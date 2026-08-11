@@ -4,20 +4,23 @@ namespace FireLine.Scripts.Player.View
 {
     public class PlayerView : MonoBehaviour
     {
-        public void SetPosition(Vector3 position)
+        public void Move(Vector2 direction, float speed)
         {
-            transform.position = position;
+            transform.position +=
+                new Vector3(direction.x, 0f, direction.y) *
+                speed *
+                Time.deltaTime;
         }
 
-        public void SetRotation(Quaternion rotation)
+        public void RotateTowards(Vector3 worldPosition)
         {
-            transform.rotation = rotation;
-        }
+            Vector3 direction = worldPosition - transform.position;
+            direction.y = 0f;
 
-        public Vector3 GetPosition()
-        {
-            return transform.position;
+            if (direction.sqrMagnitude <= 0.001f)
+                return;
+
+            transform.rotation = Quaternion.LookRotation(direction);
         }
     }
 }
-

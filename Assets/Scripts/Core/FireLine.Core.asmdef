@@ -1,0 +1,17 @@
+{
+    "name": "FireLine.Core",
+    "rootNamespace": "",
+    "references": [
+        "Zenject",
+        "FireLine.Player"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
