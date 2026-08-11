@@ -4,16 +4,19 @@ namespace FireLine.Scripts.Player.View
 {
     public class PlayerView : MonoBehaviour
     {
-        // Start is called once before the first execution of Update after the MonoBehaviour is created
-        void Start()
+        public void SetPosition(Vector3 position)
         {
-
+            transform.position = position;
         }
 
-        // Update is called once per frame
-        void Update()
+        public void SetRotation(Quaternion rotation)
         {
+            transform.rotation = rotation;
+        }
 
+        public Vector3 GetPosition()
+        {
+            return transform.position;
         }
     }
 }
