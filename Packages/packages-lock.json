@@ -1,5 +1,11 @@
 {
   "dependencies": {
+    "com.svermeulen.extenject": {
+      "version": "file:com.svermeulen.extenject",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 0,
@@ -289,7 +295,7 @@
     },
     "com.unity.modules.imageconversion": {
       "version": "1.0.0",
-      "depth": 0,
+      "depth": 1,
       "source": "builtin",
       "dependencies": {}
     },
