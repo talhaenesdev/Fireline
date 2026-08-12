@@ -3,7 +3,9 @@
     "rootNamespace": "",
     "references": [
         "Zenject",
-        "FireLine.Player"
+        "FireLine.Player",
+        "FireLine.Weapon",
+        "FireLine.Pooling"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

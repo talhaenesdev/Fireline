@@ -1,41 +1,54 @@
+using UnityEngine;
+using FireLine.Scripts.Pooling;
 using FireLine.Scripts.Weapon.Model;
 using FireLine.Scripts.Weapon.View;
-using UnityEngine;
 
 namespace FireLine.Scripts.Weapon.Controller
 {
-    public class WeaponController : MonoBehaviour
+    public class WeaponController
     {
-        [SerializeField] private WeaponView view;
+        private readonly IPoolService _poolService;
+        private readonly WeaponData _weaponData;
 
-        private WeaponModel model;
-
-        private float nextFireTime;
-
-        private void Awake()
+        public WeaponController(
+            IPoolService poolService,
+            WeaponData weaponData)
         {
-            model = new WeaponModel(
-                damage: 25,
-                fireRate: 0.25f,
-                bulletSpeed: 20f
-            );
+            _poolService = poolService;
+            _weaponData = weaponData;
         }
 
-        public void TryFire()
+        public void Shoot(
+            Vector3 position,
+            Vector3 direction)
         {
-            if (Time.time < nextFireTime)
+            BulletData bulletData =
+                _weaponData.BulletData;
+
+            if (bulletData == null)
+            {
+                Debug.LogError(
+                    "Weapon has no BulletData."
+                );
+
+                return;
+            }
+
+            BulletView bullet =
+                _poolService.Spawn<BulletView>(
+                    bulletData.PoolKey,
+                    position,
+                    Quaternion.LookRotation(direction)
+                );
+
+            if (bullet == null)
                 return;
 
-            nextFireTime = Time.time + model.FireRate;
-
-            Fire();
-        }
-
-        private void Fire()
-        {
-            view.PlayFireEffect();
-
-            Debug.Log("BANG!");
+            bullet.Initialize(
+                bulletData,
+                direction,
+                _poolService
+            );
         }
     }
 }

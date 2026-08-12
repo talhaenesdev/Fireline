@@ -1,4 +1,4 @@
-namespace FireLine.Scripts.Core.Pooling
+namespace FireLine.Scripts.Pooling
 {
     public interface IPoolable
     {

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FireLine.Scripts.Core.Pooling
+namespace FireLine.Scripts.Pooling
 {
     public class ObjectPool<T> where T : Component
     {
