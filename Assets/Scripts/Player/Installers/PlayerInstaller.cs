@@ -1,4 +1,5 @@
-﻿using Zenject;
+﻿using UnityEngine;
+using Zenject;
 using FireLine.Scripts.Player.Model;
 using FireLine.Scripts.Player.View;
 using FireLine.Scripts.Player.Controller;
@@ -21,6 +22,13 @@ namespace FireLine.Scripts.Player.Installers
                 .AsSingle();
 
             Container.BindInterfacesTo<PlayerInputController>()
+                .AsSingle();
+
+            Container.BindInterfacesTo<PlayerAimController>()
+                .AsSingle();
+
+            Container.Bind<Camera>()
+                .FromInstance(Camera.main)
                 .AsSingle();
         }
     }
