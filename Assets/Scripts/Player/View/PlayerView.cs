@@ -6,10 +6,13 @@ namespace FireLine.Scripts.Player.View
     {
         public void Move(Vector2 direction, float speed)
         {
-            transform.position +=
-                new Vector3(direction.x, 0f, direction.y) *
-                speed *
-                Time.deltaTime;
+            Vector3 movement = new Vector3(
+                direction.x,
+                0f,
+                direction.y
+            );
+
+            transform.position += movement * speed * Time.deltaTime;
         }
 
         public void RotateTowards(Vector3 worldPosition)
