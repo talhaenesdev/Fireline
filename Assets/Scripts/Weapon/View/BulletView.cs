@@ -18,6 +18,9 @@ namespace FireLine.Scripts.Weapon.View
             Vector3 direction,
             IPoolService poolService)
         {
+            Debug.Log(
+    $"Bullet Initialize | Data: {bulletData?.name}"
+);
             _bulletData = bulletData;
             _direction = direction.normalized;
             _poolService = poolService;
@@ -25,9 +28,6 @@ namespace FireLine.Scripts.Weapon.View
             _remainingLifetime =
                 bulletData.Lifetime;
 
-            Debug.Log(
-    $"BULLET SPAWNED | Position: {transform.position} | Direction: {_direction}"
-);
         }
 
         private void Update()
@@ -50,15 +50,29 @@ namespace FireLine.Scripts.Weapon.View
         }
         private void OnTriggerEnter(Collider other)
         {
+            Debug.Log(
+    $"Bullet Collision | Data: {_bulletData?.name}"
+);
             IDamageable damageable =
                 other.GetComponentInParent<IDamageable>();
 
             if (damageable == null)
-                return;
+            {
+                Debug.LogWarning(
+                    $"No IDamageable found on {other.gameObject.name}"
+                );
 
-            damageable.TakeDamage(
-                _bulletData.Damage
-            );
+                return;
+            }
+
+            if (_bulletData == null)
+            {
+                Debug.LogError("BulletData is NULL!");
+
+                return;
+            }
+
+            damageable.TakeDamage(_bulletData.Damage);
 
             Despawn();
         }
@@ -83,7 +97,7 @@ namespace FireLine.Scripts.Weapon.View
 
         public void OnDespawn()
         {
-            _bulletData = null;
+            //_bulletData = null;
             _poolService = null;
             _direction = Vector3.zero;
             _remainingLifetime = 0f;

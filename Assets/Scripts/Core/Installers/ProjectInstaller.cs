@@ -1,4 +1,5 @@
 
+using FireLine.Scripts.Core.Signals;
 using Zenject;
 
 namespace FireLine.Scripts.Core.Installers
@@ -7,7 +8,7 @@ namespace FireLine.Scripts.Core.Installers
     {
         public override void InstallBindings()
         {
-
+            Container.DeclareSignal<EntityDestroyedSignal>();
         }
     }
 }
