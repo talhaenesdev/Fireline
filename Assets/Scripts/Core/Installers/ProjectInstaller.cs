@@ -1,5 +1,7 @@
-using FireLine.Scripts.Core.Pooling;
 using FireLine.Scripts.Player.Model;
+using FireLine.Scripts.Pooling;
+using FireLine.Scripts.Weapon.Model;
+using UnityEngine;
 using Zenject;
 
 namespace FireLine.Scripts.Core.Installers
@@ -12,9 +14,6 @@ namespace FireLine.Scripts.Core.Installers
                 .AsSingle()
                 .WithArguments(5f);
 
-            Container.Bind<IPoolService>()
-                .To<PoolService>()
-                .AsSingle();
         }
     }
 }

@@ -1,16 +1,16 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace FireLine.Scripts.Core.Pooling
+namespace FireLine.Scripts.Pooling
 {
     [CreateAssetMenu(
         fileName = "PoolConfig",
-        menuName = "FireLine/Core/Pool Config"
+        menuName = "FireLine/Pooling/Pool Config"
     )]
     public class PoolConfig : ScriptableObject
     {
         [SerializeField]
-        private List<PoolData> pools;
+        private List<PoolData> pools = new();
 
         public IReadOnlyList<PoolData> Pools => pools;
     }

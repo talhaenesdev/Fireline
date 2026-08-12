@@ -4,6 +4,10 @@ namespace FireLine.Scripts.Player.View
 {
     public class PlayerView : MonoBehaviour
     {
+        [SerializeField]
+        private Transform muzzlePoint;
+
+        public Transform MuzzlePoint => muzzlePoint;
         public void Move(Vector2 direction, float speed)
         {
             Vector3 movement = new Vector3(

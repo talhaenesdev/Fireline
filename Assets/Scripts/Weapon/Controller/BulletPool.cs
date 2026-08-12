@@ -1,6 +1,6 @@
 using UnityEngine;
-using FireLine.Scripts.Core.Pooling;
 using FireLine.Scripts.Weapon.View;
+using FireLine.Scripts.Pooling;
 
 namespace FireLine.Scripts.Weapon.Controller
 {

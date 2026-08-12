@@ -1,18 +1,17 @@
 ﻿using UnityEngine;
 
-namespace FireLine.Scripts.Core.Pooling
+namespace FireLine.Scripts.Pooling
 {
     public interface IPoolService
     {
         T Spawn<T>(
-            string poolId,
-            T prefab,
+            string poolKey,
             Vector3 position,
             Quaternion rotation)
             where T : Component;
 
         void Despawn(
-            string poolId,
+            string poolKey,
             Component instance);
     }
 }

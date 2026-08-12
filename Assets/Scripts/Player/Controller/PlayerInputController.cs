@@ -8,12 +8,19 @@ namespace FireLine.Scripts.Player.Controller
     {
         private readonly PlayerController _playerController;
 
-        public PlayerInputController(PlayerController playerController)
+        public PlayerInputController(
+            PlayerController playerController)
         {
             _playerController = playerController;
         }
 
         public void Tick()
+        {
+            HandleMovement();
+            HandleShoot();
+        }
+
+        private void HandleMovement()
         {
             Vector2 movement = Vector2.zero;
 
@@ -29,11 +36,22 @@ namespace FireLine.Scripts.Player.Controller
             if (Keyboard.current.dKey.isPressed)
                 movement.x += 1f;
 
-            movement = Vector2.ClampMagnitude(movement, 1f);
+            movement = Vector2.ClampMagnitude(
+                movement,
+                1f
+            );
 
             if (movement != Vector2.zero)
             {
                 _playerController.Move(movement);
+            }
+        }
+
+        private void HandleShoot()
+        {
+            if (Mouse.current.leftButton.wasPressedThisFrame)
+            {
+                _playerController.Shoot();
             }
         }
     }
