@@ -1,6 +1,7 @@
 using UnityEngine;
 using FireLine.Scripts.Pooling;
 using FireLine.Scripts.Weapon.Model;
+using FireLine.Scripts.Core.Damage;
 
 namespace FireLine.Scripts.Weapon.View
 {
@@ -23,6 +24,10 @@ namespace FireLine.Scripts.Weapon.View
 
             _remainingLifetime =
                 bulletData.Lifetime;
+
+            Debug.Log(
+    $"BULLET SPAWNED | Position: {transform.position} | Direction: {_direction}"
+);
         }
 
         private void Update()
@@ -43,7 +48,20 @@ namespace FireLine.Scripts.Weapon.View
                 Despawn();
             }
         }
+        private void OnTriggerEnter(Collider other)
+        {
+            IDamageable damageable =
+                other.GetComponentInParent<IDamageable>();
 
+            if (damageable == null)
+                return;
+
+            damageable.TakeDamage(
+                _bulletData.Damage
+            );
+
+            Despawn();
+        }
         private void Despawn()
         {
             if (_bulletData == null ||

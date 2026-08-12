@@ -1,4 +1,5 @@
 ﻿using FireLine.Scripts.Player.Controller;
+using FireLine.Scripts.Player.Model;
 using UnityEngine;
 using Zenject;
 
@@ -23,6 +24,10 @@ namespace FireLine.Scripts.Player.Installers
             Container.Bind<PlayerMovementController>()
                 .FromComponentInHierarchy()
                 .AsSingle();
+
+            Container.Bind<PlayerModel>()
+                .AsSingle()
+                .WithArguments(5f);
         }
     }
 }

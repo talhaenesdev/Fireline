@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 4943048617276264169}
   - component: {fileID: 1862001041733341669}
   - component: {fileID: 5571953818479318153}
+  - component: {fileID: 3459532013339640685}
+  - component: {fileID: 7504359601646117982}
   m_Layer: 0
   m_Name: Bullet
   m_TagString: Untagged
@@ -69,6 +71,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e05ecad17b3e774e957ea6d4427e7e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: FireLine.Weapon::FireLine.Scripts.Weapon.View.BulletView
+--- !u!135 &3459532013339640685
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1563889568419805077}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.12237805
+  m_Center: {x: 0, y: 0.0050548017, z: 0.004898563}
+--- !u!54 &7504359601646117982
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1563889568419805077}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &1978393523838823972
 GameObject:
   m_ObjectHideFlags: 0
