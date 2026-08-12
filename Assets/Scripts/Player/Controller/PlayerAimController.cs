@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace FireLine.Scripts.Player.Controller
 {
@@ -14,17 +15,25 @@ namespace FireLine.Scripts.Player.Controller
 
         private void Update()
         {
-            if (playerCamera == null)
+            if (playerCamera == null ||
+                aimTransform == null)
+            {
                 return;
+            }
 
             Vector2 mousePosition =
-                UnityEngine.InputSystem.Mouse.current.position.ReadValue();
+                Mouse.current.position.ReadValue();
 
             Ray ray =
-                playerCamera.ScreenPointToRay(mousePosition);
+                playerCamera.ScreenPointToRay(
+                    mousePosition
+                );
 
             Plane groundPlane =
-                new Plane(Vector3.up, transform.position);
+                new Plane(
+                    Vector3.up,
+                    transform.position
+                );
 
             if (!groundPlane.Raycast(
                     ray,
@@ -41,7 +50,7 @@ namespace FireLine.Scripts.Player.Controller
 
             direction.y = 0f;
 
-            if (direction.sqrMagnitude <= 0.001f)
+            if (direction.sqrMagnitude < 0.001f)
                 return;
 
             AimDirection =

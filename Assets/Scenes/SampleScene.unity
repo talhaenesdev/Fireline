@@ -300,6 +300,51 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!1 &667001581
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 667001583}
+  - component: {fileID: 667001582}
+  m_Layer: 0
+  m_Name: WeaponInstaller
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &667001582
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 667001581}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46dc66cb10d5a0b4b93f656b51934076, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FireLine.Weapon::FireLine.Scripts.Weapon.WeaponInstaller
+  weaponData: {fileID: 11400000, guid: c9dbfbbf8805a5341958eb45b052c0af, type: 2}
+--- !u!4 &667001583
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 667001581}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.35355, y: 1.24749, z: 0.35355}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &809428404
 GameObject:
   m_ObjectHideFlags: 0
@@ -311,8 +356,11 @@ GameObject:
   - component: {fileID: 809428408}
   - component: {fileID: 809428407}
   - component: {fileID: 809428406}
-  - component: {fileID: 809428405}
   - component: {fileID: 809428409}
+  - component: {fileID: 809428411}
+  - component: {fileID: 809428405}
+  - component: {fileID: 809428410}
+  - component: {fileID: 809428412}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -347,7 +395,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Zenject::Zenject.GameObjectContext
   _scriptableObjectInstallers: []
   _monoInstallers:
-  - {fileID: 0}
+  - {fileID: 809428405}
   _installerPrefabs: []
   _autoRun: 1
   _kernel: {fileID: 0}
@@ -363,7 +411,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cdee241c716f5e4fb4cefe4d31a5205, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FireLine.Scripts.Player.View.PlayerView
-  muzzlePoint: {fileID: 0}
+  muzzlePoint: {fileID: 1931638529}
 --- !u!4 &809428408
 Transform:
   m_ObjectHideFlags: 0
@@ -394,6 +442,48 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: adf285de5a7e5b3439e2a617f4181497, type: 3}
   m_Name: 
   m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.PlayerInputController
+--- !u!114 &809428410
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 809428404}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38a2ba3f4cca5e6499187ef0984c8123, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.PlayerWeaponController
+  weaponView: {fileID: 1260661359}
+--- !u!114 &809428411
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 809428404}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fe18664e565cdb489565ff505131a48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.PlayerAimController
+  playerCamera: {fileID: 330585545}
+  aimTransform: {fileID: 1172700748}
+--- !u!114 &809428412
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 809428404}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9eba817b22da564cabce3bc0010c7f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.PlayerGameplayController
+  inputController: {fileID: 809428409}
+  aimController: {fileID: 809428411}
+  weaponController: {fileID: 809428410}
 --- !u!1 &884517088
 GameObject:
   m_ObjectHideFlags: 0
@@ -1070,6 +1160,7 @@ MonoBehaviour:
   _monoInstallers:
   - {fileID: 15945731}
   - {fileID: 1233103525}
+  - {fileID: 667001582}
   _installerPrefabs: []
   _autoRun: 1
   OnPreInstall:
@@ -1133,63 +1224,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1260661358}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &2807550602852394954
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 1563889568419805077, guid: 6c965efd92a9dbd4f9879677a7c0bdeb, type: 3}
-      propertyPath: m_Name
-      value: Bullet
-      objectReference: {fileID: 0}
-    - target: {fileID: 4943048617276264169, guid: 6c965efd92a9dbd4f9879677a7c0bdeb, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4943048617276264169, guid: 6c965efd92a9dbd4f9879677a7c0bdeb, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4943048617276264169, guid: 6c965efd92a9dbd4f9879677a7c0bdeb, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4943048617276264169, guid: 6c965efd92a9dbd4f9879677a7c0bdeb, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4943048617276264169, guid: 6c965efd92a9dbd4f9879677a7c0bdeb, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4943048617276264169, guid: 6c965efd92a9dbd4f9879677a7c0bdeb, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4943048617276264169, guid: 6c965efd92a9dbd4f9879677a7c0bdeb, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4943048617276264169, guid: 6c965efd92a9dbd4f9879677a7c0bdeb, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4943048617276264169, guid: 6c965efd92a9dbd4f9879677a7c0bdeb, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4943048617276264169, guid: 6c965efd92a9dbd4f9879677a7c0bdeb, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 6c965efd92a9dbd4f9879677a7c0bdeb, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1197,9 +1231,9 @@ SceneRoots:
   - {fileID: 1786813378}
   - {fileID: 15945732}
   - {fileID: 1233103524}
+  - {fileID: 667001583}
   - {fileID: 330585546}
   - {fileID: 950542644}
   - {fileID: 888210172}
   - {fileID: 884517092}
   - {fileID: 809428408}
-  - {fileID: 2807550602852394954}

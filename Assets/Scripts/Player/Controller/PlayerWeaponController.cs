@@ -1,12 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using UnityEngine;
+using Zenject;
+using FireLine.Scripts.Weapon.Controller;
+using FireLine.Scripts.Weapon.View;
 
-namespace Assets.Scripts.Player.Controller
+namespace FireLine.Scripts.Player.Controller
 {
-    internal class PlayerWeaponController
+    public class PlayerWeaponController : MonoBehaviour
     {
+        [SerializeField]
+        private WeaponView weaponView;
+
+        private WeaponController _weaponController;
+
+        [Inject]
+        public void Construct(
+            WeaponController weaponController)
+        {
+            _weaponController =
+                weaponController;
+        }
+
+        public void Shoot(Vector3 direction)
+        {
+            if (_weaponController == null)
+                return;
+
+            if (weaponView == null)
+            {
+                Debug.LogError(
+                    "WeaponView is not assigned."
+                );
+
+                return;
+            }
+
+            _weaponController.Shoot(
+                weaponView.MuzzlePoint.position,
+                direction
+            );
+        }
     }
 }

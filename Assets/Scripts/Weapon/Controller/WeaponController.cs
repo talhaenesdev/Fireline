@@ -33,14 +33,14 @@ namespace FireLine.Scripts.Weapon.Controller
                 return;
             }
 
-            if (_weaponData.BulletData == null)
+            BulletData bulletData =
+                _weaponData.BulletData;
+
+            if (bulletData == null)
             {
                 Debug.LogError("BulletData is null.");
                 return;
             }
-
-            BulletData bulletData =
-                _weaponData.BulletData;
 
             BulletView bullet =
                 _poolService.Spawn<BulletView>(
