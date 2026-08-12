@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using FireLine.Scripts.Core.Damage;
+﻿using FireLine.Scripts.Core.Damage;
+using UnityEngine;
 
 namespace FireLine.Scripts.Core.Entity
 {
@@ -18,12 +18,17 @@ namespace FireLine.Scripts.Core.Entity
             _currentHealth = maxHealth;
         }
 
-        public virtual void TakeDamage(float damage)
+        public virtual void TakeDamage(int damage)
         {
             if (damage <= 0)
                 return;
 
             _currentHealth -= damage;
+
+            Debug.Log(
+                $"{gameObject.name} took {damage} damage. " +
+                $"Health: {_currentHealth}/{maxHealth}"
+            );
 
             if (_currentHealth <= 0)
             {
@@ -34,8 +39,7 @@ namespace FireLine.Scripts.Core.Entity
 
         protected virtual void Die()
         {
-            Destroy(gameObject);
+            Debug.Log($"{gameObject.name} died.");
         }
-
     }
 }
