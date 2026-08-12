@@ -1,42 +1,56 @@
 ﻿using UnityEngine;
-using UnityEngine.InputSystem;
-using Zenject;
 
 namespace FireLine.Scripts.Player.Controller
 {
-    public class PlayerAimController : ITickable
+    public class PlayerAimController : MonoBehaviour
     {
-        private readonly PlayerController _playerController;
-        private readonly Camera _camera;
+        [SerializeField]
+        private Camera playerCamera;
 
-        public PlayerAimController(
-            PlayerController playerController,
-            Camera camera)
-        {
-            _playerController = playerController;
-            _camera = camera;
-        }
+        [SerializeField]
+        private Transform aimTransform;
 
-        public void Tick()
+        public Vector3 AimDirection { get; private set; }
+
+        private void Update()
         {
-            if (Mouse.current == null)
+            if (playerCamera == null)
                 return;
 
-            Vector2 mousePosition = Mouse.current.position.ReadValue();
+            Vector2 mousePosition =
+                UnityEngine.InputSystem.Mouse.current.position.ReadValue();
 
-            Ray ray = _camera.ScreenPointToRay(mousePosition);
+            Ray ray =
+                playerCamera.ScreenPointToRay(mousePosition);
 
-            Plane groundPlane = new Plane(
-                Vector3.up,
-                Vector3.zero
-            );
+            Plane groundPlane =
+                new Plane(Vector3.up, transform.position);
 
-            if (groundPlane.Raycast(ray, out float distance))
+            if (!groundPlane.Raycast(
+                    ray,
+                    out float distance))
             {
-                Vector3 worldPosition = ray.GetPoint(distance);
-
-                _playerController.Aim(worldPosition);
+                return;
             }
+
+            Vector3 target =
+                ray.GetPoint(distance);
+
+            Vector3 direction =
+                target - aimTransform.position;
+
+            direction.y = 0f;
+
+            if (direction.sqrMagnitude <= 0.001f)
+                return;
+
+            AimDirection =
+                direction.normalized;
+
+            aimTransform.rotation =
+                Quaternion.LookRotation(
+                    AimDirection
+                );
         }
     }
 }
