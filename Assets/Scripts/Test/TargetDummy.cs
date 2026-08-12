@@ -1,4 +1,4 @@
-using FireLine.Scripts.Core.Entity;
+using FireLine.Scripts.Core.Entities;
 
 namespace FireLine.Scripts.Test
 {
