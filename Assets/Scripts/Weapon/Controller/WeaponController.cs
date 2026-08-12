@@ -10,6 +10,8 @@ namespace FireLine.Scripts.Weapon.Controller
         private readonly IPoolService _poolService;
         private readonly WeaponData _weaponData;
 
+        private float _nextFireTime;
+
         public WeaponController(
             IPoolService poolService,
             WeaponData weaponData)
@@ -22,17 +24,23 @@ namespace FireLine.Scripts.Weapon.Controller
             Vector3 position,
             Vector3 direction)
         {
-            BulletData bulletData =
-                _weaponData.BulletData;
+            if (Time.time < _nextFireTime)
+                return;
 
-            if (bulletData == null)
+            if (_weaponData == null)
             {
-                Debug.LogError(
-                    "Weapon has no BulletData."
-                );
-
+                Debug.LogError("WeaponData is null.");
                 return;
             }
+
+            if (_weaponData.BulletData == null)
+            {
+                Debug.LogError("BulletData is null.");
+                return;
+            }
+
+            BulletData bulletData =
+                _weaponData.BulletData;
 
             BulletView bullet =
                 _poolService.Spawn<BulletView>(
@@ -49,6 +57,9 @@ namespace FireLine.Scripts.Weapon.Controller
                 direction,
                 _poolService
             );
+
+            _nextFireTime =
+                Time.time + _weaponData.FireRate;
         }
     }
 }

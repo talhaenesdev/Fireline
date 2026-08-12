@@ -1,58 +1,22 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
-using Zenject;
 
 namespace FireLine.Scripts.Player.Controller
 {
-    public class PlayerInputController : ITickable
+    public class PlayerInputController : MonoBehaviour
     {
-        private readonly PlayerController _playerController;
+        public bool FirePressed { get; private set; }
 
-        public PlayerInputController(
-            PlayerController playerController)
+        public Vector2 MoveInput { get; private set; }
+
+        public void OnMove(InputAction.CallbackContext context)
         {
-            _playerController = playerController;
+            MoveInput = context.ReadValue<Vector2>();
         }
 
-        public void Tick()
+        public void OnFire(InputAction.CallbackContext context)
         {
-            HandleMovement();
-            HandleShoot();
-        }
-
-        private void HandleMovement()
-        {
-            Vector2 movement = Vector2.zero;
-
-            if (Keyboard.current.wKey.isPressed)
-                movement.y += 1f;
-
-            if (Keyboard.current.sKey.isPressed)
-                movement.y -= 1f;
-
-            if (Keyboard.current.aKey.isPressed)
-                movement.x -= 1f;
-
-            if (Keyboard.current.dKey.isPressed)
-                movement.x += 1f;
-
-            movement = Vector2.ClampMagnitude(
-                movement,
-                1f
-            );
-
-            if (movement != Vector2.zero)
-            {
-                _playerController.Move(movement);
-            }
-        }
-
-        private void HandleShoot()
-        {
-            if (Mouse.current.leftButton.wasPressedThisFrame)
-            {
-                _playerController.Shoot();
-            }
+            FirePressed = context.ReadValueAsButton();
         }
     }
 }

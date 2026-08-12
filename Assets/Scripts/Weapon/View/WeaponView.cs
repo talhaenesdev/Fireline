@@ -4,14 +4,9 @@ namespace FireLine.Scripts.Weapon.View
 {
     public class WeaponView : MonoBehaviour
     {
-        [SerializeField] private Transform firePoint;
+        [SerializeField]
+        private Transform muzzlePoint;
 
-        public Transform FirePoint => firePoint;
-
-        public void PlayFireEffect()
-        {
-            // Muzzle flash / sound / animation
-        }
+        public Transform MuzzlePoint => muzzlePoint;
     }
-
 }
