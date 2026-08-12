@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "Zenject",
-        "FireLine.Pooling"
+        "FireLine.Pooling",
+        "FireLine.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
