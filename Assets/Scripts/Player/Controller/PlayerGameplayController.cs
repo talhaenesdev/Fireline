@@ -24,6 +24,7 @@ namespace FireLine.Scripts.Player.Controller
 
             if (inputController.FirePressed)
             {
+
                 weaponController.Shoot(
                     aimController.AimDirection
                 );

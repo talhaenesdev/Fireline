@@ -12,6 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 007ceff1d8b89704bab6b3f3f2205161, type: 3}
   m_Name: WeaponData
   m_EditorClassIdentifier: FireLine.Weapon::FireLine.Scripts.Weapon.Model.WeaponData
-  weaponId: 
-  bulletData: {fileID: 0}
-  fireRate: 5
+  bulletData: {fileID: 11400000, guid: 880b4d94adc9d6a4c914e9aa66e2d11b, type: 2}
+  fireRate: 0.1

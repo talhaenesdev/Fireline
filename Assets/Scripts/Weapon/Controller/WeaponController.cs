@@ -24,6 +24,7 @@ namespace FireLine.Scripts.Weapon.Controller
             Vector3 position,
             Vector3 direction)
         {
+
             if (Time.time < _nextFireTime)
                 return;
 

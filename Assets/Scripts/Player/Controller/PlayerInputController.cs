@@ -12,8 +12,6 @@ namespace FireLine.Scripts.Player.Controller
         public void OnMove(InputAction.CallbackContext context)
         {
             MoveInput = context.ReadValue<Vector2>();
-
-            Debug.Log($"Move Input: {MoveInput}");
         }
 
         public void OnFire(InputAction.CallbackContext context)

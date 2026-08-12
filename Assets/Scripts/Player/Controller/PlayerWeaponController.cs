@@ -22,15 +22,23 @@ namespace FireLine.Scripts.Player.Controller
 
         public void Shoot(Vector3 direction)
         {
+            Debug.Log($"WEAPON SHOOT: {direction}");
+
             if (_weaponController == null)
+            {
+                Debug.LogError("WeaponController is NULL!");
                 return;
+            }
 
             if (weaponView == null)
             {
-                Debug.LogError(
-                    "WeaponView is not assigned."
-                );
+                Debug.LogError("WeaponView is NULL!");
+                return;
+            }
 
+            if (weaponView.MuzzlePoint == null)
+            {
+                Debug.LogError("MuzzlePoint is NULL!");
                 return;
             }
 
