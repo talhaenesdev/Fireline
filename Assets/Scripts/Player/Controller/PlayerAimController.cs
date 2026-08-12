@@ -13,11 +13,30 @@ namespace FireLine.Scripts.Player.Controller
 
         public Vector3 AimDirection { get; private set; }
 
+        private void Awake()
+        {
+            if (playerCamera == null)
+            {
+                playerCamera = Camera.main;
+            }
+
+            if (aimTransform == null)
+            {
+                aimTransform = transform;
+            }
+        }
+
         private void Update()
         {
-            if (playerCamera == null ||
-                aimTransform == null)
+            if (playerCamera == null)
             {
+                Debug.LogError("PlayerAimController: Camera is null.");
+                return;
+            }
+
+            if (Mouse.current == null)
+            {
+                Debug.LogError("PlayerAimController: Mouse.current is null.");
                 return;
             }
 
@@ -25,14 +44,12 @@ namespace FireLine.Scripts.Player.Controller
                 Mouse.current.position.ReadValue();
 
             Ray ray =
-                playerCamera.ScreenPointToRay(
-                    mousePosition
-                );
+                playerCamera.ScreenPointToRay(mousePosition);
 
             Plane groundPlane =
                 new Plane(
                     Vector3.up,
-                    transform.position
+                    aimTransform.position
                 );
 
             if (!groundPlane.Raycast(
@@ -42,11 +59,12 @@ namespace FireLine.Scripts.Player.Controller
                 return;
             }
 
-            Vector3 target =
+            Vector3 mouseWorldPosition =
                 ray.GetPoint(distance);
 
             Vector3 direction =
-                target - aimTransform.position;
+                mouseWorldPosition -
+                aimTransform.position;
 
             direction.y = 0f;
 
@@ -56,10 +74,9 @@ namespace FireLine.Scripts.Player.Controller
             AimDirection =
                 direction.normalized;
 
-            aimTransform.rotation =
-                Quaternion.LookRotation(
-                    AimDirection
-                );
+            aimTransform.forward =
+                AimDirection;
+
         }
     }
 }

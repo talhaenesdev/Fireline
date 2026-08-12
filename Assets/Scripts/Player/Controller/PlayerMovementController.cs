@@ -19,7 +19,6 @@ namespace FireLine.Scripts.Player.Controller
 
         private void Update()
         {
-            Debug.Log(_inputController?.MoveInput);
 
             if (_inputController == null)
                 return;

@@ -60,11 +60,7 @@ namespace FireLine.Scripts.Weapon.View
 
         public void OnSpawn()
         {
-            if (_bulletData != null)
-            {
-                _remainingLifetime =
-                    _bulletData.Lifetime;
-            }
+            // State Initialize tarafýndan ayarlanýyor.
         }
 
         public void OnDespawn()
@@ -73,11 +69,6 @@ namespace FireLine.Scripts.Weapon.View
             _poolService = null;
             _direction = Vector3.zero;
             _remainingLifetime = 0f;
-        }
-
-        private void OnTriggerEnter(Collider other)
-        {
-            Despawn();
         }
     }
 }
