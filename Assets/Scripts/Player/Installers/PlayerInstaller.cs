@@ -1,46 +1,27 @@
-﻿using UnityEngine;
+﻿using FireLine.Scripts.Player.Controller;
+using UnityEngine;
 using Zenject;
-using FireLine.Scripts.Player.Model;
-using FireLine.Scripts.Player.View;
-using FireLine.Scripts.Player.Controller;
-using FireLine.Scripts.Weapon.Model;
-using FireLine.Scripts.Weapon.Controller;
 
 namespace FireLine.Scripts.Player.Installers
 {
     public class PlayerInstaller : MonoInstaller
     {
-        [SerializeField]
-        private WeaponData weaponData;
-
         public override void InstallBindings()
         {
-            Container.Bind<PlayerModel>()
-                .AsSingle()
-                .WithArguments(5f);
-
-            Container.Bind<PlayerView>()
+            Container.Bind<PlayerInputController>()
                 .FromComponentInHierarchy()
                 .AsSingle();
 
-            Container.Bind<PlayerController>()
+            Container.Bind<PlayerAimController>()
+                .FromComponentInHierarchy()
                 .AsSingle();
 
-            Container.BindInterfacesTo<PlayerInputController>()
+            Container.Bind<PlayerWeaponController>()
+                .FromComponentInHierarchy()
                 .AsSingle();
 
-            Container.BindInterfacesTo<PlayerAimController>()
-                .AsSingle();
-
-            Container.Bind<Camera>()
-                .FromInstance(Camera.main)
-                .AsSingle();
-
-            Container.Bind<WeaponData>()
-                .FromInstance(weaponData)
-                .AsSingle();
-
-            Container.Bind<WeaponController>()
+            Container.Bind<PlayerMovementController>()
+                .FromComponentInHierarchy()
                 .AsSingle();
         }
     }
