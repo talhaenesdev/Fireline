@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using FireLine.Scripts.Core.Services.Entities;
+using FireLine.Scripts.Services.Entities;
+using UnityEngine;
 using Zenject;
 
 namespace FireLine.Scripts.Pooling
@@ -14,6 +16,11 @@ namespace FireLine.Scripts.Pooling
                 .To<PoolService>()
                 .AsSingle()
                 .WithArguments(poolConfig);
+
+            Container.Bind<IEntityLifecycleHandler>()
+                .To<PoolEntityLifecycleHandler>()
+                .AsSingle();
+
         }
     }
 }

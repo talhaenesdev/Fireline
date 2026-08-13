@@ -1,10 +1,9 @@
 {
-    "name": "FireLine.Pooling",
+    "name": "FireLine.Test",
     "rootNamespace": "",
     "references": [
-        "Zenject",
-        "Unity.InputSystem",
-        "FireLine.Core"
+        "FireLine.Core",
+        "FireLine.Enemy"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

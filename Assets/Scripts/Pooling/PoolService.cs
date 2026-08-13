@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using Zenject;
 
 namespace FireLine.Scripts.Pooling
 {
@@ -16,13 +17,17 @@ namespace FireLine.Scripts.Pooling
                 Objects = new Queue<GameObject>();
             }
         }
-
+        private readonly DiContainer _container;
         private readonly Dictionary<string, Pool> _pools = new();
 
         private readonly Transform _poolRoot;
 
-        public PoolService(PoolConfig config)
+        public PoolService(
+            PoolConfig config,
+            DiContainer container)
         {
+            _container = container;
+
             GameObject root = new GameObject("[PoolService]");
 
             Object.DontDestroyOnLoad(root);
@@ -99,6 +104,8 @@ namespace FireLine.Scripts.Pooling
                 pool.Data.Prefab,
                 _poolRoot
             );
+
+            _container.InjectGameObject(instance);
 
             instance.SetActive(false);
 

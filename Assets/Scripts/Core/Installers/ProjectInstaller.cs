@@ -13,13 +13,13 @@ namespace FireLine.Scripts.Core.Installers
 
             Container.DeclareSignal<EntityDestroyedSignal>();
 
-            Container.BindInterfacesTo<EntityLifecycleService>()
-                .AsSingle()
-                .NonLazy();
-
             Container.Bind<IEntityDeathService>()
                 .To<EntityDeathService>()
                 .AsSingle();
+
+            Container.BindInterfacesTo<EntityLifecycleService>()
+                .AsSingle()
+                .NonLazy();
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿
-using FireLine.Scripts.Core.Entities;
+using FireLine.Scripts.Core.Services.Entities;
 
 namespace FireLine.Scripts.Core.Services
 {

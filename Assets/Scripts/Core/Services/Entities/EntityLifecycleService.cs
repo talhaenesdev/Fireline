@@ -1,5 +1,5 @@
-
 using FireLine.Scripts.Core.Signals;
+using System.Collections.Generic;
 using Zenject;
 
 namespace FireLine.Scripts.Core.Services.Entities
@@ -7,31 +7,35 @@ namespace FireLine.Scripts.Core.Services.Entities
     public class EntityLifecycleService : IInitializable
     {
         private readonly SignalBus _signalBus;
+        private readonly List<IEntityLifecycleHandler> _handlers;
 
-        public EntityLifecycleService(SignalBus signalBus)
+        public EntityLifecycleService(
+            SignalBus signalBus,
+            List<IEntityLifecycleHandler> handlers)
         {
             _signalBus = signalBus;
+            _handlers = handlers;
         }
 
         public void Initialize()
         {
-            _signalBus.Subscribe<EntityDestroyedSignal>(OnEntityDestroyed);
+            _signalBus.Subscribe<EntityDestroyedSignal>(
+                OnEntityDestroyed);
         }
 
         private void OnEntityDestroyed(EntityDestroyedSignal signal)
         {
-            if (signal.Entity is not Core.Entities.Entity entity)
+            if (!(signal.Entity is Entity entity))
                 return;
 
-            HandleEntity(entity);
-        }
+            foreach (var handler in _handlers)
+            {
+                if (!handler.CanHandle(entity))
+                    continue;
 
-        private void HandleEntity(Core.Entities.Entity entity)
-        {
-            // Þimdilik sadece test ediyoruz.
-            UnityEngine.Debug.Log(
-                $"EntityLifecycleService handled: {entity.name}"
-            );
+                handler.Handle(entity);
+                return;
+            }
         }
     }
 }

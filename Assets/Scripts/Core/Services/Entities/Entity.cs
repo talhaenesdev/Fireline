@@ -1,9 +1,8 @@
 ﻿using FireLine.Scripts.Core.Damage;
-using FireLine.Scripts.Core.Services;
 using UnityEngine;
 using Zenject;
 
-namespace FireLine.Scripts.Core.Entities
+namespace FireLine.Scripts.Core.Services.Entities
 {
     public abstract class Entity : MonoBehaviour, IDamageable
     {
@@ -18,7 +17,7 @@ namespace FireLine.Scripts.Core.Entities
         private int maxHealth = 100;
 
         private float _currentHealth;
-
+        private bool _isDead;
         public float CurrentHealth => _currentHealth;
         public int MaxHealth => maxHealth;
 
@@ -29,6 +28,9 @@ namespace FireLine.Scripts.Core.Entities
 
         public virtual void TakeDamage(float damage)
         {
+            if (_isDead)
+                return;
+
             if (damage <= 0)
                 return;
 
@@ -42,13 +44,29 @@ namespace FireLine.Scripts.Core.Entities
             if (_currentHealth <= 0)
             {
                 _currentHealth = 0;
+                _isDead = true;
+
                 Die();
             }
         }
 
-        protected virtual void Die()
+        private void Die()
         {
+            if (_entityDeathService == null)
+            {
+                Debug.LogError(
+                    $"EntityDeathService is NULL on {gameObject.name}"
+                );
+
+                return;
+            }
+
             _entityDeathService.HandleDeath(this);
+        }
+        protected void ResetHealth()
+        {
+            _currentHealth = maxHealth;
+            _isDead = false;
         }
     }
 }
