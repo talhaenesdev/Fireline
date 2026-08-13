@@ -1,17 +1,21 @@
-using UnityEngine;
+using FireLine.Scripts.Core.Combat;
+using FireLine.Scripts.Core.Damage;
+using FireLine.Scripts.Core.Services.Entities;
 using FireLine.Scripts.Pooling;
 using FireLine.Scripts.Weapon.Model;
-using FireLine.Scripts.Core.Damage;
+using UnityEngine;
 
 namespace FireLine.Scripts.Weapon.View
 {
-    public class BulletView : MonoBehaviour, IPoolable
+    public class BulletView : MonoBehaviour, IPoolable, IDamageSource
     {
         private BulletData _bulletData;
         private IPoolService _poolService;
-
+        private Entity _owner;
         private Vector3 _direction;
         private float _remainingLifetime;
+
+        public Entity Owner => _owner;
 
         public void Initialize(
             BulletData bulletData,
@@ -50,25 +54,23 @@ namespace FireLine.Scripts.Weapon.View
         }
         private void OnTriggerEnter(Collider other)
         {
-            Debug.Log(
-    $"Bullet Collision | Data: {_bulletData?.name}"
-);
             IDamageable damageable =
                 other.GetComponentInParent<IDamageable>();
 
             if (damageable == null)
-            {
                 return;
-            }
 
-            if (_bulletData == null)
-            {
-                Debug.LogError("BulletData is NULL!");
+            Entity target =
+                other.GetComponentInParent<Entity>();
 
+            if (target == null)
                 return;
-            }
+
+            if (target == _owner)
+                return;
 
             damageable.TakeDamage(_bulletData.Damage);
+
 
             Despawn();
         }
@@ -88,12 +90,12 @@ namespace FireLine.Scripts.Weapon.View
 
         public void OnSpawn()
         {
-            // State Initialize tarafýndan ayarlanýyor.
+            _owner = null;
         }
 
         public void OnDespawn()
         {
-            //_bulletData = null;
+            _owner = null;
             _poolService = null;
             _direction = Vector3.zero;
             _remainingLifetime = 0f;
