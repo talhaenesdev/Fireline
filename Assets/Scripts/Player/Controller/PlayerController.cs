@@ -1,7 +1,8 @@
-using UnityEngine;
+using FireLine.Scripts.Core.Services.Entities;
 using FireLine.Scripts.Player.Model;
 using FireLine.Scripts.Player.View;
 using FireLine.Scripts.Weapon.Controller;
+using UnityEngine;
 
 namespace FireLine.Scripts.Player.Controller
 {

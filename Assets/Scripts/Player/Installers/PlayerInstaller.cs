@@ -1,5 +1,7 @@
-﻿using FireLine.Scripts.Player.Controller;
+﻿using FireLine.Scripts.Core.Services.Entities;
+using FireLine.Scripts.Player.Controller;
 using FireLine.Scripts.Player.Model;
+using FireLine.Scripts.Player.View;
 using UnityEngine;
 using Zenject;
 
@@ -9,7 +11,7 @@ namespace FireLine.Scripts.Player.Installers
     {
         public override void InstallBindings()
         {
-            Container.Bind<PlayerInputController>()
+            Container.Bind<PlayerView>()
                 .FromComponentInHierarchy()
                 .AsSingle();
 
@@ -28,6 +30,13 @@ namespace FireLine.Scripts.Player.Installers
             Container.Bind<PlayerModel>()
                 .AsSingle()
                 .WithArguments(5f);
+
+            Container.Bind<PlayerController>()
+                .AsTransient();
+
+            Container.Bind<PlayerInputController>()
+                .FromComponentInHierarchy()
+                .AsSingle();
         }
     }
 }

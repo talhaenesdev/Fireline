@@ -1,7 +1,8 @@
-using UnityEngine;
+using FireLine.Scripts.Core.Services.Entities;
 using FireLine.Scripts.Pooling;
 using FireLine.Scripts.Weapon.Model;
 using FireLine.Scripts.Weapon.View;
+using UnityEngine;
 
 namespace FireLine.Scripts.Weapon.Controller
 {
@@ -24,7 +25,6 @@ namespace FireLine.Scripts.Weapon.Controller
             Vector3 position,
             Vector3 direction)
         {
-
             if (Time.time < _nextFireTime)
                 return;
 
@@ -58,6 +58,7 @@ namespace FireLine.Scripts.Weapon.Controller
                 direction,
                 _poolService
             );
+
 
             _nextFireTime =
                 Time.time + _weaponData.FireRate;
