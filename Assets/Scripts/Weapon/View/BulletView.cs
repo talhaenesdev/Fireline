@@ -58,10 +58,6 @@ namespace FireLine.Scripts.Weapon.View
 
             if (damageable == null)
             {
-                Debug.LogWarning(
-                    $"No IDamageable found on {other.gameObject.name}"
-                );
-
                 return;
             }
 

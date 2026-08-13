@@ -1,6 +1,4 @@
-﻿using FireLine.Scripts.Core.Entities;
-using FireLine.Scripts.Core.Services;
-using FireLine.Scripts.Core.Signals;
+﻿using FireLine.Scripts.Core.Signals;
 using Zenject;
 
 namespace FireLine.Scripts.Core.Services.Entities

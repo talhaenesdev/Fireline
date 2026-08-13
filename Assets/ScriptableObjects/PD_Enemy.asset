@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c46458a9e32db2f4ebe6793fbdae7fd8, type: 3}
-  m_Name: PoolData
+  m_Name: PD_Enemy
   m_EditorClassIdentifier: FireLine.Pooling::FireLine.Scripts.Pooling.PoolData
-  poolKey: Bullet
-  prefab: {fileID: 1563889568419805077, guid: 6c965efd92a9dbd4f9879677a7c0bdeb, type: 3}
+  poolKey: Enemy
+  prefab: {fileID: 3385746352847260345, guid: f36facfe3e14d644f95b925e04c37689, type: 3}
   initialSize: 20
   maxSize: 100
   expandable: 1
