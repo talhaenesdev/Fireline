@@ -138,7 +138,8 @@ namespace FireLine.Scripts.Network
 
             _bulletSpawner.Spawn(
                 position,
-                direction
+                direction,
+                OwnerClientId
             );
         }
 
