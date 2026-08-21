@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace FireLine.Scripts.Player.Controller
 {
@@ -13,6 +14,13 @@ namespace FireLine.Scripts.Player.Controller
         [SerializeField]
         private PlayerWeaponController weaponController;
 
+        public event Action<Vector3> OnFire;
+
+        public Vector3 MuzzlePosition =>
+            weaponController != null
+                ? weaponController.MuzzlePosition
+                : transform.position;
+
         private void Update()
         {
             if (inputController == null ||
@@ -24,11 +32,18 @@ namespace FireLine.Scripts.Player.Controller
 
             if (inputController.FirePressed)
             {
-
-                weaponController.Shoot(
+                OnFire?.Invoke(
                     aimController.AimDirection
                 );
             }
+        }
+
+        public void Shoot(Vector3 direction)
+        {
+            if (weaponController == null)
+                return;
+
+            weaponController.Shoot(direction);
         }
     }
 }

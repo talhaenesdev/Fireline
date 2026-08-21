@@ -9,6 +9,8 @@ namespace FireLine.Scripts.Weapon.View
 {
     public class BulletView : MonoBehaviour, IPoolable, IDamageSource
     {
+        private bool _networkControlled;
+        private bool _simulate = true;
         private BulletData _bulletData;
         private IPoolService _poolService;
         private Entity _owner;
@@ -36,6 +38,9 @@ namespace FireLine.Scripts.Weapon.View
 
         private void Update()
         {
+            if (_networkControlled)
+                return;
+
             if (_bulletData == null)
                 return;
 
@@ -51,6 +56,14 @@ namespace FireLine.Scripts.Weapon.View
             {
                 Despawn();
             }
+        }
+        public void SetSimulationEnabled(bool enabled)
+        {
+            _simulate = enabled;
+        }
+        public void SetNetworkControlled(bool value)
+        {
+            _networkControlled = value;
         }
         private void OnTriggerEnter(Collider other)
         {
@@ -91,6 +104,7 @@ namespace FireLine.Scripts.Weapon.View
         public void OnSpawn()
         {
             _owner = null;
+            _simulate = true;
         }
 
         public void OnDespawn()
@@ -99,6 +113,7 @@ namespace FireLine.Scripts.Weapon.View
             _poolService = null;
             _direction = Vector3.zero;
             _remainingLifetime = 0f;
+            _simulate = true;
         }
     }
 }
