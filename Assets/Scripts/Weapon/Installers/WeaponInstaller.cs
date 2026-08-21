@@ -12,6 +12,7 @@ namespace FireLine.Scripts.Weapon
 
         public override void InstallBindings()
         {
+            Debug.Log("WEAPON INSTALLER RUNNING");
             Container.Bind<WeaponData>()
                 .FromInstance(weaponData)
                 .AsSingle();

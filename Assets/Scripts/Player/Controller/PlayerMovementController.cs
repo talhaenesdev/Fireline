@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using Zenject;
 
 namespace FireLine.Scripts.Player.Controller
 {
@@ -10,16 +9,14 @@ namespace FireLine.Scripts.Player.Controller
 
         private PlayerInputController _inputController;
 
-        [Inject]
-        public void Construct(
-            PlayerInputController inputController)
+        private void Awake()
         {
-            _inputController = inputController;
+            _inputController =
+                GetComponent<PlayerInputController>();
         }
 
         private void Update()
         {
-
             if (_inputController == null)
                 return;
 

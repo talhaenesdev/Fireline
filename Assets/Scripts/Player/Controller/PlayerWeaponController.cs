@@ -1,7 +1,7 @@
-﻿using FireLine.Scripts.Weapon.Controller;
-using FireLine.Scripts.Weapon.View;
-using UnityEngine;
+﻿using UnityEngine;
 using Zenject;
+using FireLine.Scripts.Weapon.Controller;
+using FireLine.Scripts.Weapon.View;
 
 namespace FireLine.Scripts.Player.Controller
 {
@@ -12,29 +12,39 @@ namespace FireLine.Scripts.Player.Controller
 
         private WeaponController _weaponController;
 
-
         [Inject]
         public void Construct(
             WeaponController weaponController)
         {
             _weaponController = weaponController;
+            Debug.Log("WeaponController injected successfully.");
         }
 
         public void Shoot(Vector3 direction)
         {
-            if (_weaponController == null)
-                return;
+            Debug.Log($"WEAPON SHOOT: {direction}");
 
+            if (_weaponController == null)
+            {
+                Debug.LogError("WeaponController is NULL!");
+                return;
+            }
 
             if (weaponView == null)
+            {
+                Debug.LogError("WeaponView is NULL!");
                 return;
+            }
 
             if (weaponView.MuzzlePoint == null)
+            {
+                Debug.LogError("MuzzlePoint is NULL!");
                 return;
+            }
 
             _weaponController.Shoot(
                 weaponView.MuzzlePoint.position,
-                direction.normalized
+                direction
             );
         }
     }
