@@ -18,9 +18,17 @@ namespace FireLine.Scripts.Player.Controller
         private void Update()
         {
             if (_inputController == null)
+            {
+                Debug.LogError("Movement: InputController NULL!");
                 return;
+            }
 
             Vector2 input = _inputController.MoveInput;
+
+            if (input != Vector2.zero)
+            {
+                Debug.Log($"Movement Input: {input}");
+            }
 
             Vector3 movement = new Vector3(
                 input.x,
