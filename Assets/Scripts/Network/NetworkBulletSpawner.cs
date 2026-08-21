@@ -10,20 +10,11 @@ namespace FireLine.Scripts.Network
 
         public void Spawn(
             Vector3 position,
-            Vector3 direction)
+            Vector3 direction,
+            ulong ownerClientId)
         {
-            Debug.Log(
-                "=== BULLET SPAWNER CALLED ==="
-            );
-
             if (!NetworkManager.Singleton.IsServer)
-            {
-                Debug.LogWarning(
-                    "BulletSpawner called on non-server."
-                );
-
                 return;
-            }
 
             if (bulletPrefab == null)
             {
@@ -56,12 +47,14 @@ namespace FireLine.Scripts.Network
 
             networkObject.Spawn();
 
-            bullet.Initialize(direction);
+            bullet.Initialize(
+                direction,
+                ownerClientId
+            );
 
             Debug.Log(
                 $"Network Bullet Spawned | " +
-                $"NetworkObjectId: " +
-                $"{networkObject.NetworkObjectId}"
+                $"OwnerClientId: {ownerClientId}"
             );
         }
     }
