@@ -22,7 +22,6 @@ namespace FireLine.Scripts.Player.Controller
 
         public void Shoot(Vector3 direction)
         {
-            Debug.Log($"WEAPON SHOOT: {direction}");
 
             if (_weaponController == null)
             {
@@ -46,6 +45,19 @@ namespace FireLine.Scripts.Player.Controller
                 weaponView.MuzzlePoint.position,
                 direction
             );
+        }
+        public Vector3 MuzzlePosition
+        {
+            get
+            {
+                if (weaponView == null)
+                    return transform.position;
+
+                if (weaponView.MuzzlePoint == null)
+                    return transform.position;
+
+                return weaponView.MuzzlePoint.position;
+            }
         }
     }
 }

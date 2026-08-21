@@ -6,7 +6,8 @@
         "Unity.InputSystem",
         "FireLine.Core",
         "FireLine.Player",
-        "Zenject"
+        "Zenject",
+        "FireLine.Weapon"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

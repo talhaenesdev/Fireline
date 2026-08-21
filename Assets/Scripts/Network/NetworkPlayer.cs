@@ -15,20 +15,28 @@ namespace FireLine.Scripts.Network
         private PlayerAimController _aimController;
         private PlayerGameplayController _gameplayController;
 
+        private NetworkBulletSpawner _bulletSpawner;
+
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
 
-            SceneContext sceneContext = FindFirstObjectByType<SceneContext>();
+            SceneContext sceneContext =
+                FindFirstObjectByType<SceneContext>();
 
             if (sceneContext != null)
             {
                 sceneContext.Container.InjectGameObject(gameObject);
-                Debug.Log("Zenject injection completed for NetworkPlayer.");
+
+                Debug.Log(
+                    "Zenject injection completed for NetworkPlayer."
+                );
             }
             else
             {
-                Debug.LogError("SceneContext not found!");
+                Debug.LogError(
+                    "SceneContext not found!"
+                );
             }
 
             _playerInputController =
@@ -46,22 +54,36 @@ namespace FireLine.Scripts.Network
             _gameplayController =
                 GetComponent<PlayerGameplayController>();
 
-            bool isOwner = IsOwner;
+            _bulletSpawner =
+                FindFirstObjectByType<NetworkBulletSpawner>();
+
+            Debug.Log(
+                $"NetworkBulletSpawner found: " +
+                $"{_bulletSpawner != null}"
+            );
 
             if (_playerInputController != null)
-                _playerInputController.enabled = isOwner;
+                _playerInputController.enabled = IsOwner;
 
             if (_playerInput != null)
-                _playerInput.enabled = isOwner;
+                _playerInput.enabled = IsOwner;
 
             if (_movementController != null)
-                _movementController.enabled = isOwner;
+                _movementController.enabled = IsOwner;
 
             if (_aimController != null)
-                _aimController.enabled = isOwner;
+                _aimController.enabled = IsOwner;
 
             if (_gameplayController != null)
-                _gameplayController.enabled = isOwner;
+            {
+                _gameplayController.enabled = IsOwner;
+
+                if (IsOwner)
+                {
+                    _gameplayController.OnFire +=
+                        HandleFire;
+                }
+            }
 
             Debug.Log(
                 $"Network Player Spawned | " +
@@ -69,6 +91,67 @@ namespace FireLine.Scripts.Network
                 $"IsOwner: {IsOwner} | " +
                 $"IsServer: {IsServer}"
             );
+        }
+
+        private void HandleFire(Vector3 direction)
+        {
+            if (!IsOwner)
+                return;
+
+            Vector3 muzzlePosition =
+                _gameplayController.MuzzlePosition;
+
+            Debug.Log(
+                $"CLIENT FIRE | " +
+                $"Muzzle: {muzzlePosition} | " +
+                $"Direction: {direction}"
+            );
+
+            ShootServerRpc(
+                muzzlePosition,
+                direction
+            );
+        }
+
+        [ServerRpc]
+        private void ShootServerRpc(
+            Vector3 position,
+            Vector3 direction)
+        {
+            Debug.Log(
+                $"SERVER SHOOT RPC | " +
+                $"Position: {position} | " +
+                $"Direction: {direction}"
+            );
+
+            if (!IsServer)
+                return;
+
+            if (_bulletSpawner == null)
+            {
+                Debug.LogError(
+                    "NetworkBulletSpawner is NULL on SERVER!"
+                );
+
+                return;
+            }
+
+            _bulletSpawner.Spawn(
+                position,
+                direction
+            );
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            if (_gameplayController != null &&
+                IsOwner)
+            {
+                _gameplayController.OnFire -=
+                    HandleFire;
+            }
+
+            base.OnNetworkDespawn();
         }
     }
 }
