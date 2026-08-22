@@ -1,3 +1,4 @@
+using FireLine.Scripts.Core.Services.Entities;
 using FireLine.Scripts.Player.Controller;
 using Unity.Netcode;
 using UnityEngine;
@@ -16,7 +17,7 @@ namespace FireLine.Scripts.Network
         private PlayerGameplayController _gameplayController;
 
         private NetworkBulletSpawner _bulletSpawner;
-
+        private Entity _entity;
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
@@ -145,6 +146,10 @@ namespace FireLine.Scripts.Network
 
         public override void OnNetworkDespawn()
         {
+
+            _entity =
+                GetComponent<Entity>();
+
             if (_gameplayController != null &&
                 IsOwner)
             {
