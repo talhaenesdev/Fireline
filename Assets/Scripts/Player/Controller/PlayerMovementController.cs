@@ -27,7 +27,6 @@ namespace FireLine.Scripts.Player.Controller
 
             if (input != Vector2.zero)
             {
-                Debug.Log($"Movement Input: {input}");
             }
 
             Vector3 movement = new Vector3(

@@ -72,32 +72,35 @@ namespace FireLine.Scripts.Network
             NetworkPlayer targetPlayer =
                 other.GetComponentInParent<NetworkPlayer>();
 
-            if (targetPlayer != null)
+            if (targetPlayer == null)
+                return;
+
+            if (targetPlayer.OwnerClientId ==
+                _ownerClientId)
             {
-                if (targetPlayer.OwnerClientId ==
-                    _ownerClientId)
-                {
-                    return;
-                }
+                return;
             }
 
-            IDamageable damageable =
-                other.GetComponentInParent<IDamageable>();
+            NetworkPlayerHealth health =
+                targetPlayer.GetComponent<NetworkPlayerHealth>();
 
-            if (damageable == null)
+            if (health == null)
+            {
+                Debug.LogError(
+                    $"NetworkPlayerHealth missing on " +
+                    $"{targetPlayer.name}"
+                );
+
                 return;
-
-            Entity target =
-                other.GetComponentInParent<Entity>();
-
-            if (target == null)
-                return;
+            }
 
             Debug.Log(
-                $"NETWORK BULLET HIT: {target.name}"
+                $"NETWORK BULLET HIT PLAYER | " +
+                $"Target: {targetPlayer.OwnerClientId} | " +
+                $"Damage: {damage}"
             );
 
-            damageable.TakeDamage(damage);
+            health.TakeDamageServer(damage);
 
             Despawn();
         }
