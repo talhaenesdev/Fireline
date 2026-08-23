@@ -1,12 +1,11 @@
-﻿using FireLine.Scripts.Core.Services.Entities;
-using Unity.Netcode;
+﻿using Unity.Netcode;
 using UnityEngine;
+using System;
 
 namespace FireLine.Scripts.Network
 {
     public class NetworkPlayerHealth : NetworkBehaviour
     {
-        private Entity _entity;
 
         private NetworkVariable<float> _health =
             new NetworkVariable<float>(
@@ -15,30 +14,19 @@ namespace FireLine.Scripts.Network
                 NetworkVariableWritePermission.Server
             );
 
+        private bool _deathTriggered;
+
         public float Health =>
             _health.Value;
+
+        public event Action OnDeath;
 
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
 
-            _entity = GetComponent<Entity>();
-
-            if (_entity == null)
-            {
-                Debug.LogError(
-                    $"Entity not found on {gameObject.name}"
-                );
-
-                return;
-            }
-
-            if (IsServer)
-            {
-                _health.Value = _entity.MaxHealth;
-            }
-
-            _health.OnValueChanged += OnHealthChanged;
+            _health.OnValueChanged +=
+                OnHealthChanged;
         }
 
         private void OnHealthChanged(
@@ -49,29 +37,54 @@ namespace FireLine.Scripts.Network
                 $"NETWORK HEALTH | " +
                 $"{previous} -> {current}"
             );
-        }
 
-        public void TakeDamageServer(float damage)
-        {
             if (!IsServer)
                 return;
 
-            if (_entity == null)
+            if (current <= 0f &&
+                !_deathTriggered)
+            {
+                _deathTriggered = true;
+
+                Debug.Log(
+                    $"[NETWORK HEALTH] Death triggered | " +
+                    $"ClientId: {OwnerClientId}"
+                );
+
+                OnDeath?.Invoke();
+            }
+        }
+
+        public void TakeDamageServer(
+            float damage)
+        {
+            if (!IsServer)
                 return;
 
             if (damage <= 0f)
                 return;
 
-            _entity.TakeDamage(damage);
 
-            _health.Value =
-                _entity.CurrentHealth;
+            float newHealth =
+                Mathf.Max(
+                    0f,
+                    _health.Value - damage
+                );
+
+            Debug.Log(
+                $"NETWORK DAMAGE | " +
+                $"{_health.Value} -> {newHealth}"
+            );
+
+            _health.Value = newHealth;
         }
 
         public override void OnNetworkDespawn()
         {
             _health.OnValueChanged -=
                 OnHealthChanged;
+
+            OnDeath = null;
 
             base.OnNetworkDespawn();
         }

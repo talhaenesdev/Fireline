@@ -3,12 +3,12 @@ using FireLine.Scripts.Player.Controller;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using Zenject;
 
 namespace FireLine.Scripts.Network
 {
     public class NetworkPlayer : NetworkBehaviour
     {
+        private NetworkPlayerHealth _networkPlayerHealth;
         private PlayerInputController _playerInputController;
         private PlayerInput _playerInput;
 
@@ -17,28 +17,12 @@ namespace FireLine.Scripts.Network
         private PlayerGameplayController _gameplayController;
 
         private NetworkBulletSpawner _bulletSpawner;
-        private Entity _entity;
+
+
+
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
-
-            SceneContext sceneContext =
-                FindFirstObjectByType<SceneContext>();
-
-            if (sceneContext != null)
-            {
-                sceneContext.Container.InjectGameObject(gameObject);
-
-                Debug.Log(
-                    "Zenject injection completed for NetworkPlayer."
-                );
-            }
-            else
-            {
-                Debug.LogError(
-                    "SceneContext not found!"
-                );
-            }
 
             _playerInputController =
                 GetComponent<PlayerInputController>();
@@ -86,6 +70,26 @@ namespace FireLine.Scripts.Network
                 }
             }
 
+            _networkPlayerHealth =
+                GetComponent<NetworkPlayerHealth>();
+
+            if (_networkPlayerHealth == null)
+            {
+                Debug.LogError(
+                    "NetworkPlayerHealth missing!"
+                );
+            }
+            else if (IsServer)
+            {
+                _networkPlayerHealth.OnDeath +=
+                    HandleDeath;
+
+                Debug.Log(
+                    $"[NETWORK PLAYER] Death event subscribed | " +
+                    $"ClientId: {OwnerClientId}"
+                );
+            }
+
             Debug.Log(
                 $"Network Player Spawned | " +
                 $"ClientId: {OwnerClientId} | " +
@@ -113,7 +117,21 @@ namespace FireLine.Scripts.Network
                 direction
             );
         }
+        private void HandleDeath()
+        {
+            Debug.Log(
+                $"NETWORK PLAYER DEAD | " +
+                $"ClientId: {OwnerClientId}"
+            );
 
+            if (!IsServer)
+                return;
+
+            if (NetworkObject.IsSpawned)
+            {
+                NetworkObject.Despawn();
+            }
+        }
         [ServerRpc]
         private void ShootServerRpc(
             Vector3 position,
@@ -146,9 +164,12 @@ namespace FireLine.Scripts.Network
 
         public override void OnNetworkDespawn()
         {
-
-            _entity =
-                GetComponent<Entity>();
+            if (_networkPlayerHealth != null &&
+                IsServer)
+            {
+                _networkPlayerHealth.OnDeath -=
+                    HandleDeath;
+            }
 
             if (_gameplayController != null &&
                 IsOwner)
