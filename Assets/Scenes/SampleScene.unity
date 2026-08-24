@@ -397,6 +397,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 348016120}
+  - component: {fileID: 348016121}
   m_Layer: 0
   m_Name: SpawnPoints
   m_TagString: Untagged
@@ -424,6 +425,19 @@ Transform:
   - {fileID: 143598712}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &348016121
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 348016119}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e8c26fb0df1fe241845783c4b7ca6f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FireLine.Network::FireLine.Scripts.Network.View.NetworkRespawnPoint
+  spawnIndex: 5
 --- !u!1 &667001581
 GameObject:
   m_ObjectHideFlags: 0

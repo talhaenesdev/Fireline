@@ -4,7 +4,8 @@
     {
         public ulong ClientId { get; }
 
-        public NetworkPlayerDeathSignal(ulong clientId)
+        public NetworkPlayerDeathSignal(
+            ulong clientId)
         {
             ClientId = clientId;
         }

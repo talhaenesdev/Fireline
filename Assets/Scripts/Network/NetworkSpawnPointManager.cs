@@ -1,34 +1,38 @@
 ﻿using UnityEngine;
 
-namespace FireLine.Scripts.Network
+namespace FireLine.Scripts.Network.Service
 {
     public class NetworkSpawnPointManager : MonoBehaviour
     {
         [SerializeField]
         private Transform[] spawnPoints;
 
-        private int _nextSpawnIndex;
+        public int Count =>
+            spawnPoints != null
+                ? spawnPoints.Length
+                : 0;
 
-        public Transform GetNextSpawnPoint()
+        public Transform GetSpawnPoint(
+            ulong clientId)
         {
             if (spawnPoints == null ||
                 spawnPoints.Length == 0)
             {
                 Debug.LogError(
-                    "No Network Spawn Points configured!"
+                    "[SPAWN POINT MANAGER] " +
+                    "No spawn points assigned!"
                 );
 
                 return null;
             }
 
-            Transform spawnPoint =
-                spawnPoints[_nextSpawnIndex];
+            int index =
+                (int)(
+                    clientId %
+                    (ulong)spawnPoints.Length
+                );
 
-            _nextSpawnIndex =
-                (_nextSpawnIndex + 1) %
-                spawnPoints.Length;
-
-            return spawnPoint;
+            return spawnPoints[index];
         }
     }
 }

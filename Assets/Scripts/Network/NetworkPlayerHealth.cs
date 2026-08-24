@@ -7,41 +7,72 @@ namespace FireLine.Scripts.Network
 {
     public class NetworkPlayerHealth : NetworkBehaviour
     {
+        [Header("Health")]
         [SerializeField]
         private float maxHealth = 100f;
 
-        private SignalBus _signalBus;
-
-        public NetworkVariable<float> CurrentHealth =
+        private readonly NetworkVariable<float> _currentHealth =
             new NetworkVariable<float>(
                 100f,
                 NetworkVariableReadPermission.Everyone,
                 NetworkVariableWritePermission.Server
             );
 
+        private readonly NetworkVariable<bool> _isDead =
+            new NetworkVariable<bool>(
+                false,
+                NetworkVariableReadPermission.Everyone,
+                NetworkVariableWritePermission.Server
+            );
+
+        private SignalBus _signalBus;
+
+        public float CurrentHealth =>
+            _currentHealth.Value;
+
+        public float MaxHealth =>
+            maxHealth;
+
+        public bool IsDead =>
+            _isDead.Value;
+
         [Inject]
         public void Construct(
             SignalBus signalBus)
         {
             _signalBus = signalBus;
+
+            Debug.Log(
+                $"[NETWORK HEALTH] " +
+                $"SignalBus injected | {name}"
+            );
         }
 
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
 
-            CurrentHealth.OnValueChanged +=
-                OnHealthChanged;
-
             if (IsServer)
             {
-                CurrentHealth.Value = maxHealth;
+                _currentHealth.Value =
+                    maxHealth;
+
+                _isDead.Value =
+                    false;
             }
+
+            _currentHealth.OnValueChanged +=
+                OnHealthChanged;
+
+            _isDead.OnValueChanged +=
+                OnDeathStateChanged;
 
             Debug.Log(
                 $"[NETWORK HEALTH] Spawned | " +
                 $"ClientId: {OwnerClientId} | " +
-                $"Health: {CurrentHealth.Value}"
+                $"IsServer: {IsServer} | " +
+                $"Health: {_currentHealth.Value} | " +
+                $"Dead: {_isDead.Value}"
             );
         }
 
@@ -50,12 +81,53 @@ namespace FireLine.Scripts.Network
             float current)
         {
             Debug.Log(
-                $"NETWORK HEALTH SYNC | " +
-                $"{previous} -> {current}"
+                $"[NETWORK HEALTH] " +
+                $"Health: {previous} -> {current} | " +
+                $"ClientId: {OwnerClientId}"
             );
         }
 
-        public void TakeDamageServer(float damage)
+        private void OnDeathStateChanged(
+            bool previous,
+            bool current)
+        {
+            Debug.Log(
+                $"[NETWORK HEALTH] " +
+                $"Death State: {previous} -> {current} | " +
+                $"ClientId: {OwnerClientId}"
+            );
+
+            if (!current)
+                return;
+
+            if (!IsServer)
+                return;
+
+            if (_signalBus == null)
+            {
+                Debug.LogError(
+                    "[NETWORK HEALTH] " +
+                    "SignalBus is NULL!"
+                );
+
+                return;
+            }
+
+            Debug.Log(
+                $"[NETWORK HEALTH] " +
+                $"Firing NetworkPlayerDeathSignal | " +
+                $"ClientId: {OwnerClientId}"
+            );
+
+            _signalBus.Fire(
+                new NetworkPlayerDeathSignal(
+                    OwnerClientId
+                )
+            );
+        }
+
+        public void TakeDamageServer(
+            float damage)
         {
             if (!IsServer)
                 return;
@@ -63,52 +135,59 @@ namespace FireLine.Scripts.Network
             if (damage <= 0f)
                 return;
 
-            if (CurrentHealth.Value <= 0f)
-                return;
-
-            float previousHealth =
-                CurrentHealth.Value;
-
-            CurrentHealth.Value =
-                Mathf.Max(
-                    0f,
-                    CurrentHealth.Value - damage
+            if (_isDead.Value)
+            {
+                Debug.Log(
+                    $"[NETWORK HEALTH] " +
+                    $"Damage ignored. Player already dead | " +
+                    $"ClientId: {OwnerClientId}"
                 );
 
-            Debug.Log(
-                $"NETWORK HEALTH | " +
-                $"{previousHealth} -> {CurrentHealth.Value}"
-            );
+                return;
+            }
 
-            if (CurrentHealth.Value <= 0f)
+            _currentHealth.Value -=
+                damage;
+
+            if (_currentHealth.Value <= 0f)
             {
+                _currentHealth.Value = 0f;
+
+                _isDead.Value = true;
+
                 Debug.Log(
                     $"NETWORK PLAYER DEAD | " +
                     $"ClientId: {OwnerClientId}"
                 );
-
-                if (_signalBus == null)
-                {
-                    Debug.LogError(
-                        "[NETWORK HEALTH] " +
-                        "SignalBus is NULL!"
-                    );
-
-                    return;
-                }
-
-                _signalBus.Fire(
-                    new NetworkPlayerDeathSignal(
-                        OwnerClientId
-                    )
-                );
             }
+        }
+
+        public void ResetHealthServer()
+        {
+            if (!IsServer)
+                return;
+
+            _currentHealth.Value =
+                maxHealth;
+
+            _isDead.Value =
+                false;
+
+            Debug.Log(
+                $"[NETWORK HEALTH] Reset | " +
+                $"ClientId: {OwnerClientId} | " +
+                $"Health: {_currentHealth.Value} | " +
+                $"Dead: {_isDead.Value}"
+            );
         }
 
         public override void OnNetworkDespawn()
         {
-            CurrentHealth.OnValueChanged -=
+            _currentHealth.OnValueChanged -=
                 OnHealthChanged;
+
+            _isDead.OnValueChanged -=
+                OnDeathStateChanged;
 
             base.OnNetworkDespawn();
         }
