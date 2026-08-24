@@ -38,10 +38,12 @@ namespace FireLine.Scripts.Network
             base.OnNetworkSpawn();
 
             Debug.Log(
-                $"NetworkBullet Spawned | " +
-                $"Id: {NetworkObjectId} | " +
-                $"Server: {IsServer} | " +
-                $"Client: {IsClient}"
+                $"[NETWORK PLAYER] OnNetworkSpawn | " +
+                $"Name: {name} | " +
+                $"ClientId: {OwnerClientId} | " +
+                $"IsOwner: {IsOwner} | " +
+                $"IsServer: {IsServer} | " +
+                $"IsClient: {IsClient}"
             );
         }
 
