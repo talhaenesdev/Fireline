@@ -1,41 +1,32 @@
 ﻿using System;
 using System.Collections;
 using FireLine.Scripts.Network.Signals;
-using FireLine.Scripts.Network.Service;
 using Unity.Netcode;
 using UnityEngine;
 using Zenject;
 
 namespace FireLine.Scripts.Network.Service
 {
-    public class NetworkPlayerRespawnService :
-        IInitializable,
-        IDisposable
+    public class NetworkPlayerRespawnService : IInitializable, IDisposable
     {
         private readonly SignalBus _signalBus;
         private readonly NetworkManager _networkManager;
-        private readonly NetworkPlayer _playerPrefab;
         private readonly NetworkSpawnPointManager _spawnPointManager;
-
-        private bool _isSubscribed;
+        private readonly NetworkCoroutineRunner _coroutineRunner;
 
         private const float RespawnDelay = 2f;
 
         public NetworkPlayerRespawnService(
             SignalBus signalBus,
             NetworkManager networkManager,
-            NetworkPlayer playerPrefab,
-            NetworkSpawnPointManager spawnPointManager)
+            NetworkSpawnPointManager spawnPointManager,
+            NetworkCoroutineRunner coroutineRunner)
         {
             _signalBus = signalBus;
             _networkManager = networkManager;
-            _playerPrefab = playerPrefab;
             _spawnPointManager = spawnPointManager;
+            _coroutineRunner = coroutineRunner;
         }
-
-        // ==================================================
-        // INITIALIZE
-        // ==================================================
 
         public void Initialize()
         {
@@ -49,41 +40,34 @@ namespace FireLine.Scripts.Network.Service
             if (!_networkManager.IsServer)
                 return;
 
-            if (_spawnPointManager == null)
-            {
-                Debug.LogError(
-                    "[RESPAWN SERVICE] " +
-                    "SpawnPointManager is NULL!"
-                );
-
-                return;
-            }
-
-            if (_spawnPointManager.Count == 0)
-            {
-                Debug.LogError(
-                    "[RESPAWN SERVICE] " +
-                    "No spawn points configured!"
-                );
-
-                return;
-            }
-
             _signalBus.Subscribe<NetworkPlayerDeathSignal>(
                 OnPlayerDeath
             );
 
-            _isSubscribed = true;
-
             Debug.Log(
                 "[RESPAWN SERVICE] " +
-                "Subscribed to NetworkPlayerDeathSignal."
+                "Subscribed to NetworkPlayerDeathSignal"
             );
         }
 
-        // ==================================================
-        // PLAYER DEATH
-        // ==================================================
+        public void Dispose()
+        {
+            if (_signalBus == null ||
+                _networkManager == null)
+                return;
+
+            if (!_networkManager.IsServer)
+                return;
+
+            _signalBus.TryUnsubscribe<NetworkPlayerDeathSignal>(
+                OnPlayerDeath
+            );
+
+            Debug.Log(
+                "[RESPAWN SERVICE] " +
+                "Unsubscribed from NetworkPlayerDeathSignal"
+            );
+        }
 
         private void OnPlayerDeath(
             NetworkPlayerDeathSignal signal)
@@ -91,99 +75,16 @@ namespace FireLine.Scripts.Network.Service
             if (!_networkManager.IsServer)
                 return;
 
-            ulong clientId =
-                signal.ClientId;
-
             Debug.Log(
                 $"[RESPAWN SERVICE] " +
                 $"Death signal received | " +
-                $"ClientId: {clientId}"
+                $"ClientId: {signal.ClientId}"
             );
 
-            NetworkPlayer player =
-                FindPlayer(clientId);
-
-            if (player != null)
-            {
-                DespawnPlayer(player);
-            }
-            else
-            {
-                Debug.LogWarning(
-                    $"[RESPAWN SERVICE] " +
-                    $"Player not found | " +
-                    $"ClientId: {clientId}"
-                );
-            }
-
-            CoroutineRunner.Start(
-                RespawnCoroutine(clientId)
+            _coroutineRunner.StartCoroutine(
+                RespawnCoroutine(signal.ClientId)
             );
         }
-
-        // ==================================================
-        // FIND PLAYER
-        // ==================================================
-
-        private NetworkPlayer FindPlayer(
-            ulong clientId)
-        {
-            if (!_networkManager.ConnectedClients.TryGetValue(
-                    clientId,
-                    out NetworkClient client))
-            {
-                return null;
-            }
-
-            if (client.PlayerObject == null)
-                return null;
-
-            return client.PlayerObject
-                .GetComponent<NetworkPlayer>();
-        }
-
-        // ==================================================
-        // DESPAWN
-        // ==================================================
-
-        private void DespawnPlayer(
-            NetworkPlayer player)
-        {
-            NetworkObject networkObject =
-                player.GetComponent<NetworkObject>();
-
-            if (networkObject == null)
-            {
-                Debug.LogError(
-                    "[RESPAWN SERVICE] " +
-                    "NetworkObject missing on player!"
-                );
-
-                return;
-            }
-
-            if (!networkObject.IsSpawned)
-            {
-                Debug.LogWarning(
-                    "[RESPAWN SERVICE] " +
-                    "Player is already despawned."
-                );
-
-                return;
-            }
-
-            Debug.Log(
-                $"[RESPAWN SERVICE] " +
-                $"Despawning player | " +
-                $"ClientId: {networkObject.OwnerClientId}"
-            );
-
-            networkObject.Despawn(true);
-        }
-
-        // ==================================================
-        // RESPAWN COROUTINE
-        // ==================================================
 
         private IEnumerator RespawnCoroutine(
             ulong clientId)
@@ -201,34 +102,42 @@ namespace FireLine.Scripts.Network.Service
             RespawnPlayer(clientId);
         }
 
-        // ==================================================
-        // RESPAWN
-        // ==================================================
-
         private void RespawnPlayer(
             ulong clientId)
         {
             if (!_networkManager.IsServer)
                 return;
 
-            if (_playerPrefab == null)
+            Debug.Log(
+                $"[RESPAWN SERVICE] " +
+                $"RespawnPlayer | ClientId: {clientId}"
+            );
+
+            if (!_networkManager.ConnectedClients.TryGetValue(
+                    clientId,
+                    out NetworkClient client))
             {
                 Debug.LogError(
-                    "[RESPAWN SERVICE] " +
-                    "Player prefab is NULL!"
+                    $"[RESPAWN SERVICE] " +
+                    $"Client not found | ClientId: {clientId}"
                 );
 
                 return;
             }
 
-            if (_spawnPointManager == null)
+            NetworkObject oldPlayer =
+                client.PlayerObject;
+
+            if (oldPlayer != null &&
+                oldPlayer.IsSpawned)
             {
-                Debug.LogError(
-                    "[RESPAWN SERVICE] " +
-                    "SpawnPointManager is NULL!"
+                Debug.Log(
+                    $"[RESPAWN SERVICE] " +
+                    $"Despawning old player | " +
+                    $"ClientId: {clientId}"
                 );
 
-                return;
+                oldPlayer.Despawn(true);
             }
 
             Transform spawnPoint =
@@ -240,37 +149,44 @@ namespace FireLine.Scripts.Network.Service
             {
                 Debug.LogError(
                     "[RESPAWN SERVICE] " +
-                    "Spawn point could not be found!"
+                    "No respawn point found!"
                 );
 
                 return;
             }
 
-            Debug.Log(
-                $"[RESPAWN SERVICE] " +
-                $"Respawning ClientId: {clientId} | " +
-                $"Position: {spawnPoint.position}"
-            );
+            GameObject playerPrefab =
+                _networkManager.NetworkConfig.PlayerPrefab;
 
-            NetworkPlayer player =
+            if (playerPrefab == null)
+            {
+                Debug.LogError(
+                    "[RESPAWN SERVICE] " +
+                    "PlayerPrefab is NULL!"
+                );
+
+                return;
+            }
+
+            GameObject newPlayer =
                 UnityEngine.Object.Instantiate(
-                    _playerPrefab,
+                    playerPrefab,
                     spawnPoint.position,
                     spawnPoint.rotation
                 );
 
             NetworkObject networkObject =
-                player.GetComponent<NetworkObject>();
+                newPlayer.GetComponent<NetworkObject>();
 
             if (networkObject == null)
             {
                 Debug.LogError(
                     "[RESPAWN SERVICE] " +
-                    "NetworkObject missing on player prefab!"
+                    "NetworkObject missing on PlayerPrefab!"
                 );
 
                 UnityEngine.Object.Destroy(
-                    player.gameObject
+                    newPlayer
                 );
 
                 return;
@@ -286,61 +202,6 @@ namespace FireLine.Scripts.Network.Service
                 $"Player respawned successfully | " +
                 $"ClientId: {clientId}"
             );
-        }
-
-        // ==================================================
-        // DISPOSE
-        // ==================================================
-
-        public void Dispose()
-        {
-            if (!_isSubscribed)
-                return;
-
-            _signalBus.TryUnsubscribe<
-                NetworkPlayerDeathSignal>(
-                    OnPlayerDeath
-                );
-
-            _isSubscribed = false;
-
-            Debug.Log(
-                "[RESPAWN SERVICE] Disposed."
-            );
-        }
-
-        // ==================================================
-        // COROUTINE RUNNER
-        // ==================================================
-
-        private class CoroutineRunner :
-            MonoBehaviour
-        {
-            private static CoroutineRunner _instance;
-
-            public static Coroutine Start(
-                IEnumerator routine)
-            {
-                if (_instance == null)
-                {
-                    GameObject obj =
-                        new GameObject(
-                            "[Network Respawn Coroutine Runner]"
-                        );
-
-                    UnityEngine.Object.DontDestroyOnLoad(
-                        obj
-                    );
-
-                    _instance =
-                        obj.AddComponent<
-                            CoroutineRunner>();
-                }
-
-                return _instance.StartCoroutine(
-                    routine
-                );
-            }
         }
     }
 }

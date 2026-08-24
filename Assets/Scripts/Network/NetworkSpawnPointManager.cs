@@ -7,11 +7,6 @@ namespace FireLine.Scripts.Network.Service
         [SerializeField]
         private Transform[] spawnPoints;
 
-        public int Count =>
-            spawnPoints != null
-                ? spawnPoints.Length
-                : 0;
-
         public Transform GetSpawnPoint(
             ulong clientId)
         {

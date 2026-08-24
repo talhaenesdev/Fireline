@@ -298,6 +298,7 @@ GameObject:
   - component: {fileID: 7853310734115405942}
   - component: {fileID: 6536783911784415948}
   - component: {fileID: 4219172794803520995}
+  - component: {fileID: 5419852331436352164}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -374,7 +375,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38a2ba3f4cca5e6499187ef0984c8123, type: 3}
   m_Name: 
   m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.PlayerWeaponController
-  weaponView: {fileID: 4165358966343681739}
+  muzzlePoint: {fileID: 8587788849489917253}
 --- !u!114 &7179617274299999568
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -387,9 +388,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9eba817b22da564cabce3bc0010c7f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.PlayerGameplayController
-  inputController: {fileID: 8266686966715429905}
-  aimController: {fileID: 3426552689247225756}
-  weaponController: {fileID: 2116892378908411366}
 --- !u!114 &3540882109280776243
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -547,7 +545,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 136627921
+  GlobalObjectIdHash: 994029375
   InScenePlacedSourceGlobalObjectIdHash: 136627921
   DeferredDespawnTick: 0
   Ownership: 1
@@ -632,6 +630,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51f7aa16649a4ae42b62ff5fa3a3e7e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: FireLine.Network::FireLine.Scripts.Network.NetworkPlayerHealth
+  ShowTopMostFoldoutHeaderGroup: 1
+  maxHealth: 100
+--- !u!114 &5419852331436352164
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6727836590595305734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e017fb0f23ba1a47a689c39b9d58303, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FireLine.Network::FireLine.Scripts.Network.NetworkWeaponFireService
   ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &7225291542983376552
 GameObject:

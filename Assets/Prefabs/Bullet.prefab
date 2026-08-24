@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 6930093281005143109}
   - component: {fileID: 5772978907616603125}
   - component: {fileID: 6448626046045300862}
+  - component: {fileID: 776399044916393240}
   m_Layer: 0
   m_Name: Bullet
   m_TagString: Untagged
@@ -197,6 +198,18 @@ MonoBehaviour:
   speed: 20
   lifetime: 3
   damage: 10
+--- !u!114 &776399044916393240
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1563889568419805077}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e05ecad17b3e774e957ea6d4427e7e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FireLine.Weapon::FireLine.Scripts.Weapon.View.BulletView
 --- !u!1 &1978393523838823972
 GameObject:
   m_ObjectHideFlags: 0

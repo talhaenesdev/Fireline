@@ -1,67 +1,42 @@
-using FireLine.Scripts.Core.Services.Entities;
-using FireLine.Scripts.Pooling;
 using FireLine.Scripts.Weapon.Model;
-using FireLine.Scripts.Weapon.View;
 using UnityEngine;
 
 namespace FireLine.Scripts.Weapon.Controller
 {
     public class WeaponController
     {
-        private readonly IPoolService _poolService;
         private readonly WeaponData _weaponData;
 
         private float _nextFireTime;
 
         public WeaponController(
-            IPoolService poolService,
             WeaponData weaponData)
         {
-            _poolService = poolService;
             _weaponData = weaponData;
         }
 
-        public void Shoot(
-            Vector3 position,
-            Vector3 direction)
+        public bool CanShoot()
         {
-            if (Time.time < _nextFireTime)
-                return;
-
             if (_weaponData == null)
             {
-                Debug.LogError("WeaponData is null.");
-                return;
-            }
-
-            BulletData bulletData =
-                _weaponData.BulletData;
-
-            if (bulletData == null)
-            {
-                Debug.LogError("BulletData is null.");
-                return;
-            }
-
-            BulletView bullet =
-                _poolService.Spawn<BulletView>(
-                    bulletData.PoolKey,
-                    position,
-                    Quaternion.LookRotation(direction)
+                Debug.LogError(
+                    "[WEAPON] WeaponData is NULL!"
                 );
 
-            if (bullet == null)
+                return false;
+            }
+
+            return Time.time >= _nextFireTime;
+        }
+
+        public void RegisterShot()
+        {
+            if (_weaponData == null)
                 return;
 
-            bullet.Initialize(
-                bulletData,
-                direction,
-                _poolService
-            );
-
-
             _nextFireTime =
-                Time.time + _weaponData.FireRate;
+                Time.time +
+                _weaponData.FireRate;
         }
     }
 }
