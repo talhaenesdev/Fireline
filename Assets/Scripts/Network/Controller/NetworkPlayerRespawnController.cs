@@ -85,14 +85,12 @@ namespace FireLine.Scripts.Network.Controller
                 return;
 
             Debug.Log(
-                $"[RESPAWN] Player death received | " +
+                $"[RESPAWN SERVICE] SIGNAL RECEIVED | " +
                 $"ClientId: {signal.ClientId}"
             );
 
-            StartCoroutine(
-                RespawnCoroutine(
-                    signal.ClientId
-                )
+            CoroutineRunner.Instance.StartCoroutine(
+                RespawnCoroutine(signal.ClientId)
             );
         }
 
