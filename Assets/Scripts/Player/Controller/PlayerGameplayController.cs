@@ -1,49 +1,72 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace FireLine.Scripts.Player.Controller
 {
     public class PlayerGameplayController : MonoBehaviour
     {
-        [SerializeField]
-        private PlayerInputController inputController;
+        private PlayerInputController _inputController;
+        private PlayerAimController _aimController;
+        private PlayerWeaponController _weaponController;
 
-        [SerializeField]
-        private PlayerAimController aimController;
+        public event System.Action OnFire;
 
-        [SerializeField]
-        private PlayerWeaponController weaponController;
-
-        public event Action<Vector3> OnFire;
-
-        public Vector3 MuzzlePosition =>
-            weaponController != null
-                ? weaponController.MuzzlePosition
-                : transform.position;
-
-        private void Update()
+        private void Awake()
         {
-            if (inputController == null ||
-                aimController == null ||
-                weaponController == null)
+            _inputController =
+                GetComponent<PlayerInputController>();
+
+            _aimController =
+                GetComponent<PlayerAimController>();
+
+            _weaponController =
+                GetComponent<PlayerWeaponController>();
+
+            if (_inputController == null)
             {
-                return;
+                Debug.LogError(
+                    "[GAMEPLAY] " +
+                    "PlayerInputController NOT FOUND!"
+                );
             }
 
-            if (inputController.FirePressed)
+            if (_aimController == null)
             {
-                OnFire?.Invoke(
-                    aimController.AimDirection
+                Debug.LogError(
+                    "[GAMEPLAY] " +
+                    "PlayerAimController NOT FOUND!"
+                );
+            }
+
+            if (_weaponController == null)
+            {
+                Debug.LogError(
+                    "[GAMEPLAY] " +
+                    "PlayerWeaponController NOT FOUND!"
                 );
             }
         }
 
-        public void Shoot(Vector3 direction)
+        private void Update()
         {
-            if (weaponController == null)
+            if (_inputController == null ||
+                _aimController == null ||
+                _weaponController == null)
+            {
+                return;
+            }
+
+            if (!_inputController.FirePressed)
                 return;
 
-            weaponController.Shoot(direction);
+            Debug.Log(
+                "[GAMEPLAY] FirePressed"
+            );
+
+            _weaponController.Shoot(
+                _aimController.AimDirection
+            );
+
+            OnFire?.Invoke();
         }
     }
 }

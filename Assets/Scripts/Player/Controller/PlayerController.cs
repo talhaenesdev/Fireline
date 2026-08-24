@@ -1,4 +1,3 @@
-using FireLine.Scripts.Core.Services.Entities;
 using FireLine.Scripts.Player.Model;
 using FireLine.Scripts.Player.View;
 using FireLine.Scripts.Weapon.Controller;
@@ -41,21 +40,5 @@ namespace FireLine.Scripts.Player.Controller
             );
         }
 
-        public void Shoot()
-        {
-            Vector3 direction =
-                _aimPosition -
-                _view.transform.position;
-
-            direction.y = 0f;
-
-            if (direction.sqrMagnitude <= 0.001f)
-                return;
-
-            _weaponController.Shoot(
-                _view.MuzzlePoint.position,
-                direction.normalized
-            );
-        }
     }
 }

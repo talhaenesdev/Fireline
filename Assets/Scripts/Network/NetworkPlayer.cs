@@ -1,5 +1,6 @@
-using FireLine.Scripts.Core.Services.Entities;
+using FireLine.Scripts.Network.Signals;
 using FireLine.Scripts.Player.Controller;
+using FireLine.Scripts.Weapon.Controller;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -9,52 +10,71 @@ namespace FireLine.Scripts.Network
 {
     public class NetworkPlayer : NetworkBehaviour
     {
+        private SignalBus _signalBus;
         private PlayerInputController _playerInputController;
         private PlayerInput _playerInput;
-
+        private WeaponController _weaponController;
         private PlayerMovementController _movementController;
         private PlayerAimController _aimController;
         private PlayerGameplayController _gameplayController;
 
-        private NetworkBulletSpawner _bulletSpawner;
-
-
-
+        private NetworkPlayerHealth _health;
+        [Inject]
+        public void Construct(
+    SignalBus signalBus)
+        {
+            _signalBus = signalBus;
+        }
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
 
             Debug.Log(
-                $"[NETWORK PLAYER] OnNetworkSpawn | " +
-                $"Name: {name} | " +
+                $"[NETWORK PLAYER] Spawned | " +
                 $"ClientId: {OwnerClientId} | " +
                 $"IsOwner: {IsOwner} | " +
-                $"IsServer: {IsServer} | " +
-                $"IsClient: {IsClient}"
+                $"IsServer: {IsServer}"
             );
 
+            InjectWithSceneContext();
+
+            FindComponents();
+
+            SetupOwner();
+
+            SubscribeHealth();
+
+            Debug.Log(
+                "[NETWORK PLAYER] Setup completed."
+            );
+        }
+
+        private void InjectWithSceneContext()
+        {
             SceneContext sceneContext =
-                   FindFirstObjectByType<SceneContext>();
+                FindFirstObjectByType<SceneContext>();
 
-            if (sceneContext != null)
-            {
-                sceneContext.Container.InjectGameObject(
-                    gameObject
-                );
-
-                Debug.Log(
-                    $"[NETWORK PLAYER] " +
-                    $"Zenject injection completed | " +
-                    $"Object: {gameObject.name}"
-                );
-            }
-            else
+            if (sceneContext == null)
             {
                 Debug.LogError(
-                    "[NETWORK PLAYER] SceneContext not found!"
+                    "[NETWORK PLAYER] " +
+                    "SceneContext NOT FOUND!"
                 );
+
+                return;
             }
 
+            sceneContext.Container
+                .InjectGameObject(gameObject);
+
+            Debug.Log(
+                "[NETWORK PLAYER] " +
+                "Zenject injection completed."
+            );
+        }
+
+        private void FindComponents()
+        {
             _playerInputController =
                 GetComponent<PlayerInputController>();
 
@@ -70,102 +90,138 @@ namespace FireLine.Scripts.Network
             _gameplayController =
                 GetComponent<PlayerGameplayController>();
 
-            _bulletSpawner =
-                FindFirstObjectByType<NetworkBulletSpawner>();
-
-            Debug.Log(
-                $"NetworkBulletSpawner found: " +
-                $"{_bulletSpawner != null}"
-            );
-
-            if (_playerInputController != null)
-                _playerInputController.enabled = IsOwner;
-
-            if (_playerInput != null)
-                _playerInput.enabled = IsOwner;
-
-            if (_movementController != null)
-                _movementController.enabled = IsOwner;
-
-            if (_aimController != null)
-                _aimController.enabled = IsOwner;
-
-            if (_gameplayController != null)
-            {
-                _gameplayController.enabled = IsOwner;
-
-                if (IsOwner)
-                {
-                    _gameplayController.OnFire +=
-                        HandleFire;
-                }
-            }
-
-
-
+            _health =
+                GetComponent<NetworkPlayerHealth>();
         }
 
-        private void HandleFire(Vector3 direction)
+        private void SetupOwner()
         {
             if (!IsOwner)
+            {
+                DisableLocalInput();
                 return;
+            }
 
-            Vector3 muzzlePosition =
-                _gameplayController.MuzzlePosition;
+            EnableLocalInput();
 
             Debug.Log(
-                $"CLIENT FIRE | " +
-                $"Muzzle: {muzzlePosition} | " +
-                $"Direction: {direction}"
-            );
-
-            ShootServerRpc(
-                muzzlePosition,
-                direction
-            );
-        }
-        private void HandleDeath()
-        {
-            Debug.Log(
-                $"NETWORK PLAYER DEAD | " +
+                $"[NETWORK PLAYER] " +
+                $"Local owner initialized | " +
                 $"ClientId: {OwnerClientId}"
             );
-
-            if (!IsServer)
-                return;
-
-            if (NetworkObject.IsSpawned)
-            {
-                NetworkObject.Despawn();
-            }
         }
-        [ServerRpc]
-        private void ShootServerRpc(
-            Vector3 position,
-            Vector3 direction)
+
+        private void SubscribeHealth()
         {
-            Debug.Log(
-                $"SERVER SHOOT RPC | " +
-                $"Position: {position} | " +
-                $"Direction: {direction}"
-            );
-
-            if (!IsServer)
-                return;
-
-            if (_bulletSpawner == null)
+            if (_health == null)
             {
                 Debug.LogError(
-                    "NetworkBulletSpawner is NULL on SERVER!"
+                    "[NETWORK PLAYER] " +
+                    "NetworkPlayerHealth NOT FOUND!"
                 );
 
                 return;
             }
 
-            _bulletSpawner.Spawn(
-                position,
-                direction,
-                OwnerClientId
+            _health.DeathStateChanged +=
+                OnDeathStateChanged;
+        }
+
+        private void OnDeathStateChanged(
+            bool isDead)
+        {
+            if (!IsOwner)
+                return;
+
+            if (isDead)
+            {
+                DisableLocalInput();
+            }
+            else
+            {
+                EnableLocalInput();
+            }
+        }
+
+        private void EnableLocalInput()
+        {
+            if (_playerInput != null)
+                _playerInput.enabled = true;
+
+            if (_playerInputController != null)
+                _playerInputController.enabled = true;
+
+            if (_movementController != null)
+                _movementController.enabled = true;
+
+            if (_aimController != null)
+                _aimController.enabled = true;
+
+            if (_gameplayController != null)
+                _gameplayController.enabled = true;
+        }
+
+        private void DisableLocalInput()
+        {
+            if (_playerInput != null)
+                _playerInput.enabled = false;
+
+            if (_playerInputController != null)
+                _playerInputController.enabled = false;
+
+            if (_movementController != null)
+                _movementController.enabled = false;
+
+            if (_aimController != null)
+                _aimController.enabled = false;
+
+            if (_gameplayController != null)
+                _gameplayController.enabled = false;
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            if (_health != null)
+            {
+                _health.DeathStateChanged -=
+                    OnDeathStateChanged;
+            }
+
+            base.OnNetworkDespawn();
+        }
+        [ServerRpc]
+        public void RequestShootServerRpc(
+    Vector3 position,
+    Vector3 direction,
+    ServerRpcParams rpcParams = default)
+        {
+            if (!IsServer)
+                return;
+
+            if (_signalBus == null)
+            {
+                Debug.LogError(
+                    "[NETWORK PLAYER] " +
+                    "SignalBus is NULL!"
+                );
+
+                return;
+            }
+
+            ulong clientId =
+                rpcParams.Receive.SenderClientId;
+
+            Debug.Log(
+                $"[SERVER] Shoot request | " +
+                $"ClientId: {clientId}"
+            );
+
+            _signalBus.Fire(
+                new NetworkShootSignal(
+                    position,
+                    direction,
+                    clientId
+                )
             );
         }
     }

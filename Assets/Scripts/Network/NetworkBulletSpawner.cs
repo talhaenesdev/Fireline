@@ -1,5 +1,7 @@
-﻿using Unity.Netcode;
+﻿using FireLine.Scripts.Network.Signals;
+using Unity.Netcode;
 using UnityEngine;
+using Zenject;
 
 namespace FireLine.Scripts.Network
 {
@@ -7,6 +9,30 @@ namespace FireLine.Scripts.Network
     {
         [SerializeField]
         private NetworkBullet bulletPrefab;
+
+        private SignalBus _signalBus;
+
+        [Inject]
+        public void Construct(
+            SignalBus signalBus)
+        {
+            _signalBus = signalBus;
+
+            _signalBus.Subscribe<
+                NetworkShootSignal>(
+                OnShootRequested
+            );
+        }
+
+        private void OnShootRequested(
+            NetworkShootSignal signal)
+        {
+            Spawn(
+                signal.Position,
+                signal.Direction,
+                signal.ClientId
+            );
+        }
 
         public void Spawn(
             Vector3 position,
@@ -38,7 +64,8 @@ namespace FireLine.Scripts.Network
             if (networkObject == null)
             {
                 Debug.LogError(
-                    "Bullet prefabında NetworkObject yok!"
+                    "Bullet prefabında " +
+                    "NetworkObject yok!"
                 );
 
                 Destroy(bullet.gameObject);
@@ -56,6 +83,17 @@ namespace FireLine.Scripts.Network
                 $"Network Bullet Spawned | " +
                 $"OwnerClientId: {ownerClientId}"
             );
+        }
+
+        private void OnDestroy()
+        {
+            if (_signalBus != null)
+            {
+                _signalBus.TryUnsubscribe<
+                    NetworkShootSignal>(
+                    OnShootRequested
+                );
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using FireLine.Scripts.Network.Service;
 using FireLine.Scripts.Network.Signals;
 using Unity.Netcode;
 using UnityEngine;
@@ -133,7 +134,7 @@ namespace FireLine.Scripts.Network.Controller
             }
 
             Transform spawnPoint =
-                _spawnPointManager.GetNextSpawnPoint();
+                _spawnPointManager.GetSpawnPoint(clientId);
 
             if (spawnPoint == null)
             {
