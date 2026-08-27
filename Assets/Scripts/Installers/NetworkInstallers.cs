@@ -1,6 +1,4 @@
-using FireLine.Scripts.Core.Weapon;
 using FireLine.Scripts.Network;
-using FireLine.Scripts.Network.Controller;
 using FireLine.Scripts.Network.Service;
 using FireLine.Scripts.Network.Signals;
 using Unity.Netcode;
@@ -12,15 +10,34 @@ namespace FireLine.Scripts.Installers
     {
         public override void InstallBindings()
         {
+            // ----------------------------------------
+            // SIGNALS
+            // ----------------------------------------
+
             Container.DeclareSignal<
                 NetworkPlayerDeathSignal>();
 
             Container.DeclareSignal<
                 NetworkShootSignal>();
 
+
+            // ----------------------------------------
+            // NETWORK RESPAWN
+            // ----------------------------------------
+
             Container.BindInterfacesTo<
                 NetworkPlayerRespawnService>()
                 .AsSingle();
+
+            Container.Bind<NetworkCoroutineRunner>()
+                .FromNewComponentOnNewGameObject()
+                .AsSingle()
+                .NonLazy();
+
+
+            // ----------------------------------------
+            // NETWORK SERVICES
+            // ----------------------------------------
 
             Container.Bind<NetworkSpawnPointManager>()
                 .FromComponentInHierarchy()
@@ -30,23 +47,9 @@ namespace FireLine.Scripts.Installers
                 .FromComponentInHierarchy()
                 .AsSingle();
 
-            Container.Bind<NetworkPlayerRespawnController>()
-                .FromComponentInHierarchy()
-                .AsSingle();
-
             Container.Bind<NetworkBulletSpawner>()
                 .FromComponentInHierarchy()
                 .AsSingle();
-
-            Container.Bind<IWeaponFireService>()
-    .To<NetworkWeaponFireService>()
-    .FromComponentInHierarchy()
-    .AsSingle();
-
-            Container.Bind<NetworkCoroutineRunner>()
-    .FromNewComponentOnNewGameObject()
-    .AsSingle()
-    .NonLazy();
         }
     }
 }

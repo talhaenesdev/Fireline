@@ -117,6 +117,7 @@ namespace FireLine.Scripts.Network
             }
         }
 
+
         private void Die()
         {
             if (!IsServer)
@@ -142,12 +143,25 @@ namespace FireLine.Scripts.Network
                 return;
             }
 
+            Debug.Log(
+                $"[NETWORK HEALTH] " +
+                $"Firing Death Signal | " +
+                $"ClientId: {OwnerClientId}"
+            );
+
             _signalBus.Fire(
                 new NetworkPlayerDeathSignal(
                     OwnerClientId
                 )
             );
+
+            Debug.Log(
+                $"[NETWORK HEALTH] " +
+                $"Death Signal Fired | " +
+                $"ClientId: {OwnerClientId}"
+            );
         }
+
 
         public override void OnNetworkDespawn()
         {

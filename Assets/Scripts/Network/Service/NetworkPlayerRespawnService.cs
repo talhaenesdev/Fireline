@@ -7,7 +7,9 @@ using Zenject;
 
 namespace FireLine.Scripts.Network.Service
 {
-    public class NetworkPlayerRespawnService : IInitializable, IDisposable
+    public class NetworkPlayerRespawnService :
+        IInitializable,
+        IDisposable
     {
         private readonly SignalBus _signalBus;
         private readonly NetworkManager _networkManager;
@@ -28,32 +30,36 @@ namespace FireLine.Scripts.Network.Service
             _coroutineRunner = coroutineRunner;
         }
 
-        public void Initialize()
-        {
-            Debug.Log(
-                $"[RESPAWN SERVICE] Initialize | " +
-                $"IsServer: {_networkManager.IsServer} | " +
-                $"IsClient: {_networkManager.IsClient} | " +
-                $"IsHost: {_networkManager.IsHost}"
-            );
+        public void Initialize() 
+        { 
+            Debug.Log($"[RESPAWN SERVICE] Initialize | " + $"IsServer: {_networkManager.IsServer} | " + $"IsClient: {_networkManager.IsClient} | " + $"IsHost: {_networkManager.IsHost}");
+            _coroutineRunner.Run(WaitForServerAndSubscribe()); 
+        }
 
-            if (!_networkManager.IsServer)
-                return;
+        private IEnumerator WaitForServerAndSubscribe() 
+        { 
+            Debug.Log("[RESPAWN SERVICE] " + "Waiting for NetworkManager...");
+            while (_networkManager != null && !_networkManager.IsServer) 
+            { 
+                yield return null; 
+            } 
+            
+            if (_networkManager == null) 
+            { 
+                Debug.LogError("[RESPAWN SERVICE] " + "NetworkManager is NULL!"); 
+                yield break; 
+            }
 
-            _signalBus.Subscribe<NetworkPlayerDeathSignal>(
-                OnPlayerDeath
-            );
-
-            Debug.Log(
-                "[RESPAWN SERVICE] " +
-                "Subscribed to NetworkPlayerDeathSignal"
-            );
+            Debug.Log($"[RESPAWN SERVICE] " + $"NetworkManager ready | " + $"IsServer: {_networkManager.IsServer} | " + $"IsHost: {_networkManager.IsHost}");
+            _signalBus.Subscribe<NetworkPlayerDeathSignal>(OnPlayerDeath); Debug.Log("[RESPAWN SERVICE] " + "Subscribed to NetworkPlayerDeathSignal"); 
         }
 
         public void Dispose()
         {
-            if (_signalBus == null ||
-                _networkManager == null)
+            if (_signalBus == null)
+                return;
+
+            if (_networkManager == null)
                 return;
 
             if (!_networkManager.IsServer)
@@ -76,12 +82,11 @@ namespace FireLine.Scripts.Network.Service
                 return;
 
             Debug.Log(
-                $"[RESPAWN SERVICE] " +
-                $"Death signal received | " +
+                $"[RESPAWN SERVICE] Death signal received | " +
                 $"ClientId: {signal.ClientId}"
             );
 
-            _coroutineRunner.StartCoroutine(
+            _coroutineRunner.Run(
                 RespawnCoroutine(signal.ClientId)
             );
         }
@@ -90,8 +95,7 @@ namespace FireLine.Scripts.Network.Service
             ulong clientId)
         {
             Debug.Log(
-                $"[RESPAWN SERVICE] " +
-                $"Waiting {RespawnDelay} seconds | " +
+                $"[RESPAWN SERVICE] Waiting {RespawnDelay}s | " +
                 $"ClientId: {clientId}"
             );
 
@@ -109,35 +113,77 @@ namespace FireLine.Scripts.Network.Service
                 return;
 
             Debug.Log(
-                $"[RESPAWN SERVICE] " +
-                $"RespawnPlayer | ClientId: {clientId}"
+                $"[RESPAWN SERVICE] RespawnPlayer | " +
+                $"ClientId: {clientId}"
             );
+
+            // --------------------------------------------------
+            // 1. Client hâlâ bağlı mı?
+            // --------------------------------------------------
 
             if (!_networkManager.ConnectedClients.TryGetValue(
                     clientId,
                     out NetworkClient client))
             {
-                Debug.LogError(
+                Debug.LogWarning(
                     $"[RESPAWN SERVICE] " +
-                    $"Client not found | ClientId: {clientId}"
+                    $"Client disconnected | " +
+                    $"ClientId: {clientId}"
                 );
 
                 return;
             }
 
+            // --------------------------------------------------
+            // 2. Eski Player'ı al
+            // --------------------------------------------------
+
             NetworkObject oldPlayer =
                 client.PlayerObject;
 
-            if (oldPlayer != null &&
-                oldPlayer.IsSpawned)
+            if (oldPlayer != null)
             {
                 Debug.Log(
                     $"[RESPAWN SERVICE] " +
-                    $"Despawning old player | " +
+                    $"Old Player found | " +
+                    $"Spawned: {oldPlayer.IsSpawned} | " +
                     $"ClientId: {clientId}"
                 );
 
-                oldPlayer.Despawn(true);
+                if (oldPlayer.IsSpawned)
+                {
+                    oldPlayer.Despawn(
+                        true
+                    );
+
+                    Debug.Log(
+                        $"[RESPAWN SERVICE] " +
+                        $"Old Player despawned | " +
+                        $"ClientId: {clientId}"
+                    );
+                }
+            }
+            else
+            {
+                Debug.LogWarning(
+                    $"[RESPAWN SERVICE] " +
+                    $"Old PlayerObject is NULL | " +
+                    $"ClientId: {clientId}"
+                );
+            }
+
+            // --------------------------------------------------
+            // 3. Spawn point bul
+            // --------------------------------------------------
+
+            if (_spawnPointManager == null)
+            {
+                Debug.LogError(
+                    "[RESPAWN SERVICE] " +
+                    "SpawnPointManager is NULL!"
+                );
+
+                return;
             }
 
             Transform spawnPoint =
@@ -148,25 +194,43 @@ namespace FireLine.Scripts.Network.Service
             if (spawnPoint == null)
             {
                 Debug.LogError(
-                    "[RESPAWN SERVICE] " +
-                    "No respawn point found!"
+                    $"[RESPAWN SERVICE] " +
+                    $"SpawnPoint is NULL | " +
+                    $"ClientId: {clientId}"
                 );
 
                 return;
             }
 
+            Debug.Log(
+                $"[RESPAWN SERVICE] " +
+                $"Spawn point found | " +
+                $"ClientId: {clientId} | " +
+                $"Position: {spawnPoint.position}"
+            );
+
+            // --------------------------------------------------
+            // 4. Player prefab bul
+            // --------------------------------------------------
+
             GameObject playerPrefab =
-                _networkManager.NetworkConfig.PlayerPrefab;
+                _networkManager
+                    .NetworkConfig
+                    .PlayerPrefab;
 
             if (playerPrefab == null)
             {
                 Debug.LogError(
                     "[RESPAWN SERVICE] " +
-                    "PlayerPrefab is NULL!"
+                    "NetworkConfig.PlayerPrefab is NULL!"
                 );
 
                 return;
             }
+
+            // --------------------------------------------------
+            // 5. Yeni Player oluştur
+            // --------------------------------------------------
 
             GameObject newPlayer =
                 UnityEngine.Object.Instantiate(
@@ -174,6 +238,26 @@ namespace FireLine.Scripts.Network.Service
                     spawnPoint.position,
                     spawnPoint.rotation
                 );
+
+            if (newPlayer == null)
+            {
+                Debug.LogError(
+                    "[RESPAWN SERVICE] " +
+                    "Failed to instantiate PlayerPrefab!"
+                );
+
+                return;
+            }
+
+            Debug.Log(
+                $"[RESPAWN SERVICE] " +
+                $"New Player instantiated | " +
+                $"ClientId: {clientId}"
+            );
+
+            // --------------------------------------------------
+            // 6. NetworkObject kontrolü
+            // --------------------------------------------------
 
             NetworkObject networkObject =
                 newPlayer.GetComponent<NetworkObject>();
@@ -192,6 +276,10 @@ namespace FireLine.Scripts.Network.Service
                 return;
             }
 
+            // --------------------------------------------------
+            // 7. Network Player olarak spawn et
+            // --------------------------------------------------
+
             networkObject.SpawnAsPlayerObject(
                 clientId,
                 true
@@ -200,7 +288,8 @@ namespace FireLine.Scripts.Network.Service
             Debug.Log(
                 $"[RESPAWN SERVICE] " +
                 $"Player respawned successfully | " +
-                $"ClientId: {clientId}"
+                $"ClientId: {clientId} | " +
+                $"Position: {spawnPoint.position}"
             );
         }
     }
