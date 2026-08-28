@@ -2,12 +2,15 @@
 {
     public class NetworkPlayerDeathSignal
     {
-        public ulong ClientId { get; }
+        public ulong VictimClientId { get; }
+        public ulong KillerClientId { get; }
 
         public NetworkPlayerDeathSignal(
-            ulong clientId)
+            ulong victimClientId,
+            ulong killerClientId)
         {
-            ClientId = clientId;
+            VictimClientId = victimClientId;
+            KillerClientId = killerClientId;
         }
     }
 }

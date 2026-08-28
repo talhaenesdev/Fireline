@@ -1,5 +1,4 @@
-﻿using FireLine.Scripts.Core.Damage;
-using FireLine.Scripts.Core.Services.Entities;
+﻿using System;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -102,7 +101,10 @@ namespace FireLine.Scripts.Network
                 $"Damage: {damage}"
             );
 
-            health.TakeDamageServer(damage);
+            health.TakeDamageServer(
+                damage,
+                _ownerClientId
+            );
 
             Despawn();
         }
