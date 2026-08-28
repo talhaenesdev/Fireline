@@ -94,7 +94,8 @@ namespace FireLine.Scripts.Network
         }
 
         public void TakeDamageServer(
-            float damage)
+            int damage,
+            ulong attackerClientId)
         {
             if (!IsServer)
                 return;
@@ -102,23 +103,29 @@ namespace FireLine.Scripts.Network
             if (_isDead.Value)
                 return;
 
-            if (damage <= 0f)
+            if (damage <= 0)
                 return;
 
-            _health.Value =
-                Mathf.Max(
-                    0f,
-                    _health.Value - damage
-                );
+            _health.Value -= damage;
 
-            if (_health.Value <= 0f)
+            Debug.Log(
+                $"[NETWORK HEALTH] Damage | " +
+                $"Victim: {OwnerClientId} | " +
+                $"Attacker: {attackerClientId} | " +
+                $"Damage: {damage} | " +
+                $"Health: {_health.Value}"
+            );
+
+            if (_health.Value <= 0)
             {
-                Die();
+                _health.Value = 0;
+
+                Die(attackerClientId);
             }
         }
 
-
-        private void Die()
+        private void Die(
+            ulong killerClientId)
         {
             if (!IsServer)
                 return;
@@ -130,7 +137,8 @@ namespace FireLine.Scripts.Network
 
             Debug.Log(
                 $"NETWORK PLAYER DEAD | " +
-                $"ClientId: {OwnerClientId}"
+                $"Victim: {OwnerClientId} | " +
+                $"Killer: {killerClientId}"
             );
 
             if (_signalBus == null)
@@ -143,25 +151,13 @@ namespace FireLine.Scripts.Network
                 return;
             }
 
-            Debug.Log(
-                $"[NETWORK HEALTH] " +
-                $"Firing Death Signal | " +
-                $"ClientId: {OwnerClientId}"
-            );
-
             _signalBus.Fire(
                 new NetworkPlayerDeathSignal(
-                    OwnerClientId
+                    OwnerClientId,
+                    killerClientId
                 )
             );
-
-            Debug.Log(
-                $"[NETWORK HEALTH] " +
-                $"Death Signal Fired | " +
-                $"ClientId: {OwnerClientId}"
-            );
         }
-
 
         public override void OnNetworkDespawn()
         {

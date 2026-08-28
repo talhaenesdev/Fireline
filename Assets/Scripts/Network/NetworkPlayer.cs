@@ -1,6 +1,4 @@
-using FireLine.Scripts.Network.Signals;
 using FireLine.Scripts.Player.Controller;
-using FireLine.Scripts.Weapon.Controller;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -10,21 +8,17 @@ namespace FireLine.Scripts.Network
 {
     public class NetworkPlayer : NetworkBehaviour
     {
-        private SignalBus _signalBus;
         private PlayerInputController _playerInputController;
         private PlayerInput _playerInput;
-        private WeaponController _weaponController;
+
         private PlayerMovementController _movementController;
         private PlayerAimController _aimController;
         private PlayerGameplayController _gameplayController;
 
         private NetworkPlayerHealth _health;
-        [Inject]
-        public void Construct(
-    SignalBus signalBus)
-        {
-            _signalBus = signalBus;
-        }
+
+        private bool _healthSubscribed;
+
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
@@ -33,7 +27,8 @@ namespace FireLine.Scripts.Network
                 $"[NETWORK PLAYER] Spawned | " +
                 $"ClientId: {OwnerClientId} | " +
                 $"IsOwner: {IsOwner} | " +
-                $"IsServer: {IsServer}"
+                $"IsServer: {IsServer} | " +
+                $"IsClient: {IsClient}"
             );
 
             InjectWithSceneContext();
@@ -123,8 +118,13 @@ namespace FireLine.Scripts.Network
                 return;
             }
 
+            if (_healthSubscribed)
+                return;
+
             _health.DeathStateChanged +=
                 OnDeathStateChanged;
+
+            _healthSubscribed = true;
         }
 
         private void OnDeathStateChanged(
@@ -132,6 +132,13 @@ namespace FireLine.Scripts.Network
         {
             if (!IsOwner)
                 return;
+
+            Debug.Log(
+                $"[NETWORK PLAYER] " +
+                $"Death state changed | " +
+                $"ClientId: {OwnerClientId} | " +
+                $"IsDead: {isDead}"
+            );
 
             if (isDead)
             {
@@ -181,48 +188,23 @@ namespace FireLine.Scripts.Network
 
         public override void OnNetworkDespawn()
         {
-            if (_health != null)
+            if (_health != null &&
+                _healthSubscribed)
             {
                 _health.DeathStateChanged -=
                     OnDeathStateChanged;
+
+                _healthSubscribed = false;
             }
 
-            base.OnNetworkDespawn();
-        }
-        [ServerRpc]
-        public void RequestShootServerRpc(
-    Vector3 position,
-    Vector3 direction,
-    ServerRpcParams rpcParams = default)
-        {
-            if (!IsServer)
-                return;
-
-            if (_signalBus == null)
-            {
-                Debug.LogError(
-                    "[NETWORK PLAYER] " +
-                    "SignalBus is NULL!"
-                );
-
-                return;
-            }
-
-            ulong clientId =
-                rpcParams.Receive.SenderClientId;
+            DisableLocalInput();
 
             Debug.Log(
-                $"[SERVER] Shoot request | " +
-                $"ClientId: {clientId}"
+                $"[NETWORK PLAYER] Despawned | " +
+                $"ClientId: {OwnerClientId}"
             );
 
-            _signalBus.Fire(
-                new NetworkShootSignal(
-                    position,
-                    direction,
-                    clientId
-                )
-            );
+            base.OnNetworkDespawn();
         }
     }
 }

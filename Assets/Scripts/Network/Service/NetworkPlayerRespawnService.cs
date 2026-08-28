@@ -82,12 +82,16 @@ namespace FireLine.Scripts.Network.Service
                 return;
 
             Debug.Log(
-                $"[RESPAWN SERVICE] Death signal received | " +
-                $"ClientId: {signal.ClientId}"
+                $"[RESPAWN SERVICE] " +
+                $"Death signal received | " +
+                $"Victim: {signal.VictimClientId} | " +
+                $"Killer: {signal.KillerClientId}"
             );
 
             _coroutineRunner.Run(
-                RespawnCoroutine(signal.ClientId)
+                RespawnCoroutine(
+                    signal.VictimClientId
+                )
             );
         }
 
