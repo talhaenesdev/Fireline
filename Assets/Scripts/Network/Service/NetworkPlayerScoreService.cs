@@ -13,6 +13,7 @@ namespace FireLine.Scripts.Network.Service
     {
         private readonly SignalBus _signalBus;
         private readonly NetworkManager _networkManager;
+        private readonly NetworkScoreboard _scoreboard;
 
         private readonly Dictionary<ulong, ScoreData> _scores =
             new Dictionary<ulong, ScoreData>();
@@ -21,10 +22,12 @@ namespace FireLine.Scripts.Network.Service
 
         public NetworkPlayerScoreService(
             SignalBus signalBus,
-            NetworkManager networkManager)
+            NetworkManager networkManager,
+            NetworkScoreboard scoreboard)
         {
             _signalBus = signalBus;
             _networkManager = networkManager;
+            _scoreboard = scoreboard;
         }
 
         public void Initialize()
@@ -116,14 +119,23 @@ namespace FireLine.Scripts.Network.Service
             if (!_networkManager.IsServer)
                 return;
 
-            GetOrCreateScore(clientId);
+            ScoreData score =
+                GetOrCreateScore(clientId);
+
+            _scoreboard.SetScoreServer(
+                clientId,
+                score.Kills,
+                score.Deaths
+            );
 
             Debug.Log(
-                $"[SCORE SERVICE] " +
-                $"Client connected | " +
-                $"ClientId: {clientId}"
+                $"[SCORE SERVICE] Client connected | " +
+                $"ClientId: {clientId} | " +
+                $"Kills: {score.Kills} | " +
+                $"Deaths: {score.Deaths}"
             );
         }
+
 
         private void OnClientDisconnected(
             ulong clientId)
@@ -131,16 +143,18 @@ namespace FireLine.Scripts.Network.Service
             if (!_networkManager.IsServer)
                 return;
 
-            if (_scores.Remove(clientId))
-            {
-                Debug.Log(
-                    $"[SCORE SERVICE] " +
-                    $"Removed score | " +
-                    $"ClientId: {clientId}"
-                );
-            }
-        }
+            _scores.Remove(clientId);
 
+            _scoreboard.RemoveScoreServer(
+                clientId
+            );
+
+            Debug.Log(
+                $"[SCORE SERVICE] " +
+                $"Client disconnected | " +
+                $"ClientId: {clientId}"
+            );
+        } 
         private void OnPlayerDeath(
             NetworkPlayerDeathSignal signal)
         {
@@ -159,6 +173,11 @@ namespace FireLine.Scripts.Network.Service
                 );
 
             victimScore.Deaths++;
+            _scoreboard.SetScoreServer(
+                signal.VictimClientId,
+                victimScore.Kills,
+                victimScore.Deaths
+            );
 
             Debug.Log(
                 $"[SCORE SERVICE] " +
@@ -185,6 +204,12 @@ namespace FireLine.Scripts.Network.Service
                 );
 
             killerScore.Kills++;
+
+            _scoreboard.SetScoreServer(
+                signal.KillerClientId,
+                killerScore.Kills,
+                killerScore.Deaths
+            );
 
             Debug.Log(
                 $"[SCORE SERVICE] " +
