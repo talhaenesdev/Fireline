@@ -52,6 +52,10 @@ namespace FireLine.Scripts.Installers
             Container.Bind<NetworkManager>()
                 .FromComponentInHierarchy()
                 .AsSingle();
+            
+            Container.Bind<NetworkScoreboard>()
+                .FromComponentInHierarchy()
+                .AsSingle();
 
             Container.Bind<NetworkBulletSpawner>()
                 .FromComponentInHierarchy()
