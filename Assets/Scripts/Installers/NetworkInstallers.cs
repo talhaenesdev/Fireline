@@ -2,6 +2,7 @@ using FireLine.Scripts.Network;
 using FireLine.Scripts.Network.Service;
 using FireLine.Scripts.Network.Signals;
 using Unity.Netcode;
+using UnityEngine;
 using Zenject;
 
 namespace FireLine.Scripts.Installers
@@ -10,6 +11,7 @@ namespace FireLine.Scripts.Installers
     {
         public override void InstallBindings()
         {
+            Debug.Log("[NETWORK INSTALLER] InstallBindings RUNNING");
             // ----------------------------------------
             // SIGNALS
             // ----------------------------------------
@@ -27,6 +29,10 @@ namespace FireLine.Scripts.Installers
 
             Container.BindInterfacesTo<
                 NetworkPlayerRespawnService>()
+                .AsSingle();
+
+            Container.BindInterfacesTo<
+                NetworkPlayerScoreService>()
                 .AsSingle();
 
             Container.Bind<NetworkCoroutineRunner>()
