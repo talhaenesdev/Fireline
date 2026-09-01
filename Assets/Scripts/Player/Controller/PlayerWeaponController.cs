@@ -1,5 +1,6 @@
 ﻿using FireLine.Scripts.Core.Weapon;
 using FireLine.Scripts.Weapon.Controller;
+using Unity.Netcode;
 using UnityEngine;
 using Zenject;
 
@@ -9,45 +10,67 @@ namespace FireLine.Scripts.Player.Controller
     {
         private WeaponController _weaponController;
         private IWeaponFireService _fireService;
+        private NetworkObject _networkObject;
 
         [SerializeField]
         private Transform muzzlePoint;
+
+        // ============================================================
+        // ZENJECT
+        // ============================================================
 
         [Inject]
         public void Construct(
             WeaponController weaponController)
         {
-            _weaponController =
-                weaponController;
+            _weaponController = weaponController;
 
             Debug.Log(
-                "[PLAYER WEAPON] " +
-                "WeaponController injected successfully."
+                $"[PLAYER-WEAPON][INJECT] " +
+                $"WeaponController injected | " +
+                $"Instance={GetInstanceID()} | " +
+                $"Scene={gameObject.scene.name}"
             );
         }
 
+        // ============================================================
+        // AWAKE
+        // ============================================================
+
         private void Awake()
         {
-            _fireService =
-                GetComponent<
-                    IWeaponFireService>();
+            _networkObject =
+                GetComponent<NetworkObject>();
 
-            if (_fireService == null)
-            {
-                Debug.LogError(
-                    "[PLAYER WEAPON] " +
-                    "IWeaponFireService NOT FOUND!"
-                );
-            }
+            _fireService =
+                GetComponent<IWeaponFireService>();
+
+            Debug.Log(
+                $"[PLAYER-WEAPON][AWAKE] " +
+                $"Instance={GetInstanceID()} | " +
+                $"Scene={gameObject.scene.name} | " +
+                $"NetworkObject={_networkObject != null} | " +
+                $"FireService={_fireService != null}"
+            );
         }
 
-        public void Shoot(
-            Vector3 direction)
+        // ============================================================
+        // SHOOT
+        // ============================================================
+
+        public void Shoot(Vector3 direction)
         {
+            Debug.Log(
+                $"[PLAYER-WEAPON][SHOOT] " +
+                $"Owner={GetOwnerId()} | " +
+                $"IsOwner={GetIsOwner()} | " +
+                $"Controller={_weaponController != null}"
+            );
+
             if (_weaponController == null)
             {
                 Debug.LogError(
-                    "[PLAYER WEAPON] " +
+                    "[PLAYER-WEAPON][ERROR] " +
                     "WeaponController is NULL!"
                 );
 
@@ -57,7 +80,7 @@ namespace FireLine.Scripts.Player.Controller
             if (_fireService == null)
             {
                 Debug.LogError(
-                    "[PLAYER WEAPON] " +
+                    "[PLAYER-WEAPON][ERROR] " +
                     "IWeaponFireService is NULL!"
                 );
 
@@ -67,7 +90,7 @@ namespace FireLine.Scripts.Player.Controller
             if (muzzlePoint == null)
             {
                 Debug.LogError(
-                    "[PLAYER WEAPON] " +
+                    "[PLAYER-WEAPON][ERROR] " +
                     "MuzzlePoint is NULL!"
                 );
 
@@ -75,10 +98,24 @@ namespace FireLine.Scripts.Player.Controller
             }
 
             if (direction == Vector3.zero)
+            {
+                Debug.LogWarning(
+                    "[PLAYER-WEAPON][SHOOT] " +
+                    "Shoot cancelled | Direction is zero"
+                );
+
                 return;
+            }
 
             if (!_weaponController.CanShoot())
+            {
+                Debug.Log(
+                    "[PLAYER-WEAPON][SHOOT] " +
+                    "Shoot blocked | WeaponController.CanShoot=false"
+                );
+
                 return;
+            }
 
             Vector3 position =
                 muzzlePoint.position;
@@ -86,15 +123,32 @@ namespace FireLine.Scripts.Player.Controller
             _weaponController.RegisterShot();
 
             Debug.Log(
-                $"[PLAYER WEAPON] Shoot | " +
-                $"Position: {position} | " +
-                $"Direction: {direction}"
+                $"[PLAYER-WEAPON][FIRE] " +
+                $"Position={position} | " +
+                $"Direction={direction}"
             );
 
             _fireService.Fire(
                 position,
                 direction
             );
+        }
+
+        // ============================================================
+        // NETWORK HELPERS
+        // ============================================================
+
+        private ulong GetOwnerId()
+        {
+            return _networkObject != null
+                ? _networkObject.OwnerClientId
+                : ulong.MaxValue;
+        }
+
+        private bool GetIsOwner()
+        {
+            return _networkObject != null &&
+                   _networkObject.IsOwner;
         }
     }
 }

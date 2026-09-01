@@ -9,9 +9,6 @@ namespace FireLine.Scripts.Core.Installers
     {
         public override void InstallBindings()
         {
-            SignalBusInstaller.Install(Container);
-
-            Container.DeclareSignal<EntityDestroyedSignal>();
 
             Container.Bind<IEntityDeathService>()
                 .To<EntityDeathService>()

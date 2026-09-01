@@ -1,7 +1,5 @@
-﻿using FireLine.Scripts.Network.Signals;
-using Unity.Netcode;
+﻿using Unity.Netcode;
 using UnityEngine;
-using Zenject;
 
 namespace FireLine.Scripts.Network
 {
@@ -10,46 +8,52 @@ namespace FireLine.Scripts.Network
         [SerializeField]
         private NetworkBullet bulletPrefab;
 
-        private SignalBus _signalBus;
-
-        [Inject]
-        public void Construct(
-            SignalBus signalBus)
-        {
-            _signalBus = signalBus;
-
-            _signalBus.Subscribe<
-                NetworkShootSignal>(
-                OnShootRequested
-            );
-        }
-
-        private void OnShootRequested(
-            NetworkShootSignal signal)
-        {
-            Spawn(
-                signal.Position,
-                signal.Direction,
-                signal.ClientId
-            );
-        }
-
         public void Spawn(
             Vector3 position,
             Vector3 direction,
             ulong ownerClientId)
         {
-            if (!NetworkManager.Singleton.IsServer)
-                return;
-
-            if (bulletPrefab == null)
+            if (NetworkManager.Singleton == null)
             {
                 Debug.LogError(
-                    "NetworkBullet Prefab NULL!"
+                    "[BULLET SPAWNER] " +
+                    "NetworkManager.Singleton is NULL!"
                 );
 
                 return;
             }
+
+            if (!NetworkManager.Singleton.IsServer)
+            {
+                Debug.LogWarning(
+                    "[BULLET SPAWNER] " +
+                    "Spawn called on non-server!"
+                );
+
+                return;
+            }
+
+            if (bulletPrefab == null)
+            {
+                Debug.LogError(
+                    "[BULLET SPAWNER] " +
+                    "NetworkBullet Prefab is NULL!"
+                );
+
+                return;
+            }
+
+            if (direction == Vector3.zero)
+            {
+                Debug.LogWarning(
+                    "[BULLET SPAWNER] " +
+                    "Direction is zero!"
+                );
+
+                return;
+            }
+
+            direction.Normalize();
 
             NetworkBullet bullet =
                 Instantiate(
@@ -64,11 +68,13 @@ namespace FireLine.Scripts.Network
             if (networkObject == null)
             {
                 Debug.LogError(
-                    "Bullet prefabında " +
+                    "[BULLET SPAWNER] " +
+                    "NetworkBullet prefabında " +
                     "NetworkObject yok!"
                 );
 
                 Destroy(bullet.gameObject);
+
                 return;
             }
 
@@ -80,20 +86,13 @@ namespace FireLine.Scripts.Network
             );
 
             Debug.Log(
+                $"[BULLET SPAWNER] " +
                 $"Network Bullet Spawned | " +
-                $"OwnerClientId: {ownerClientId}"
+                $"NetworkObjectId: {networkObject.NetworkObjectId} | " +
+                $"OwnerClientId: {ownerClientId} | " +
+                $"Position: {position} | " +
+                $"Direction: {direction}"
             );
-        }
-
-        private void OnDestroy()
-        {
-            if (_signalBus != null)
-            {
-                _signalBus.TryUnsubscribe<
-                    NetworkShootSignal>(
-                    OnShootRequested
-                );
-            }
         }
     }
 }

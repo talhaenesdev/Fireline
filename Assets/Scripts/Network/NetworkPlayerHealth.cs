@@ -35,8 +35,7 @@ namespace FireLine.Scripts.Network
         public event System.Action<bool>
             DeathStateChanged;
 
-        [Inject]
-        public void Construct(
+        public void Initialize(
             SignalBus signalBus)
         {
             _signalBus = signalBus;

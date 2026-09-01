@@ -1,6 +1,7 @@
 ﻿using FireLine.Scripts.Core.Weapon;
 using Unity.Netcode;
 using UnityEngine;
+using Zenject;
 
 namespace FireLine.Scripts.Network
 {
@@ -10,19 +11,16 @@ namespace FireLine.Scripts.Network
     {
         private NetworkBulletSpawner _bulletSpawner;
 
-        private void Awake()
+        [Inject]
+        public void Construct(
+            NetworkBulletSpawner bulletSpawner)
         {
-            _bulletSpawner =
-                FindFirstObjectByType<
-                    NetworkBulletSpawner>();
+            _bulletSpawner = bulletSpawner;
 
-            if (_bulletSpawner == null)
-            {
-                Debug.LogError(
-                    "[NETWORK WEAPON] " +
-                    "NetworkBulletSpawner NOT FOUND!"
-                );
-            }
+            Debug.Log(
+                $"[NETWORK WEAPON] Construct | " +
+                $"BulletSpawner: {_bulletSpawner != null}"
+            );
         }
 
         public void Fire(
@@ -30,14 +28,27 @@ namespace FireLine.Scripts.Network
             Vector3 direction)
         {
             if (!IsOwner)
+            {
+                Debug.Log(
+                    "[NETWORK WEAPON] " +
+                    "Fire rejected: not owner."
+                );
+
                 return;
+            }
 
             if (direction == Vector3.zero)
                 return;
 
+            Debug.Log(
+                $"[NETWORK WEAPON] Fire | " +
+                $"Position: {position} | " +
+                $"Direction: {direction}"
+            );
+
             RequestFireServerRpc(
                 position,
-                direction
+                direction.normalized
             );
         }
 
@@ -60,19 +71,24 @@ namespace FireLine.Scripts.Network
                 return;
             }
 
+            if (direction == Vector3.zero)
+                return;
+
             ulong clientId =
                 rpcParams.Receive.SenderClientId;
 
-            _bulletSpawner.Spawn(
-                position,
-                direction,
-                clientId
-            );
-
             Debug.Log(
                 $"[NETWORK WEAPON] " +
-                $"Server spawned bullet | " +
-                $"ClientId: {clientId}"
+                $"Server received fire request | " +
+                $"ClientId: {clientId} | " +
+                $"Position: {position} | " +
+                $"Direction: {direction}"
+            );
+
+            _bulletSpawner.Spawn(
+                position,
+                direction.normalized,
+                clientId
             );
         }
     }

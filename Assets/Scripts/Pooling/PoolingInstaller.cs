@@ -1,4 +1,5 @@
-﻿using FireLine.Scripts.Core.Services.Entities;
+﻿using FireLine.Scripts.Core.Services;
+using FireLine.Scripts.Core.Services.Entities;
 using FireLine.Scripts.Services.Entities;
 using UnityEngine;
 using Zenject;
@@ -21,6 +22,13 @@ namespace FireLine.Scripts.Pooling
                 .To<PoolEntityLifecycleHandler>()
                 .AsSingle();
 
+            // ----------------------------------------
+            // ENTITY DEATH
+            // ----------------------------------------
+
+            Container.Bind<IEntityDeathService>()
+                .To<EntityDeathService>()
+                .AsSingle();
         }
     }
 }

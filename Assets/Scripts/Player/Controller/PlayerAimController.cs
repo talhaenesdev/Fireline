@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.Netcode;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace FireLine.Scripts.Player.Controller
@@ -12,31 +13,46 @@ namespace FireLine.Scripts.Player.Controller
         private Transform aimTransform;
 
         public Vector3 AimDirection { get; private set; }
+        private NetworkObject _networkObject;
 
         private void Awake()
         {
-            if (playerCamera == null)
-            {
-                playerCamera = Camera.main;
-            }
-
             if (aimTransform == null)
             {
                 aimTransform = transform;
             }
+            _networkObject =
+                GetComponent<NetworkObject>();
+            // Oyuncu oluşturulduğunda kamerayı bulmayı dene.
+            TryFindCamera();
         }
 
         private void Update()
         {
+            if (_networkObject == null ||
+                !_networkObject.IsOwner)
+            {
+                return;
+            }
+            // Kamera henüz bulunamadıysa tekrar ara.
             if (playerCamera == null)
             {
-                Debug.LogError("PlayerAimController: Camera is null.");
-                return;
+                TryFindCamera();
+
+                // Bu frame'de de kamera yoksa devam etme.
+                if (playerCamera == null)
+                {
+                    return;
+                }
             }
 
             if (Mouse.current == null)
             {
-                Debug.LogError("PlayerAimController: Mouse.current is null.");
+                Debug.LogError(
+                    "PlayerAimController: " +
+                    "Mouse.current is null."
+                );
+
                 return;
             }
 
@@ -44,7 +60,9 @@ namespace FireLine.Scripts.Player.Controller
                 Mouse.current.position.ReadValue();
 
             Ray ray =
-                playerCamera.ScreenPointToRay(mousePosition);
+                playerCamera.ScreenPointToRay(
+                    mousePosition
+                );
 
             Plane groundPlane =
                 new Plane(
@@ -76,7 +94,38 @@ namespace FireLine.Scripts.Player.Controller
 
             aimTransform.forward =
                 AimDirection;
+        }
 
+        private void TryFindCamera()
+        {
+            if (playerCamera != null)
+                return;
+
+            Camera[] cameras =
+                FindObjectsByType<Camera>(
+                    FindObjectsInactive.Exclude,
+                    FindObjectsSortMode.None
+                );
+
+            foreach (Camera camera in cameras)
+            {
+                if (!camera.CompareTag("MainCamera"))
+                    continue;
+
+                playerCamera = camera;
+
+                Debug.Log(
+                    $"[PLAYER AIM] Camera assigned: " +
+                    $"{camera.name}"
+                );
+
+                return;
+            }
+
+            Debug.LogWarning(
+                "[PLAYER AIM] " +
+                "Main Camera not found yet."
+            );
         }
     }
 }
