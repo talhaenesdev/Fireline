@@ -3,11 +3,15 @@
     "rootNamespace": "",
     "references": [
         "Unity.Netcode.Runtime",
+        "Unity.Services.Core",
         "Unity.InputSystem",
         "FireLine.Core",
         "FireLine.Player",
         "Zenject",
-        "FireLine.Weapon"
+        "FireLine.Weapon",
+        "Unity.Services.Multiplayer",
+        "Unity.Networking.Transport",
+        "FireLine.Entities"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

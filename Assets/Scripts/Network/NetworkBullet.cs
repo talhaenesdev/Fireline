@@ -1,5 +1,4 @@
-﻿using System;
-using Unity.Netcode;
+﻿using Unity.Netcode;
 using UnityEngine;
 
 namespace FireLine.Scripts.Network
@@ -26,10 +25,21 @@ namespace FireLine.Scripts.Network
             if (!IsServer)
                 return;
 
-            _direction = direction.normalized;
-            _ownerClientId = ownerClientId;
+            _direction =
+                direction.normalized;
 
-            _remainingLifetime = lifetime;
+            _ownerClientId =
+                ownerClientId;
+
+            _remainingLifetime =
+                lifetime;
+
+            Debug.Log(
+                $"[NETWORK BULLET] Initialize | " +
+                $"NetworkObjectId: {NetworkObjectId} | " +
+                $"OwnerClientId: {_ownerClientId} | " +
+                $"Direction: {_direction}"
+            );
         }
 
         public override void OnNetworkSpawn()
@@ -37,12 +47,14 @@ namespace FireLine.Scripts.Network
             base.OnNetworkSpawn();
 
             Debug.Log(
-                $"[NETWORK PLAYER] OnNetworkSpawn | " +
+                $"[NETWORK BULLET] OnNetworkSpawn | " +
                 $"Name: {name} | " +
-                $"ClientId: {OwnerClientId} | " +
+                $"NetworkObjectId: {NetworkObjectId} | " +
+                $"OwnerClientId: {OwnerClientId} | " +
                 $"IsOwner: {IsOwner} | " +
                 $"IsServer: {IsServer} | " +
-                $"IsClient: {IsClient}"
+                $"IsClient: {IsClient} | " +
+                $"Position: {transform.position}"
             );
         }
 
@@ -65,7 +77,8 @@ namespace FireLine.Scripts.Network
             }
         }
 
-        private void OnTriggerEnter(Collider other)
+        private void OnTriggerEnter(
+            Collider other)
         {
             if (!IsServer)
                 return;
@@ -83,11 +96,13 @@ namespace FireLine.Scripts.Network
             }
 
             NetworkPlayerHealth health =
-                targetPlayer.GetComponent<NetworkPlayerHealth>();
+                targetPlayer.GetComponent<
+                    NetworkPlayerHealth>();
 
             if (health == null)
             {
                 Debug.LogError(
+                    $"[NETWORK BULLET] " +
                     $"NetworkPlayerHealth missing on " +
                     $"{targetPlayer.name}"
                 );
@@ -96,9 +111,10 @@ namespace FireLine.Scripts.Network
             }
 
             Debug.Log(
-                $"NETWORK BULLET HIT PLAYER | " +
+                $"[NETWORK BULLET] HIT PLAYER | " +
                 $"Target: {targetPlayer.OwnerClientId} | " +
-                $"Damage: {damage}"
+                $"Damage: {damage} | " +
+                $"Attacker: {_ownerClientId}"
             );
 
             health.TakeDamageServer(
@@ -114,7 +130,8 @@ namespace FireLine.Scripts.Network
             if (!IsServer)
                 return;
 
-            if (NetworkObject.IsSpawned)
+            if (NetworkObject != null &&
+                NetworkObject.IsSpawned)
             {
                 NetworkObject.Despawn();
             }

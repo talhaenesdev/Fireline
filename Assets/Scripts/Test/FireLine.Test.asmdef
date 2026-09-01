@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "FireLine.Core",
-        "FireLine.Enemy"
+        "FireLine.Enemy",
+        "Unity.Netcode.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

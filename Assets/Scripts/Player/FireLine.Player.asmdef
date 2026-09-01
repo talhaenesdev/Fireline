@@ -5,7 +5,8 @@
         "Zenject",
         "Unity.InputSystem",
         "FireLine.Weapon",
-        "FireLine.Core"
+        "FireLine.Core",
+        "Unity.Netcode.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

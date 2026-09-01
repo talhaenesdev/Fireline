@@ -1,7 +1,10 @@
+using System;
+using System.Collections;
 using FireLine.Scripts.Player.Controller;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using Zenject;
 
 namespace FireLine.Scripts.Network
@@ -14,59 +17,226 @@ namespace FireLine.Scripts.Network
         private PlayerMovementController _movementController;
         private PlayerAimController _aimController;
         private PlayerGameplayController _gameplayController;
-
         private NetworkPlayerHealth _health;
 
         private bool _healthSubscribed;
+        private bool _injected;
+
+        // ============================================================
+        // NETWORK SPAWN
+        // ============================================================
 
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
 
             Debug.Log(
-                $"[NETWORK PLAYER] Spawned | " +
-                $"ClientId: {OwnerClientId} | " +
-                $"IsOwner: {IsOwner} | " +
-                $"IsServer: {IsServer} | " +
-                $"IsClient: {IsClient}"
+                $"[NET-PLAYER][SPAWN] " +
+                $"Player={gameObject.name} | " +
+                $"Scene={gameObject.scene.name} | " +
+                $"ClientId={OwnerClientId} | " +
+                $"NetworkObjectId={NetworkObjectId} | " +
+                $"Owner={IsOwner} | " +
+                $"Server={IsServer} | " +
+                $"Client={IsClient}"
             );
-
-            InjectWithSceneContext();
 
             FindComponents();
 
-            SetupOwner();
+            Debug.Log(
+                $"[NET-PLAYER][COMPONENTS] " +
+                $"Input={_playerInput != null} | " +
+                $"InputController={_playerInputController != null} | " +
+                $"Movement={_movementController != null} | " +
+                $"Aim={_aimController != null} | " +
+                $"Gameplay={_gameplayController != null} | " +
+                $"Health={_health != null}"
+            );
+
+            if (SceneManager.GetActiveScene().name == "Game")
+            {
+                StartCoroutine(
+                    WaitForSceneContextAndInject()
+                );
+            }
+            else
+            {
+                Debug.Log(
+                    $"[NET-PLAYER][INJECT] Skipped | " +
+                    $"Current scene is not GameScene | " +
+                    $"Scene={SceneManager.GetActiveScene().name}"
+                );
+            }
 
             SubscribeHealth();
+        }
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
 
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(
+            Scene scene,
+            LoadSceneMode mode)
+        {
             Debug.Log(
-                "[NETWORK PLAYER] Setup completed."
+                $"[NET-PLAYER][SCENE] Scene loaded | " +
+                $"Scene={scene.name}"
+            );
+
+            if (scene.name != "GameScene")
+                return;
+
+            if (_injected)
+                return;
+
+            StartCoroutine(
+                WaitForSceneContextAndInject()
             );
         }
 
-        private void InjectWithSceneContext()
-        {
-            SceneContext sceneContext =
-                FindFirstObjectByType<SceneContext>();
+        // ============================================================
+        // ZENJECT INJECTION
+        // ============================================================
 
-            if (sceneContext == null)
+        private IEnumerator WaitForSceneContextAndInject()
+        {
+            if (_injected)
             {
-                Debug.LogError(
-                    "[NETWORK PLAYER] " +
-                    "SceneContext NOT FOUND!"
+                Debug.Log(
+                    $"[NET-PLAYER][INJECT] Already injected | " +
+                    $"Player={gameObject.name}"
+                );
+
+                yield break;
+            }
+
+            Debug.Log(
+                $"[NET-PLAYER][SCENE] Searching SceneContext | " +
+                $"PlayerScene={gameObject.scene.name}"
+            );
+
+            SceneContext context = null;
+
+            while (context == null)
+            {
+                context = FindSceneContext();
+
+                if (context == null)
+                {
+                    Debug.Log(
+                        $"[NET-PLAYER][SCENE] SceneContext not found yet | " +
+                        $"PlayerScene={gameObject.scene.name}"
+                    );
+
+                    yield return null;
+                }
+            }
+
+            Debug.Log(
+                $"[NET-PLAYER][SCENE] SceneContext found | " +
+                $"Scene={context.gameObject.scene.name} | " +
+                $"Instance={context.GetInstanceID()}"
+            );
+
+            InjectWithSceneContext(context);
+        }
+
+        private void InjectWithSceneContext(SceneContext context)
+        {
+            Debug.Log(
+                $"[NET-PLAYER][INJECT] " +
+                $"Context={context.GetInstanceID()} | " +
+                $"Container={context.Container.GetHashCode()}"
+            );
+            if (_injected)
+            {
+                Debug.Log(
+                    $"[NET-PLAYER][INJECT] Skipped | Already injected | " +
+                    $"Player={gameObject.name}"
                 );
 
                 return;
             }
 
-            sceneContext.Container
-                .InjectGameObject(gameObject);
+            if (context == null)
+            {
+                Debug.LogError(
+                    $"[NET-PLAYER][INJECT][ERROR] " +
+                    $"SceneContext is NULL | " +
+                    $"PlayerScene={gameObject.scene.name}"
+                );
+
+                return;
+            }
 
             Debug.Log(
-                "[NETWORK PLAYER] " +
-                "Zenject injection completed."
+                $"[NET-PLAYER][INJECT] Starting | " +
+                $"Player={gameObject.name} | " +
+                $"PlayerScene={gameObject.scene.name} | " +
+                $"ContextScene={context.gameObject.scene.name} | " +
+                $"Context={context.GetInstanceID()}"
             );
+            try
+            {
+                SignalBus signalBus =
+                    context.Container.Resolve<SignalBus>();
+
+                Debug.Log(
+                    $"[NET-PLAYER][SIGNAL] SignalBus resolved | " +
+                    $"Context={context.GetInstanceID()} | " +
+                    $"SignalBus={signalBus.GetHashCode()}"
+                );
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError(
+                    $"[NET-PLAYER][SIGNAL] SignalBus resolve FAILED | " +
+                    $"Context={context.GetInstanceID()} | " +
+                    $"Scene={context.gameObject.scene.name} | " +
+                    $"Reason={exception.Message}"
+                );
+            }
+            try
+            {
+                context.Container.InjectGameObject(
+                    gameObject
+                );
+
+                _injected = true;
+
+                Debug.Log(
+                    $"[NET-PLAYER][INJECT][SUCCESS] " +
+                    $"Zenject injection completed | " +
+                    $"Player={gameObject.name} | " +
+                    $"Scene={gameObject.scene.name}"
+                );
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError(
+                    $"[NET-PLAYER][INJECT][FAILED] " +
+                    $"Player={gameObject.name} | " +
+                    $"Scene={gameObject.scene.name}\n" +
+                    $"Reason: {exception.Message}"
+                );
+
+                return;
+            }
+
+            FindComponents();
+
+            SetupOwner();
         }
+
+        // ============================================================
+        // COMPONENTS
+        // ============================================================
 
         private void FindComponents()
         {
@@ -89,69 +259,37 @@ namespace FireLine.Scripts.Network
                 GetComponent<NetworkPlayerHealth>();
         }
 
+        // ============================================================
+        // OWNER / INPUT
+        // ============================================================
+
         private void SetupOwner()
         {
             if (!IsOwner)
             {
-                DisableLocalInput();
-                return;
-            }
-
-            EnableLocalInput();
-
-            Debug.Log(
-                $"[NETWORK PLAYER] " +
-                $"Local owner initialized | " +
-                $"ClientId: {OwnerClientId}"
-            );
-        }
-
-        private void SubscribeHealth()
-        {
-            if (_health == null)
-            {
-                Debug.LogError(
-                    "[NETWORK PLAYER] " +
-                    "NetworkPlayerHealth NOT FOUND!"
+                Debug.Log(
+                    $"[NET-PLAYER][INPUT] Remote player | " +
+                    $"ClientId={OwnerClientId} | Input disabled"
                 );
 
+                DisableLocalInput();
+
                 return;
             }
-
-            if (_healthSubscribed)
-                return;
-
-            _health.DeathStateChanged +=
-                OnDeathStateChanged;
-
-            _healthSubscribed = true;
-        }
-
-        private void OnDeathStateChanged(
-            bool isDead)
-        {
-            if (!IsOwner)
-                return;
 
             Debug.Log(
-                $"[NETWORK PLAYER] " +
-                $"Death state changed | " +
-                $"ClientId: {OwnerClientId} | " +
-                $"IsDead: {isDead}"
+                $"[NET-PLAYER][INPUT] Local owner | " +
+                $"ClientId={OwnerClientId} | Input enabled"
             );
 
-            if (isDead)
-            {
-                DisableLocalInput();
-            }
-            else
-            {
-                EnableLocalInput();
-            }
+            EnableLocalInput();
         }
 
         private void EnableLocalInput()
         {
+            if (!IsOwner)
+                return;
+
             if (_playerInput != null)
                 _playerInput.enabled = true;
 
@@ -166,6 +304,11 @@ namespace FireLine.Scripts.Network
 
             if (_gameplayController != null)
                 _gameplayController.enabled = true;
+
+            Debug.Log(
+                $"[NET-PLAYER][INPUT] ENABLED | " +
+                $"ClientId={OwnerClientId}"
+            );
         }
 
         private void DisableLocalInput()
@@ -184,7 +327,105 @@ namespace FireLine.Scripts.Network
 
             if (_gameplayController != null)
                 _gameplayController.enabled = false;
+
+            Debug.Log(
+                $"[NET-PLAYER][INPUT] DISABLED | " +
+                $"ClientId={OwnerClientId}"
+            );
         }
+
+        // ============================================================
+        // HEALTH
+        // ============================================================
+
+        private void SubscribeHealth()
+        {
+            if (_health == null)
+            {
+                Debug.LogError(
+                    $"[NET-PLAYER][HEALTH][ERROR] " +
+                    $"NetworkPlayerHealth not found | " +
+                    $"Player={gameObject.name}"
+                );
+
+                return;
+            }
+
+            if (_healthSubscribed)
+                return;
+
+            _health.DeathStateChanged +=
+                OnDeathStateChanged;
+
+            _healthSubscribed = true;
+
+            Debug.Log(
+                $"[NET-PLAYER][HEALTH] " +
+                $"DeathStateChanged subscribed | " +
+                $"ClientId={OwnerClientId}"
+            );
+        }
+
+        private void OnDeathStateChanged(bool isDead)
+        {
+            if (!IsOwner)
+                return;
+
+            Debug.Log(
+                $"[NET-PLAYER][HEALTH] " +
+                $"DeathStateChanged | " +
+                $"ClientId={OwnerClientId} | " +
+                $"Dead={isDead}"
+            );
+
+            if (isDead)
+            {
+                DisableLocalInput();
+            }
+            else
+            {
+                EnableLocalInput();
+            }
+        }
+
+        // ============================================================
+        // SCENE CONTEXT
+        // ============================================================
+
+        private SceneContext FindSceneContext()
+        {
+            Scene activeScene =
+                SceneManager.GetActiveScene();
+
+            SceneContext[] contexts =
+                FindObjectsByType<SceneContext>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None
+                );
+
+            foreach (SceneContext context in contexts)
+            {
+                if (context == null)
+                    continue;
+
+                if (context.gameObject.scene != activeScene)
+                    continue;
+
+                Debug.Log(
+                    $"[NET-PLAYER][SCENE] MATCH | " +
+                    $"Scene={activeScene.name} | " +
+                    $"Context={context.GetInstanceID()}"
+                );
+
+                return context;
+            }
+
+            return null;
+        }
+
+        // ============================================================
+        // NETWORK DESPAWN
+        // ============================================================
 
         public override void OnNetworkDespawn()
         {
@@ -195,13 +436,21 @@ namespace FireLine.Scripts.Network
                     OnDeathStateChanged;
 
                 _healthSubscribed = false;
+
+                Debug.Log(
+                    $"[NET-PLAYER][HEALTH] " +
+                    $"DeathStateChanged unsubscribed | " +
+                    $"ClientId={OwnerClientId}"
+                );
             }
 
             DisableLocalInput();
 
             Debug.Log(
-                $"[NETWORK PLAYER] Despawned | " +
-                $"ClientId: {OwnerClientId}"
+                $"[NET-PLAYER][DESPAWN] " +
+                $"Player={gameObject.name} | " +
+                $"ClientId={OwnerClientId} | " +
+                $"NetworkObjectId={NetworkObjectId}"
             );
 
             base.OnNetworkDespawn();
