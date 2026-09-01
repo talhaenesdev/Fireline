@@ -1,0 +1,18 @@
+{
+    "name": "FireLine.Pooling",
+    "rootNamespace": "",
+    "references": [
+        "Zenject",
+        "Unity.InputSystem",
+        "FireLine.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

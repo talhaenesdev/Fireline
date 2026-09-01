@@ -1,0 +1,20 @@
+{
+    "name": "FireLine.Player",
+    "rootNamespace": "",
+    "references": [
+        "Zenject",
+        "Unity.InputSystem",
+        "FireLine.Weapon",
+        "FireLine.Core",
+        "Unity.Netcode.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

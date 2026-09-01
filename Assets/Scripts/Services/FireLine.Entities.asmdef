@@ -1,0 +1,19 @@
+{
+    "name": "FireLine.Entities",
+    "rootNamespace": "",
+    "references": [
+        "Zenject",
+        "Unity.InputSystem",
+        "Unity.Services.Authentication",
+        "Unity.Services.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,8 @@
+{
+  "name": "com.svermeulen.extenject",
+  "displayName": "Extenject",
+  "version": "9.1.0",
+  "description": "Dependency Injection Framework for Unity3D",
+  "dependencies": {},
+  "_fingerprint": "a71cff294faae88b608fb8fa628e854e7046c829"
+}

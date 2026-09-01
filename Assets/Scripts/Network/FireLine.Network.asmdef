@@ -1,0 +1,25 @@
+{
+    "name": "FireLine.Network",
+    "rootNamespace": "",
+    "references": [
+        "Unity.Netcode.Runtime",
+        "Unity.Services.Core",
+        "Unity.InputSystem",
+        "FireLine.Core",
+        "FireLine.Player",
+        "Zenject",
+        "FireLine.Weapon",
+        "Unity.Services.Multiplayer",
+        "Unity.Networking.Transport",
+        "FireLine.Entities"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
