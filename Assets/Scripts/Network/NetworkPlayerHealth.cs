@@ -35,10 +35,19 @@ namespace FireLine.Scripts.Network
         public event System.Action<bool>
             DeathStateChanged;
 
+        [Inject]
         public void Initialize(
             SignalBus signalBus)
         {
             _signalBus = signalBus;
+
+            Debug.Log(
+                $"[NETWORK HEALTH][INJECT] " +
+                $"SignalBus injected | " +
+                $"Instance={GetInstanceID()} | " +
+                $"SignalBus={_signalBus.GetHashCode()} | " +
+                $"Scene={gameObject.scene.name}"
+            );
         }
 
         public override void OnNetworkSpawn()
