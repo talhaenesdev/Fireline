@@ -61,10 +61,13 @@ namespace FireLine.Scripts.Network
             }
             else
             {
+                DisableLocalInput();
+
                 Debug.Log(
-                    $"[NET-PLAYER][INJECT] Skipped | " +
-                    $"Current scene is not GameScene | " +
-                    $"Scene={SceneManager.GetActiveScene().name}"
+                    $"[NET-PLAYER][INPUT] " +
+                    $"Gameplay disabled outside Game | " +
+                    $"Scene={SceneManager.GetActiveScene().name} | " +
+                    $"ClientId={OwnerClientId}"
                 );
             }
 
@@ -89,7 +92,7 @@ namespace FireLine.Scripts.Network
                 $"Scene={scene.name}"
             );
 
-            if (scene.name != "GameScene")
+            if (scene.name != "Game")
                 return;
 
             if (_injected)

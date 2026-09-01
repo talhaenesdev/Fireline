@@ -2494,51 +2494,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1214777374}
   m_CullTransparentMesh: 1
---- !u!1 &1261789481
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1261789483}
-  - component: {fileID: 1261789482}
-  m_Layer: 0
-  m_Name: WeaponInstaller
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1261789482
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1261789481}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 46dc66cb10d5a0b4b93f656b51934076, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FireLine.Weapon::FireLine.Scripts.Weapon.Installer.WeaponInstaller
-  weaponData: {fileID: 11400000, guid: c9dbfbbf8805a5341958eb45b052c0af, type: 2}
---- !u!4 &1261789483
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1261789481}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -806.7316, y: -0.00009, z: -7941.9487}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1306481085
 GameObject:
   m_ObjectHideFlags: 0
@@ -3610,7 +3565,6 @@ MonoBehaviour:
   _monoInstallers:
   - {fileID: 868192333}
   - {fileID: 539184612}
-  - {fileID: 1261789482}
   - {fileID: 337090711}
   _installerPrefabs: []
   _autoRun: 1
@@ -4378,5 +4332,4 @@ SceneRoots:
   - {fileID: 950542644}
   - {fileID: 1620005793}
   - {fileID: 426772239}
-  - {fileID: 1261789483}
   - {fileID: 337090712}

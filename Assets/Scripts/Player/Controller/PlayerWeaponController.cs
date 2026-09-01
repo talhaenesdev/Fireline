@@ -48,6 +48,7 @@ namespace FireLine.Scripts.Player.Controller
             Debug.Log(
                 $"[PLAYER-WEAPON][AWAKE] " +
                 $"Instance={GetInstanceID()} | " +
+                $"GameObject={gameObject.name} | " +
                 $"Scene={gameObject.scene.name} | " +
                 $"NetworkObject={_networkObject != null} | " +
                 $"FireService={_fireService != null}"
@@ -62,6 +63,8 @@ namespace FireLine.Scripts.Player.Controller
         {
             Debug.Log(
                 $"[PLAYER-WEAPON][SHOOT] " +
+                $"Instance={GetInstanceID()} | " +
+                $"GameObject={gameObject.name} | " +
                 $"Owner={GetOwnerId()} | " +
                 $"IsOwner={GetIsOwner()} | " +
                 $"Controller={_weaponController != null}"
