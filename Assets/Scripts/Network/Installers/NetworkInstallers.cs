@@ -29,12 +29,13 @@ namespace FireLine.Scripts.Network.Installers
             Container.BindInterfacesTo<NetworkPlayerScoreService>()
                 .AsSingle();
 
+            Container.Bind<NetworkConnectionService>()
+                .AsSingle();
 
-            
-            
-            
-            
-            
+
+
+
+
             NetworkSpawnPointManager spawnPointManager =
                 FindFirstObjectByType<NetworkSpawnPointManager>();
 
