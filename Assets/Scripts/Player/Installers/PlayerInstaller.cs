@@ -1,5 +1,6 @@
 using FireLine.Scripts.Player.Controller;
 using FireLine.Scripts.Player.Model;
+using FireLine.Scripts.Player.Service;
 using UnityEngine;
 using Zenject;
 

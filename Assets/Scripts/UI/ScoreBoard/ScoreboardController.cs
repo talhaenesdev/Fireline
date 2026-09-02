@@ -60,9 +60,7 @@ namespace FireLine.Scripts.UI.Scoreboard
 
             view.Clear();
 
-            for (int i = 0;
-                 i < _scoreboard.Count;
-                 i++)
+            for (int i = 0; i < _scoreboard.Count; i++)
             {
                 NetworkScoreEntry score =
                     _scoreboard.GetAt(i);
@@ -74,7 +72,7 @@ namespace FireLine.Scripts.UI.Scoreboard
                     continue;
 
                 row.SetData(
-                    $"Player {score.ClientId}",
+                    score.PlayerName.ToString(),
                     score.Kills,
                     score.Deaths
                 );

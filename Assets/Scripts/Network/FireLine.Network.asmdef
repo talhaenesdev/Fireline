@@ -11,7 +11,8 @@
         "FireLine.Weapon",
         "Unity.Services.Multiplayer",
         "Unity.Networking.Transport",
-        "FireLine.Entities"
+        "FireLine.Entities",
+        "Unity.Collections"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
