@@ -1,6 +1,9 @@
+using FireLine.Scripts.Network.Service;
+using FireLine.Scripts.Player.Controller;
+using FireLine.Scripts.Player.Service;
 using System;
 using System.Collections;
-using FireLine.Scripts.Player.Controller;
+using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -13,7 +16,8 @@ namespace FireLine.Scripts.Network
     {
         private PlayerInputController _playerInputController;
         private PlayerInput _playerInput;
-
+        private PlayerNameService _playerNameService;
+        private NetworkPlayerScoreService _scoreService;
         private PlayerMovementController _movementController;
         private PlayerAimController _aimController;
         private PlayerGameplayController _gameplayController;
@@ -22,6 +26,28 @@ namespace FireLine.Scripts.Network
         private bool _healthSubscribed;
         private bool _injected;
 
+        private readonly NetworkVariable<FixedString64Bytes> _playerName =
+                new NetworkVariable<FixedString64Bytes>(
+                default,
+                NetworkVariableReadPermission.Everyone,
+                NetworkVariableWritePermission.Server
+        );
+
+
+        [Inject]
+        public void Construct(
+            PlayerNameService playerNameService,
+            NetworkPlayerScoreService scoreService)
+        {
+            _playerNameService = playerNameService;
+            _scoreService = scoreService;
+
+            Debug.Log(
+                $"[NET-PLAYER][NAME] PlayerNameService injected | Player={gameObject.name}"
+            );
+        }
+        public string PlayerName =>
+            _playerName.Value.ToString();
         // ============================================================
         // NETWORK SPAWN
         // ============================================================
@@ -73,6 +99,80 @@ namespace FireLine.Scripts.Network
 
             SubscribeHealth();
         }
+        private void SendPlayerName()
+        {
+            if (_playerNameService == null)
+            {
+                Debug.LogError(
+                    "[NET-PLAYER][NAME] " +
+                    "PlayerNameService is NULL!"
+                );
+
+                return;
+            }
+
+            string playerName =
+                _playerNameService.GetPlayerName();
+
+            if (string.IsNullOrWhiteSpace(playerName))
+            {
+                playerName = "Player";
+            }
+
+            playerName = playerName.Trim();
+
+            Debug.Log(
+                $"[NET-PLAYER][NAME] " +
+                $"Sending name to server | " +
+                $"Name={playerName} | " +
+                $"ClientId={OwnerClientId}"
+            );
+
+            SetPlayerNameServerRpc(
+                playerName
+            );
+        }
+
+        [ServerRpc]
+        private void SetPlayerNameServerRpc(string playerName)
+        {
+            if (!IsServer)
+                return;
+
+            if (string.IsNullOrWhiteSpace(playerName))
+                playerName = "Player";
+
+            playerName = playerName.Trim();
+
+            if (playerName.Length > 32)
+                playerName = playerName.Substring(0, 32);
+
+            _playerName.Value =
+                new FixedString64Bytes(playerName);
+
+            Debug.Log(
+                $"[NET-PLAYER][NAME] Name registered | " +
+                $"ClientId={OwnerClientId} | " +
+                $"Name={playerName}"
+            );
+
+            if (_scoreService == null)
+            {
+                Debug.LogError(
+                    "[NET-PLAYER][SCORE] " +
+                    "NetworkPlayerScoreService is NULL!"
+                );
+
+                return;
+            }
+
+            _scoreService.UpdatePlayerName(
+                OwnerClientId,
+                playerName
+            );
+        }
+
+
         private void OnEnable()
         {
             SceneManager.sceneLoaded += OnSceneLoaded;
@@ -235,6 +335,11 @@ namespace FireLine.Scripts.Network
             FindComponents();
 
             SetupOwner();
+
+            if (IsOwner)
+            {
+                SendPlayerName();
+            }
         }
 
         // ============================================================

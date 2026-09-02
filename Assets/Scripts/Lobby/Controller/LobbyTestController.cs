@@ -1,5 +1,6 @@
 ﻿
 using FireLine.Scripts.Network.Service;
+using FireLine.Scripts.Player.Service;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -10,6 +11,7 @@ namespace FireLine.Scripts.Lobby.Controller
 {
     public class LobbyTestController : MonoBehaviour
     {
+        private PlayerNameService _playerNameService;
         private NetworkLobbyService _lobbyService;
         private NetworkGameStartService _gameStartService;
         [SerializeField]
@@ -35,6 +37,9 @@ namespace FireLine.Scripts.Lobby.Controller
         [SerializeField]
         private TMP_InputField joinCodeInput;
 
+        [SerializeField]
+        private TMP_InputField playerNameInput;
+
         [Header("Texts")]
         [SerializeField]
         private TMP_Text sessionCodeText;
@@ -54,11 +59,13 @@ namespace FireLine.Scripts.Lobby.Controller
 
         [Inject]
         public void Construct(
-            NetworkLobbyService lobbyService,
-            NetworkGameStartService gameStartService)
+                NetworkLobbyService lobbyService,
+                NetworkGameStartService gameStartService,
+                PlayerNameService playerNameService)
         {
             _lobbyService = lobbyService;
             _gameStartService = gameStartService;
+            _playerNameService = playerNameService;
 
             Debug.Log(
                 "[LOBBY TEST] LobbyService injected."
@@ -67,10 +74,21 @@ namespace FireLine.Scripts.Lobby.Controller
             Debug.Log(
                 "[LOBBY TEST] GameStartService injected."
             );
+
+            Debug.Log(
+                "[LOBBY TEST] PlayerNameService injected."
+            );
         }
 
         private void Start()
         {
+            if (playerNameInput != null &&
+                _playerNameService != null)
+            {
+                playerNameInput.text =
+                    _playerNameService.GetPlayerName();
+            }
+
             startGameButton.onClick.AddListener(
                 OnStartGameButtonClicked
             );
@@ -213,11 +231,17 @@ namespace FireLine.Scripts.Lobby.Controller
 
         private void OnCreateButtonClicked()
         {
+            if (!SavePlayerName())
+                return;
+
             _ = CreateLobby();
         }
 
         private void OnJoinButtonClicked()
         {
+            if (!SavePlayerName())
+                return;
+
             _ = JoinLobby();
         }
 
@@ -540,6 +564,50 @@ namespace FireLine.Scripts.Lobby.Controller
                 $"Ready: {isReady} | " +
                 $"All Ready: {_lobbyService.AreAllPlayersReady()}"
             );
+        }
+
+        private bool SavePlayerName()
+        {
+            if (_playerNameService == null)
+            {
+                Debug.LogError(
+                    "[LOBBY UI] PlayerNameService is NULL!"
+                );
+
+                return false;
+            }
+
+            if (playerNameInput == null)
+            {
+                Debug.LogError(
+                    "[LOBBY UI] Player Name Input is NULL!"
+                );
+
+                return false;
+            }
+
+            string playerName =
+                playerNameInput.text.Trim();
+
+            if (string.IsNullOrWhiteSpace(playerName))
+            {
+                SetStatus(
+                    "Please enter your player name."
+                );
+
+                return false;
+            }
+
+            _playerNameService.SetPlayerName(
+                playerName
+            );
+
+            Debug.Log(
+                $"[LOBBY UI] Player name saved | " +
+                $"Name={_playerNameService.GetPlayerName()}"
+            );
+
+            return true;
         }
     }
 }

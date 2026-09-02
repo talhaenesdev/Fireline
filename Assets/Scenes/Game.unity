@@ -1906,11 +1906,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Zenject::Zenject.SceneContext
   _scriptableObjectInstallers: []
   _monoInstallers:
-  - {fileID: 2140302978}
   - {fileID: 1233103525}
   - {fileID: 1808295838}
   - {fileID: 106540413}
   - {fileID: 1261678533}
+  - {fileID: 2140302978}
   _installerPrefabs: []
   _autoRun: 1
   OnPreInstall:
