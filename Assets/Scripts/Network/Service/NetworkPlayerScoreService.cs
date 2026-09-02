@@ -7,9 +7,7 @@ using Zenject;
 
 namespace FireLine.Scripts.Network.Service
 {
-    public class NetworkPlayerScoreService :
-        IInitializable,
-        IDisposable
+    public class NetworkPlayerScoreService : IInitializable, IDisposable
     {
         private readonly SignalBus _signalBus;
         private readonly NetworkManager _networkManager;
@@ -39,20 +37,15 @@ namespace FireLine.Scripts.Network.Service
                 $"IsHost: {_networkManager.IsHost}"
             );
 
-            _networkManager.OnServerStarted +=
-                OnServerStarted;
+            _networkManager.OnServerStarted += OnServerStarted;
 
             if (_networkManager.IsServer)
-            {
                 Subscribe();
-            }
         }
 
         private void OnServerStarted()
         {
-            Debug.Log(
-                "[SCORE SERVICE] Server started."
-            );
+            Debug.Log("[SCORE SERVICE] Server started.");
 
             Subscribe();
         }
@@ -78,8 +71,7 @@ namespace FireLine.Scripts.Network.Service
             _isSubscribed = true;
 
             Debug.Log(
-                "[SCORE SERVICE] " +
-                "Subscribed successfully."
+                "[SCORE SERVICE] Subscribed successfully."
             );
         }
 
@@ -97,24 +89,19 @@ namespace FireLine.Scripts.Network.Service
                     OnClientDisconnected;
             }
 
-            if (_signalBus != null &&
-                _isSubscribed)
+            if (_signalBus != null && _isSubscribed)
             {
-                _signalBus.TryUnsubscribe<
-                    NetworkPlayerDeathSignal>(
+                _signalBus.TryUnsubscribe<NetworkPlayerDeathSignal>(
                     OnPlayerDeath
                 );
             }
 
             _isSubscribed = false;
 
-            Debug.Log(
-                "[SCORE SERVICE] Disposed."
-            );
+            Debug.Log("[SCORE SERVICE] Disposed.");
         }
 
-        private void OnClientConnected(
-            ulong clientId)
+        private void OnClientConnected(ulong clientId)
         {
             if (!_networkManager.IsServer)
                 return;
@@ -124,6 +111,7 @@ namespace FireLine.Scripts.Network.Service
 
             _scoreboard.SetScoreServer(
                 clientId,
+                "Player",
                 score.Kills,
                 score.Deaths
             );
@@ -136,25 +124,21 @@ namespace FireLine.Scripts.Network.Service
             );
         }
 
-
-        private void OnClientDisconnected(
-            ulong clientId)
+        private void OnClientDisconnected(ulong clientId)
         {
             if (!_networkManager.IsServer)
                 return;
 
             _scores.Remove(clientId);
 
-            _scoreboard.RemoveScoreServer(
-                clientId
-            );
+            _scoreboard.RemoveScoreServer(clientId);
 
             Debug.Log(
-                $"[SCORE SERVICE] " +
-                $"Client disconnected | " +
+                $"[SCORE SERVICE] Client disconnected | " +
                 $"ClientId: {clientId}"
             );
-        } 
+        }
+
         private void OnPlayerDeath(
             NetworkPlayerDeathSignal signal)
         {
@@ -173,15 +157,14 @@ namespace FireLine.Scripts.Network.Service
                 );
 
             victimScore.Deaths++;
-            _scoreboard.SetScoreServer(
+
+            UpdateScoreboard(
                 signal.VictimClientId,
-                victimScore.Kills,
-                victimScore.Deaths
+                victimScore
             );
 
             Debug.Log(
-                $"[SCORE SERVICE] " +
-                $"Death +1 | " +
+                $"[SCORE SERVICE] Death +1 | " +
                 $"ClientId: {signal.VictimClientId} | " +
                 $"Deaths: {victimScore.Deaths}"
             );
@@ -190,8 +173,7 @@ namespace FireLine.Scripts.Network.Service
                 signal.VictimClientId)
             {
                 Debug.Log(
-                    $"[SCORE SERVICE] " +
-                    $"Self death | " +
+                    $"[SCORE SERVICE] Self death | " +
                     $"ClientId: {signal.VictimClientId}"
                 );
 
@@ -205,18 +187,93 @@ namespace FireLine.Scripts.Network.Service
 
             killerScore.Kills++;
 
-            _scoreboard.SetScoreServer(
+            UpdateScoreboard(
                 signal.KillerClientId,
-                killerScore.Kills,
-                killerScore.Deaths
+                killerScore
             );
 
             Debug.Log(
-                $"[SCORE SERVICE] " +
-                $"Kill +1 | " +
+                $"[SCORE SERVICE] Kill +1 | " +
                 $"ClientId: {signal.KillerClientId} | " +
                 $"Kills: {killerScore.Kills}"
             );
+        }
+
+        public void UpdatePlayerName(
+            ulong clientId,
+            string playerName)
+        {
+            if (!_networkManager.IsServer)
+                return;
+
+            if (string.IsNullOrWhiteSpace(playerName))
+                playerName = "Player";
+
+            playerName = playerName.Trim();
+
+            if (playerName.Length > 32)
+                playerName = playerName.Substring(0, 32);
+
+            ScoreData score =
+                GetOrCreateScore(clientId);
+
+            _scoreboard.SetScoreServer(
+                clientId,
+                playerName,
+                score.Kills,
+                score.Deaths
+            );
+
+            Debug.Log(
+                $"[SCORE SERVICE] Player name updated | " +
+                $"ClientId: {clientId} | " +
+                $"Name: {playerName}"
+            );
+        }
+
+        private void UpdateScoreboard(
+            ulong clientId,
+            ScoreData score)
+        {
+            string playerName =
+                GetPlayerName(clientId);
+
+            _scoreboard.SetScoreServer(
+                clientId,
+                playerName,
+                score.Kills,
+                score.Deaths
+            );
+        }
+
+        private string GetPlayerName(ulong clientId)
+        {
+            if (_networkManager == null)
+                return "Player";
+
+            if (!_networkManager.ConnectedClients.TryGetValue(
+                    clientId,
+                    out NetworkClient client))
+            {
+                return "Player";
+            }
+
+            if (client.PlayerObject == null)
+                return "Player";
+
+            NetworkPlayer networkPlayer =
+                client.PlayerObject.GetComponent<NetworkPlayer>();
+
+            if (networkPlayer == null)
+                return "Player";
+
+            string playerName =
+                networkPlayer.PlayerName;
+
+            if (string.IsNullOrWhiteSpace(playerName))
+                return "Player";
+
+            return playerName;
         }
 
         private ScoreData GetOrCreateScore(
@@ -224,64 +281,38 @@ namespace FireLine.Scripts.Network.Service
         {
             if (_scores.TryGetValue(
                     clientId,
-                    out ScoreData score))
+                    out ScoreData existingScore))
             {
-                return score;
+                return existingScore;
             }
 
-            score = new ScoreData();
+            ScoreData newScore =
+                new ScoreData();
 
             _scores.Add(
                 clientId,
-                score
+                newScore
             );
 
-            Debug.Log(
-                $"[SCORE SERVICE] " +
-                $"Created score | " +
-                $"ClientId: {clientId}"
-            );
-
-            return score;
+            return newScore;
         }
 
-        public int GetKills(
-            ulong clientId)
+        public int GetKills(ulong clientId)
         {
-            if (!_scores.TryGetValue(
-                    clientId,
-                    out ScoreData score))
-            {
-                return 0;
-            }
-
-            return score.Kills;
+            return GetOrCreateScore(clientId).Kills;
         }
 
-        public int GetDeaths(
-            ulong clientId)
+        public int GetDeaths(ulong clientId)
         {
-            if (!_scores.TryGetValue(
-                    clientId,
-                    out ScoreData score))
-            {
-                return 0;
-            }
-
-            return score.Deaths;
+            return GetOrCreateScore(clientId).Deaths;
         }
 
-        public float GetKda(
-            ulong clientId)
+        public float GetKda(ulong clientId)
         {
-            if (!_scores.TryGetValue(
-                    clientId,
-                    out ScoreData score))
-            {
-                return 0f;
-            }
+            ScoreData score =
+                GetOrCreateScore(clientId);
 
-            if (score.Deaths == 0)
+            if (score.Deaths <= 0)
                 return score.Kills;
 
             return (float)score.Kills /
