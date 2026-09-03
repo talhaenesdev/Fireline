@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c46458a9e32db2f4ebe6793fbdae7fd8, type: 3}
   m_Name: PD_ImpactParticle
   m_EditorClassIdentifier: FireLine.Pooling::FireLine.Scripts.Pooling.PoolData
-  poolKey: WallImpactParticle
+  poolKey: WallImpact
   prefab: {fileID: 3967571797341593768, guid: 130181b0892e78a40bf6233509359aa7, type: 3}
   initialSize: 20
   maxSize: 100

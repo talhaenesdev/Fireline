@@ -7,6 +7,10 @@ namespace FireLine.Scripts.Network.Installers
 {
     public class NetworkInstaller : MonoInstaller
     {
+        [Header("Player")]
+        [SerializeField]
+        private NetworkObject playerPrefab;
+
         public override void InstallBindings()
         {
             Debug.Log(
@@ -14,14 +18,51 @@ namespace FireLine.Scripts.Network.Installers
                 $"Container={Container.GetHashCode()}"
             );
 
+            // --------------------------------------------------
+            // NetworkManager
+            // --------------------------------------------------
+
             Container.Bind<NetworkManager>()
                 .FromMethod(_ => NetworkManager.Singleton)
                 .AsSingle();
+
+            // --------------------------------------------------
+            // Player Prefab
+            // --------------------------------------------------
+
+            if (playerPrefab == null)
+            {
+                Debug.LogError(
+                    "[NETWORK INSTALLER] " +
+                    "Player Prefab is NULL!"
+                );
+            }
+            else
+            {
+                Container.Bind<NetworkObject>()
+                    .WithId("PlayerPrefab")
+                    .FromInstance(playerPrefab)
+                    .AsSingle();
+
+                Debug.Log(
+                    $"[NETWORK INSTALLER] " +
+                    $"Player Prefab BOUND | " +
+                    $"Prefab: {playerPrefab.name}"
+                );
+            }
+
+            // --------------------------------------------------
+            // Coroutine Runner
+            // --------------------------------------------------
 
             Container.Bind<NetworkCoroutineRunner>()
                 .FromNewComponentOnNewGameObject()
                 .AsSingle()
                 .NonLazy();
+
+            // --------------------------------------------------
+            // Services
+            // --------------------------------------------------
 
             Container.BindInterfacesTo<NetworkPlayerRespawnService>()
                 .AsSingle();
@@ -32,6 +73,9 @@ namespace FireLine.Scripts.Network.Installers
             Container.Bind<NetworkConnectionService>()
                 .AsSingle();
 
+            // --------------------------------------------------
+            // Spawn Point Manager
+            // --------------------------------------------------
 
             NetworkSpawnPointManager spawnPointManager =
                 FindFirstObjectByType<NetworkSpawnPointManager>();
@@ -39,7 +83,8 @@ namespace FireLine.Scripts.Network.Installers
             if (spawnPointManager == null)
             {
                 Debug.LogError(
-                    "[NETWORK INSTALLER] spawnPointManager NOT FOUND!"
+                    "[NETWORK INSTALLER] " +
+                    "spawnPointManager NOT FOUND!"
                 );
             }
             else
@@ -49,16 +94,14 @@ namespace FireLine.Scripts.Network.Installers
                     .AsSingle();
 
                 Debug.Log(
-                    "[NETWORK INSTALLER] spawnPointManager BOUND"
+                    "[NETWORK INSTALLER] " +
+                    "spawnPointManager BOUND"
                 );
             }
 
-
-
-
-
-
-
+            // --------------------------------------------------
+            // Bullet Spawner
+            // --------------------------------------------------
 
             NetworkBulletSpawner bulletSpawner =
                 FindFirstObjectByType<NetworkBulletSpawner>();
@@ -66,7 +109,8 @@ namespace FireLine.Scripts.Network.Installers
             if (bulletSpawner == null)
             {
                 Debug.LogError(
-                    "[NETWORK INSTALLER] NetworkBulletSpawner NOT FOUND!"
+                    "[NETWORK INSTALLER] " +
+                    "NetworkBulletSpawner NOT FOUND!"
                 );
             }
             else
@@ -76,9 +120,14 @@ namespace FireLine.Scripts.Network.Installers
                     .AsSingle();
 
                 Debug.Log(
-                    "[NETWORK INSTALLER] NetworkBulletSpawner BOUND"
+                    "[NETWORK INSTALLER] " +
+                    "NetworkBulletSpawner BOUND"
                 );
             }
+
+            // --------------------------------------------------
+            // Scoreboard
+            // --------------------------------------------------
 
             NetworkScoreboard scoreboard =
                 FindFirstObjectByType<NetworkScoreboard>();
@@ -86,7 +135,8 @@ namespace FireLine.Scripts.Network.Installers
             if (scoreboard == null)
             {
                 Debug.LogError(
-                    "[NETWORK INSTALLER] scoreboard NOT FOUND!"
+                    "[NETWORK INSTALLER] " +
+                    "scoreboard NOT FOUND!"
                 );
             }
             else
@@ -96,10 +146,10 @@ namespace FireLine.Scripts.Network.Installers
                     .AsSingle();
 
                 Debug.Log(
-                    "[NETWORK INSTALLER] scoreboard BOUND"
+                    "[NETWORK INSTALLER] " +
+                    "scoreboard BOUND"
                 );
             }
-
 
             Debug.Log(
                 $"[NETWORK INSTALLER] " +
@@ -107,7 +157,9 @@ namespace FireLine.Scripts.Network.Installers
                 $"{FindFirstObjectByType<NetworkBulletSpawner>() != null}"
             );
 
-            Debug.Log("[NETWORK INSTALLER] COMPLETED");
+            Debug.Log(
+                "[NETWORK INSTALLER] COMPLETED"
+            );
         }
     }
 }

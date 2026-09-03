@@ -15,6 +15,7 @@ namespace FireLine.Scripts.Network.Service
         private readonly NetworkManager _networkManager;
         private readonly NetworkSpawnPointManager _spawnPointManager;
         private readonly NetworkCoroutineRunner _coroutineRunner;
+        private readonly NetworkObject _playerPrefab;
 
         private const float RespawnDelay = 2f;
 
@@ -22,12 +23,14 @@ namespace FireLine.Scripts.Network.Service
             SignalBus signalBus,
             NetworkManager networkManager,
             NetworkSpawnPointManager spawnPointManager,
-            NetworkCoroutineRunner coroutineRunner)
+            NetworkCoroutineRunner coroutineRunner,
+        [Inject(Id = "PlayerPrefab")] NetworkObject playerPrefab)
         {
             _signalBus = signalBus;
             _networkManager = networkManager;
             _spawnPointManager = spawnPointManager;
             _coroutineRunner = coroutineRunner;
+            _playerPrefab = playerPrefab;
         }
 
         public void Initialize() 
@@ -214,31 +217,12 @@ namespace FireLine.Scripts.Network.Service
             );
 
             // --------------------------------------------------
-            // 4. Player prefab bul
-            // --------------------------------------------------
-
-            GameObject playerPrefab =
-                _networkManager
-                    .NetworkConfig
-                    .PlayerPrefab;
-
-            if (playerPrefab == null)
-            {
-                Debug.LogError(
-                    "[RESPAWN SERVICE] " +
-                    "NetworkConfig.PlayerPrefab is NULL!"
-                );
-
-                return;
-            }
-
-            // --------------------------------------------------
             // 5. Yeni Player oluştur
             // --------------------------------------------------
 
             GameObject newPlayer =
                 UnityEngine.Object.Instantiate(
-                    playerPrefab,
+                    _playerPrefab.gameObject,
                     spawnPoint.position,
                     spawnPoint.rotation
                 );
