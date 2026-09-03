@@ -9,6 +9,9 @@ namespace FireLine.Scripts.Network
         [SerializeField]
         private NetworkObject playerPrefab;
 
+        [SerializeField]
+        private Transform[] spawnPoints;
+
         private void Awake()
         {
             if (!NetworkManager.Singleton.IsServer)
@@ -60,11 +63,21 @@ namespace FireLine.Scripts.Network
             if (client.PlayerObject != null)
                 return;
 
+            Transform spawnPoint =
+                GetSpawnPoint(clientId);
+
+            Debug.Log(
+                $"[PLAYER SPAWNER] SPAWN POINT TEST | " +
+                $"ClientId={clientId} | " +
+                $"Point={spawnPoint.name} | " +
+                $"Position={spawnPoint.position}"
+            );
+
             NetworkObject player =
                 Instantiate(
                     playerPrefab,
-                    Vector3.zero,
-                    Quaternion.identity
+                    spawnPoint.position,
+                    spawnPoint.rotation
                 );
 
             player.SpawnAsPlayerObject(
@@ -75,8 +88,30 @@ namespace FireLine.Scripts.Network
             Debug.Log(
                 $"[PLAYER SPAWNER] " +
                 $"Spawned Player | " +
-                $"ClientId={clientId}"
+                $"ClientId={clientId} | " +
+                $"SpawnPoint={spawnPoint.name} | " +
+                $"Position={spawnPoint.position}"
             );
+        }
+
+        private Transform GetSpawnPoint(
+            ulong clientId)
+        {
+            if (spawnPoints == null ||
+                spawnPoints.Length == 0)
+            {
+                Debug.LogError(
+                    "[PLAYER SPAWNER] " +
+                    "No spawn points assigned!"
+                );
+
+                return transform;
+            }
+
+            int index =
+                (int)(clientId % (ulong)spawnPoints.Length);
+
+            return spawnPoints[index];
         }
 
         private void OnDestroy()

@@ -1,6 +1,5 @@
 ﻿using Unity.Netcode;
 using UnityEngine;
-using Zenject;
 
 namespace FireLine.Scripts.Network
 {
@@ -89,10 +88,9 @@ namespace FireLine.Scripts.Network
             Debug.Log(
                 $"[BULLET SPAWNER] " +
                 $"Network Bullet Spawned | " +
-                $"NetworkObjectId: {networkObject.NetworkObjectId} | " +
-                $"OwnerClientId: {ownerClientId} | " +
-                $"Position: {position} | " +
-                $"Direction: {direction}"
+                $"NetworkObjectId: " +
+                $"{networkObject.NetworkObjectId} | " +
+                $"OwnerClientId: {ownerClientId}"
             );
         }
     }

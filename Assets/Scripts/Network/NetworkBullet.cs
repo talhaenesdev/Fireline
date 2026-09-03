@@ -1,6 +1,6 @@
-﻿using Unity.Netcode;
+﻿using FireLine.Scripts.Network.Service;
+using Unity.Netcode;
 using UnityEngine;
-using Zenject;
 
 namespace FireLine.Scripts.Network
 {
@@ -15,13 +15,9 @@ namespace FireLine.Scripts.Network
         [SerializeField]
         private int damage = 10;
 
-        [SerializeField]
-        private string wallImpactPoolKey = "WallImpact";
-
         private Vector3 _direction;
         private float _remainingLifetime;
         private ulong _ownerClientId;
-
 
         public void Initialize(
             Vector3 direction,
@@ -91,69 +87,81 @@ namespace FireLine.Scripts.Network
             NetworkPlayer targetPlayer =
                 other.GetComponentInParent<NetworkPlayer>();
 
+            // PLAYER HIT
             if (targetPlayer != null)
             {
-                HandlePlayerHit(targetPlayer);
+                if (targetPlayer.OwnerClientId ==
+                    _ownerClientId)
+                {
+                    return;
+                }
+
+                NetworkPlayerHealth health =
+                    targetPlayer.GetComponent<
+                        NetworkPlayerHealth>();
+
+                if (health == null)
+                {
+                    Debug.LogError(
+                        $"[NETWORK BULLET] " +
+                        $"NetworkPlayerHealth missing on " +
+                        $"{targetPlayer.name}"
+                    );
+
+                    return;
+                }
+
+                Debug.Log(
+                    $"[NETWORK BULLET] HIT PLAYER | " +
+                    $"Target: {targetPlayer.OwnerClientId} | " +
+                    $"Damage: {damage} | " +
+                    $"Attacker: {_ownerClientId}"
+                );
+
+                health.TakeDamageServer(
+                    damage,
+                    _ownerClientId
+                );
+
+                Despawn();
+
                 return;
             }
 
-            HandleEnvironmentHit();
+            // WALL / OTHER COLLIDER HIT
+            Debug.Log(
+                $"[NETWORK BULLET] HIT WALL | " +
+                $"Collider: {other.name} | " +
+                $"Position: {transform.position}"
+            );
+
+            PlayWallImpact();
+
+            Despawn();
         }
 
-        private void HandlePlayerHit(
-            NetworkPlayer targetPlayer)
+        private void PlayWallImpact()
         {
-            if (targetPlayer.OwnerClientId ==
-                _ownerClientId)
-            {
-                return;
-            }
+            NetworkWallImpactEffectService service =
+                FindFirstObjectByType<
+                    NetworkWallImpactEffectService>();
 
-            NetworkPlayerHealth health =
-                targetPlayer.GetComponent<
-                    NetworkPlayerHealth>();
-
-            if (health == null)
+            if (service == null)
             {
                 Debug.LogError(
-                    $"[NETWORK BULLET] " +
-                    $"NetworkPlayerHealth missing on " +
-                    $"{targetPlayer.name}"
+                    "[NETWORK BULLET] " +
+                    "NetworkWallImpactEffectService " +
+                    "NOT FOUND!"
                 );
 
                 return;
             }
 
-            Debug.Log(
-                $"[NETWORK BULLET] HIT PLAYER | " +
-                $"Target: {targetPlayer.OwnerClientId} | " +
-                $"Damage: {damage} | " +
-                $"Attacker: {_ownerClientId}"
+            service.PlayWallImpact(
+                transform.position
             );
-
-            health.TakeDamageServer(
-                damage,
-                _ownerClientId
-            );
-
-            Despawn();
         }
 
-        private void HandleEnvironmentHit()
-        {
-            Vector3 impactPosition =
-                transform.position;
-
-            Debug.Log(
-                $"[NETWORK BULLET] " +
-                $"HIT ENVIRONMENT | " +
-                $"Position: {impactPosition}"
-            );
-
-            Despawn();
-        }
-
-        
         private void Despawn()
         {
             if (!IsServer)
