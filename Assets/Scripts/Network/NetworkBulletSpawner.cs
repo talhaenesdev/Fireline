@@ -1,5 +1,6 @@
 ﻿using Unity.Netcode;
 using UnityEngine;
+using Zenject;
 
 namespace FireLine.Scripts.Network
 {

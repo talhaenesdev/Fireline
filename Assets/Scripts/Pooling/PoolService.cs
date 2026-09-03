@@ -107,6 +107,17 @@ namespace FireLine.Scripts.Pooling
 
             _container.InjectGameObject(instance);
 
+            PooledParticleEffect particleEffect =
+                instance.GetComponent<PooledParticleEffect>();
+
+            if (particleEffect != null)
+            {
+                particleEffect.Initialize(
+                    this,
+                    pool.Data.PoolKey
+                );
+            }
+
             instance.SetActive(false);
 
             return instance;

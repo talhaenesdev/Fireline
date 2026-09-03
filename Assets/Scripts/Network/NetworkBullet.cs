@@ -1,5 +1,6 @@
 ﻿using Unity.Netcode;
 using UnityEngine;
+using Zenject;
 
 namespace FireLine.Scripts.Network
 {
@@ -14,9 +15,13 @@ namespace FireLine.Scripts.Network
         [SerializeField]
         private int damage = 10;
 
+        [SerializeField]
+        private string wallImpactPoolKey = "WallImpact";
+
         private Vector3 _direction;
         private float _remainingLifetime;
         private ulong _ownerClientId;
+
 
         public void Initialize(
             Vector3 direction,
@@ -86,9 +91,18 @@ namespace FireLine.Scripts.Network
             NetworkPlayer targetPlayer =
                 other.GetComponentInParent<NetworkPlayer>();
 
-            if (targetPlayer == null)
+            if (targetPlayer != null)
+            {
+                HandlePlayerHit(targetPlayer);
                 return;
+            }
 
+            HandleEnvironmentHit();
+        }
+
+        private void HandlePlayerHit(
+            NetworkPlayer targetPlayer)
+        {
             if (targetPlayer.OwnerClientId ==
                 _ownerClientId)
             {
@@ -125,6 +139,21 @@ namespace FireLine.Scripts.Network
             Despawn();
         }
 
+        private void HandleEnvironmentHit()
+        {
+            Vector3 impactPosition =
+                transform.position;
+
+            Debug.Log(
+                $"[NETWORK BULLET] " +
+                $"HIT ENVIRONMENT | " +
+                $"Position: {impactPosition}"
+            );
+
+            Despawn();
+        }
+
+        
         private void Despawn()
         {
             if (!IsServer)
