@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46458a9e32db2f4ebe6793fbdae7fd8, type: 3}
+  m_Name: PD_ImpactParticle
+  m_EditorClassIdentifier: FireLine.Pooling::FireLine.Scripts.Pooling.PoolData
+  poolKey: WallImpactParticle
+  prefab: {fileID: 3967571797341593768, guid: 130181b0892e78a40bf6233509359aa7, type: 3}
+  initialSize: 20
+  maxSize: 100
+  expandable: 1
