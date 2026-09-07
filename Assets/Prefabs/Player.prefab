@@ -356,6 +356,37 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &5404081256292172423
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 879746745281773250}
+  m_Layer: 0
+  m_Name: Vision
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &879746745281773250
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5404081256292172423}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 311929678271989319}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6517178516213573905
 GameObject:
   m_ObjectHideFlags: 0
@@ -411,9 +442,10 @@ GameObject:
   - component: {fileID: 5006476606668121105}
   - component: {fileID: 4162238347015880299}
   - component: {fileID: 8149004686171555721}
+  - component: {fileID: 6842709419260223899}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -434,6 +466,7 @@ Transform:
   - {fileID: 8709621768593786735}
   - {fileID: 115344442681767431}
   - {fileID: 1325268306996561168}
+  - {fileID: 879746745281773250}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7612163908192422989
@@ -831,6 +864,25 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 84
   m_CollisionDetection: 0
+--- !u!114 &6842709419260223899
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6727836590595305734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c0881a5c612c844bbec04f9c96d7d4c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FireLine.Network::FireLine.Scripts.Network.Controller.NetworkPlayerVisionController
+  ShowTopMostFoldoutHeaderGroup: 1
+  vision: {fileID: 879746745281773250}
+  visionRange: 50
+  visionAngle: 90
+  obstacleLayers:
+    serializedVersion: 2
+    m_Bits: 64
 --- !u!1 &7050262185231087442
 GameObject:
   m_ObjectHideFlags: 0
