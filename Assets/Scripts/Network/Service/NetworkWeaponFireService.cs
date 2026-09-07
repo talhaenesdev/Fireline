@@ -1,4 +1,5 @@
 ﻿using FireLine.Scripts.Core.Weapon;
+using FireLine.Scripts.Weapon.Service;
 using Unity.Netcode;
 using UnityEngine;
 using Zenject;
@@ -90,6 +91,27 @@ namespace FireLine.Scripts.Network
                 direction.normalized,
                 clientId
             );
+
+            PlayWeaponFireClientRpc(position);
+        }
+
+        [ClientRpc]
+        private void PlayWeaponFireClientRpc(Vector3 position)
+        {
+            if (WeaponAudioManager.Instance == null)
+            {
+                Debug.LogWarning(
+                    "[NETWORK WEAPON] WeaponAudioManager is NULL!"
+                );
+
+                return;
+            }
+
+            Debug.Log(
+                $"[NETWORK WEAPON] Playing fire sound at {position}"
+            );
+
+            WeaponAudioManager.Instance.PlayFireSound(position);
         }
     }
 }
