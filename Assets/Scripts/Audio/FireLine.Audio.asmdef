@@ -1,12 +1,7 @@
 {
-    "name": "FireLine.Weapon",
+    "name": "FireLine.Audio",
     "rootNamespace": "",
-    "references": [
-        "Zenject",
-        "FireLine.Pooling",
-        "FireLine.Core",
-        "FireLine.Audio"
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
