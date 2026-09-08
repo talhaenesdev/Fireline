@@ -11,11 +11,6 @@ namespace FireLine.Scripts.Weapon.Controller
         private int _currentAmmo;
         private bool _isReloading;
 
-        public float ReloadDuration =>
-            _weaponData != null
-            ? _weaponData.ReloadDuration
-            : 0f;
-
         public WeaponController(
             WeaponData weaponData)
         {
@@ -36,14 +31,13 @@ namespace FireLine.Scripts.Weapon.Controller
                 ? _weaponData.MagazineSize
                 : 0;
 
+        public float ReloadDuration =>
+            _weaponData != null
+                ? _weaponData.ReloadDuration
+                : 0f;
+
         public bool IsReloading =>
             _isReloading;
-
-        public bool IsAutomatic()
-        {
-            return _weaponData != null &&
-                   _weaponData.Automatic;
-        }
 
         public bool CanShoot()
         {
@@ -77,6 +71,12 @@ namespace FireLine.Scripts.Weapon.Controller
             return Time.time >= _nextFireTime;
         }
 
+        public bool IsAutomatic()
+        {
+            return _weaponData != null &&
+                   _weaponData.Automatic;
+        }
+
         public void RegisterShot()
         {
             if (_weaponData == null)
@@ -101,14 +101,30 @@ namespace FireLine.Scripts.Weapon.Controller
         public bool CanReload()
         {
             if (_weaponData == null)
+            {
+                Debug.LogError(
+                    "[WEAPON] WeaponData is NULL!"
+                );
+
                 return false;
+            }
 
             if (_isReloading)
+            {
+                Debug.Log(
+                    "[WEAPON] Reload blocked | Already reloading"
+                );
+
                 return false;
+            }
 
             if (_currentAmmo >=
                 _weaponData.MagazineSize)
             {
+                Debug.Log(
+                    "[WEAPON] Reload blocked | Magazine full"
+                );
+
                 return false;
             }
 

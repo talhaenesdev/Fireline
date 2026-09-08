@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using static UnityEngine.Android.AndroidGame;
 
 namespace FireLine.Scripts.Weapon.Model
 {
@@ -19,10 +18,6 @@ namespace FireLine.Scripts.Weapon.Model
         [SerializeField]
         private bool automatic = true;
 
-        [Header("Audio")]
-        [SerializeField]
-        private AudioClip[] fireClips;
-
         [Header("Magazine")]
         [SerializeField]
         private int magazineSize = 7;
@@ -30,12 +25,26 @@ namespace FireLine.Scripts.Weapon.Model
         [SerializeField]
         private float reloadDuration = 1.5f;
 
+        [Header("Audio")]
+        [SerializeField]
+        private AudioClip[] fireClips;
 
-        public int MagazineSize => magazineSize;
-        public float ReloadDuration => reloadDuration;
-        public BulletData BulletData => bulletData;
-        public float FireRate => fireRate;
-        public AudioClip[] FireClips => fireClips;
-        public bool Automatic => automatic;
+        public BulletData BulletData =>
+            bulletData;
+
+        public float FireRate =>
+            fireRate;
+
+        public bool Automatic =>
+            automatic;
+
+        public int MagazineSize =>
+            magazineSize;
+
+        public float ReloadDuration =>
+            reloadDuration;
+
+        public AudioClip[] FireClips =>
+            fireClips;
     }
 }
