@@ -94,6 +94,16 @@ namespace FireLine.Scripts.Player.Controller
                 StartReload();
             }
 
+            if (_weaponController.CurrentAmmo <= 0 &&
+                !_weaponController.IsReloading)
+            {
+                Debug.Log(
+                    "[GAMEPLAY] Magazine empty | Starting automatic reload!"
+                );
+
+                StartReload();
+            }
+
             // ============================================================
             // FIRE
             // ============================================================
