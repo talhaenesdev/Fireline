@@ -32,7 +32,11 @@ namespace FireLine.Scripts.Player.Controller
                 $"Scene={gameObject.scene.name}"
             );
         }
-
+        public bool IsAutomatic()
+        {
+            return _weaponController != null &&
+                   _weaponController.IsAutomatic();
+        }
         // ============================================================
         // AWAKE
         // ============================================================

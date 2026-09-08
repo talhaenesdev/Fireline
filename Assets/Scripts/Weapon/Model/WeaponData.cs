@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using static UnityEngine.Android.AndroidGame;
 
 namespace FireLine.Scripts.Weapon.Model
 {
@@ -15,6 +16,8 @@ namespace FireLine.Scripts.Weapon.Model
         [SerializeField]
         private float fireRate = 0.25f;
 
+        [SerializeField]
+        private bool automatic = true;
         [Header("Audio")]
         [SerializeField]
         private AudioClip[] fireClips;
@@ -22,5 +25,6 @@ namespace FireLine.Scripts.Weapon.Model
         public BulletData BulletData => bulletData;
         public float FireRate => fireRate;
         public AudioClip[] FireClips => fireClips;
+        public bool Automatic => automatic;
     }
 }
