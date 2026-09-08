@@ -6,11 +6,9 @@ namespace FireLine.Scripts.Weapon.Controller
     public class WeaponController
     {
         private readonly WeaponData _weaponData;
-
         private float _nextFireTime;
 
-        public WeaponController(
-            WeaponData weaponData)
+        public WeaponController(WeaponData weaponData)
         {
             _weaponData = weaponData;
         }
@@ -19,14 +17,17 @@ namespace FireLine.Scripts.Weapon.Controller
         {
             if (_weaponData == null)
             {
-                Debug.LogError(
-                    "[WEAPON] WeaponData is NULL!"
-                );
-
+                Debug.LogError("[WEAPON] WeaponData is NULL!");
                 return false;
             }
 
             return Time.time >= _nextFireTime;
+        }
+
+        public bool IsAutomatic()
+        {
+            return _weaponData != null &&
+                   _weaponData.Automatic;
         }
 
         public void RegisterShot()

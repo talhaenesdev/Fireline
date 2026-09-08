@@ -80,13 +80,27 @@ namespace FireLine.Scripts.Player.Controller
                 return;
             }
 
-            if (!_inputController.FirePressed)
+            bool shouldFire;
+
+            if (_weaponController.IsAutomatic())
+            {
+                shouldFire =
+                    _inputController.FirePressed;
+            }
+            else
+            {
+                shouldFire =
+                    _inputController.FireStarted;
+            }
+
+            if (!shouldFire)
                 return;
 
             Debug.Log(
-                $"[GAMEPLAY] FirePressed | " +
+                $"[GAMEPLAY] Fire | " +
                 $"OwnerClientId: {_networkObject.OwnerClientId} | " +
-                $"IsOwner: {_networkObject.IsOwner}"
+                $"IsOwner: {_networkObject.IsOwner} | " +
+                $"Automatic: {_weaponController.IsAutomatic()}"
             );
 
             _weaponController.Shoot(
