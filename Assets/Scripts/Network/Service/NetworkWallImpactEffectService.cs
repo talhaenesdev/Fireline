@@ -30,7 +30,7 @@ namespace FireLine.Scripts.Network.Service
 
         [ClientRpc]
         private void PlayWallImpactClientRpc(
-            Vector3 position)
+                Vector3 position)
         {
             if (_poolService == null)
             {
@@ -57,6 +57,22 @@ namespace FireLine.Scripts.Network.Service
                 );
 
                 return;
+            }
+
+            Debug.Log(
+                "[WALL IMPACT FX] Calling WallImpactAudioManager"
+            );
+
+            if (WallImpactAudioManager.Instance != null)
+            {
+                WallImpactAudioManager.Instance
+                    .PlayImpactSound(position);
+            }
+            else
+            {
+                Debug.LogError(
+                    "[WALL IMPACT FX] WallImpactAudioManager.Instance is NULL!"
+                );
             }
 
             Debug.Log(

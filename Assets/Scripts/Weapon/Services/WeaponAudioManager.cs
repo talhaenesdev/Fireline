@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using FireLine.Scripts.Audio.Service;
+using UnityEngine;
 
 namespace FireLine.Scripts.Weapon.Service
 {
@@ -7,16 +8,23 @@ namespace FireLine.Scripts.Weapon.Service
         public static WeaponAudioManager Instance { get; private set; }
 
         [Header("Audio")]
-        [SerializeField] private AudioClip[] fireClips;
+        [SerializeField]
+        private AudioClip[] fireClips;
 
         [Header("3D Settings")]
-        [SerializeField] private float volume = 1f;
-        [SerializeField] private float minDistance = 1f;
-        [SerializeField] private float maxDistance = 15f;
+        [SerializeField]
+        private float volume = 1f;
+
+        [SerializeField]
+        private float minDistance = 5f;
+
+        [SerializeField]
+        private float maxDistance = 30f;
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            if (Instance != null &&
+                Instance != this)
             {
                 Destroy(gameObject);
                 return;
@@ -24,19 +32,30 @@ namespace FireLine.Scripts.Weapon.Service
 
             Instance = this;
 
-            Debug.Log("[WEAPON-AUDIO] Manager initialized!");
+            Debug.Log(
+                "[WEAPON-AUDIO] Manager initialized!"
+            );
         }
 
-        public void PlayFireSound(Vector3 position)
+        public void PlayFireSound(
+            Vector3 position)
         {
-            Debug.Log(
-                $"[WEAPON-AUDIO] PlayFireSound | Position={position}"
-            );
-
-            if (fireClips == null || fireClips.Length == 0)
+            if (fireClips == null ||
+                fireClips.Length == 0)
             {
                 Debug.LogWarning(
-                    "[WEAPON-AUDIO] No fire clips assigned!"
+                    "[WEAPON-AUDIO] " +
+                    "No fire clips assigned!"
+                );
+
+                return;
+            }
+
+            if (AudioPoolManager.Instance == null)
+            {
+                Debug.LogError(
+                    "[WEAPON-AUDIO] " +
+                    "AudioPoolManager is NULL!"
                 );
 
                 return;
@@ -44,34 +63,24 @@ namespace FireLine.Scripts.Weapon.Service
 
             AudioClip clip =
                 fireClips[
-                    Random.Range(0, fireClips.Length)
+                    Random.Range(
+                        0,
+                        fireClips.Length
+                    )
                 ];
 
-            Debug.Log(
-                $"[WEAPON-AUDIO] Clip={clip.name}"
+            AudioPoolManager.Instance.Play(
+                clip,
+                position,
+                volume,
+                minDistance,
+                maxDistance
             );
 
-            GameObject audioObject =
-                new GameObject("WeaponFireAudio");
-
-            audioObject.transform.position = position;
-
-            AudioSource audioSource =
-                audioObject.AddComponent<AudioSource>();
-
-            audioSource.clip = clip;
-            audioSource.volume = volume;
-            audioSource.spatialBlend = 0f;
-            audioSource.minDistance = minDistance;
-            audioSource.maxDistance = maxDistance;
-            audioSource.rolloffMode =
-                AudioRolloffMode.Linear;
-
-            audioSource.Play();
-
-            Destroy(
-                audioObject,
-                clip.length
+            Debug.Log(
+                $"[WEAPON-AUDIO] Playing | " +
+                $"Clip={clip.name} | " +
+                $"Position={position}"
             );
         }
     }

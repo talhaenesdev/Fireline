@@ -13,7 +13,8 @@
         "Unity.Networking.Transport",
         "FireLine.Entities",
         "Unity.Collections",
-        "FireLine.Pooling"
+        "FireLine.Pooling",
+        "FireLine.Audio"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
