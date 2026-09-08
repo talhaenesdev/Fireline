@@ -18,10 +18,21 @@ namespace FireLine.Scripts.Weapon.Model
 
         [SerializeField]
         private bool automatic = true;
+
         [Header("Audio")]
         [SerializeField]
         private AudioClip[] fireClips;
 
+        [Header("Magazine")]
+        [SerializeField]
+        private int magazineSize = 7;
+
+        [SerializeField]
+        private float reloadDuration = 1.5f;
+
+
+        public int MagazineSize => magazineSize;
+        public float ReloadDuration => reloadDuration;
         public BulletData BulletData => bulletData;
         public float FireRate => fireRate;
         public AudioClip[] FireClips => fireClips;

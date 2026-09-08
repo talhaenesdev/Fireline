@@ -11,6 +11,7 @@ namespace FireLine.Scripts.Player.Controller
         private NetworkObject _networkObject;
 
         public event System.Action OnFire;
+        private Coroutine _reloadCoroutine;
 
         private void Awake()
         {
@@ -80,6 +81,23 @@ namespace FireLine.Scripts.Player.Controller
                 return;
             }
 
+            // ============================================================
+            // RELOAD
+            // ============================================================
+
+            if (_inputController.ReloadPressed)
+            {
+                Debug.Log(
+                    "[GAMEPLAY] Reload input received!"
+                );
+
+                StartReload();
+            }
+
+            // ============================================================
+            // FIRE
+            // ============================================================
+
             bool shouldFire;
 
             if (_weaponController.IsAutomatic())
@@ -108,6 +126,58 @@ namespace FireLine.Scripts.Player.Controller
             );
 
             OnFire?.Invoke();
+        }
+
+        private void StartReload()
+        {
+            if (_reloadCoroutine != null)
+            {
+                Debug.Log("[GAMEPLAY] Reload already running!");
+                return;
+            }
+
+            if (_weaponController.IsReloading)
+            {
+                Debug.Log("[GAMEPLAY] Weapon is already reloading!");
+                return;
+            }
+
+            if (!_weaponController.StartReload())
+            {
+                Debug.Log("[GAMEPLAY] Reload cannot start!");
+                return;
+            }
+
+            Debug.Log(
+                $"[GAMEPLAY] Reload started | " +
+                $"Ammo={_weaponController.CurrentAmmo}/" +
+                $"{_weaponController.MagazineSize}"
+            );
+
+            _reloadCoroutine =
+                StartCoroutine(ReloadRoutine());
+        }
+
+        private System.Collections.IEnumerator ReloadRoutine()
+        {
+            Debug.Log(
+                $"[GAMEPLAY] Reloading... | " +
+                $"Duration={_weaponController.ReloadDuration}"
+            );
+
+            yield return new WaitForSeconds(
+                _weaponController.ReloadDuration
+            );
+
+            _weaponController.CompleteReload();
+
+            Debug.Log(
+                $"[GAMEPLAY] Reload completed | " +
+                $"Ammo={_weaponController.CurrentAmmo}/" +
+                $"{_weaponController.MagazineSize}"
+            );
+
+            _reloadCoroutine = null;
         }
     }
 }

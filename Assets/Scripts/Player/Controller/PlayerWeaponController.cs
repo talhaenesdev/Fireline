@@ -62,7 +62,46 @@ namespace FireLine.Scripts.Player.Controller
         // ============================================================
         // SHOOT
         // ============================================================
+        public int CurrentAmmo =>
+                _weaponController != null
+        ? _weaponController.CurrentAmmo
+        : 0;
 
+        public int MagazineSize =>
+            _weaponController != null
+                ? _weaponController.MagazineSize
+                : 0;
+
+        public bool IsReloading =>
+            _weaponController != null &&
+            _weaponController.IsReloading;
+        
+        public float ReloadDuration =>
+            _weaponController != null
+            ? _weaponController.ReloadDuration
+            : 0f;
+
+        public bool StartReload()
+        {
+            if (_weaponController == null)
+            {
+                Debug.LogError(
+                    "[PLAYER-WEAPON] WeaponController is NULL!"
+                );
+
+                return false;
+            }
+
+            return _weaponController.StartReload();
+        }
+
+        public void CompleteReload()
+        {
+            if (_weaponController == null)
+                return;
+
+            _weaponController.CompleteReload();
+        }
         public void Shoot(Vector3 direction)
         {
             Debug.Log(
