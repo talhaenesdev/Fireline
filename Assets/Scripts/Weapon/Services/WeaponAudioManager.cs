@@ -11,6 +11,8 @@ namespace FireLine.Scripts.Weapon.Service
         [SerializeField]
         private AudioClip[] fireClips;
 
+        [SerializeField]
+        private AudioClip[] reloadClips;
         [Header("3D Settings")]
         [SerializeField]
         private float volume = 1f;
@@ -79,6 +81,52 @@ namespace FireLine.Scripts.Weapon.Service
 
             Debug.Log(
                 $"[WEAPON-AUDIO] Playing | " +
+                $"Clip={clip.name} | " +
+                $"Position={position}"
+            );
+        }
+
+        public void PlayReloadSound(Vector3 position)
+        {
+            if (reloadClips == null ||
+                reloadClips.Length == 0)
+            {
+                Debug.LogWarning(
+                    "[WEAPON-AUDIO] " +
+                    "No reload clips assigned!"
+                );
+
+                return;
+            }
+
+            if (AudioPoolManager.Instance == null)
+            {
+                Debug.LogError(
+                    "[WEAPON-AUDIO] " +
+                    "AudioPoolManager is NULL!"
+                );
+
+                return;
+            }
+
+            AudioClip clip =
+                reloadClips[
+                    Random.Range(
+                        0,
+                        reloadClips.Length
+                    )
+                ];
+
+            AudioPoolManager.Instance.Play(
+                clip,
+                position,
+                volume,
+                minDistance,
+                maxDistance
+            );
+
+            Debug.Log(
+                $"[WEAPON-AUDIO] Playing Reload | " +
                 $"Clip={clip.name} | " +
                 $"Position={position}"
             );
