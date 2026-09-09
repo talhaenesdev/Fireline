@@ -46,6 +46,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: FireLine.Weapon::FireLine.Scripts.Weapon.Service.WeaponAudioManager
   fireClips:
   - {fileID: 8300000, guid: 12657a0a67dc1544faf2c24cf63955d5, type: 3}
+  reloadClips:
+  - {fileID: 8300000, guid: 2c0c3713366b31c4b9d37a4bf613db31, type: 3}
   volume: 1
   minDistance: 0.1
   maxDistance: 15
