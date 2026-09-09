@@ -17,7 +17,7 @@ namespace FireLine.Scripts.Player.Controller
 
         [SerializeField]
         private Transform muzzlePoint;
-
+        public event System.Action<int, int> AmmoChanged;
         [Inject]
         public void Construct(
             WeaponController weaponController)
@@ -124,6 +124,11 @@ namespace FireLine.Scripts.Player.Controller
             }
 
             _weaponController.CompleteReload();
+
+            AmmoChanged?.Invoke(
+                _weaponController.CurrentAmmo,
+                _weaponController.MagazineSize
+            );
         }
 
         private void PlayReloadSound()
@@ -223,6 +228,11 @@ namespace FireLine.Scripts.Player.Controller
                 $"[PLAYER-WEAPON][FIRE] " +
                 $"Position={position} | " +
                 $"Direction={direction}"
+            );
+
+            AmmoChanged?.Invoke(
+                _weaponController.CurrentAmmo,
+                _weaponController.MagazineSize
             );
 
             _fireService.Fire(
