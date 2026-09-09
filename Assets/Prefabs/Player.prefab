@@ -614,6 +614,7 @@ GameObject:
   - component: {fileID: 6842709419260223899}
   - component: {fileID: 2274199593103484380}
   - component: {fileID: 294294179912840190}
+  - component: {fileID: 6882452062047279220}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -1103,6 +1104,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.NetworkPlayerAudioListener
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &6882452062047279220
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6727836590595305734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3733ed9121c590544a4e65d756852e80, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.PlayerCameraController
+  ShowTopMostFoldoutHeaderGroup: 1
+  playerCamera: {fileID: 0}
+  cameraOffset: {x: 0, y: 10, z: -0.01}
+  followSpeed: 10
 --- !u!1 &7050262185231087442
 GameObject:
   m_ObjectHideFlags: 0
