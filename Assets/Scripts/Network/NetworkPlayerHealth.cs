@@ -9,9 +9,9 @@ namespace FireLine.Scripts.Network
     {
         [SerializeField]
         private float maxHealth = 100f;
-
+        public float MaxHealth =>
+    maxHealth;
         private SignalBus _signalBus;
-
         private readonly NetworkVariable<float> _health =
             new NetworkVariable<float>(
                 100f,
@@ -35,6 +35,7 @@ namespace FireLine.Scripts.Network
         public event System.Action<bool>
             DeathStateChanged;
 
+        public event System.Action<float, float> HealthChanged;
         [Inject]
         public void Initialize(
             SignalBus signalBus)
@@ -80,6 +81,11 @@ namespace FireLine.Scripts.Network
             float previous,
             float current)
         {
+            HealthChanged?.Invoke(
+                previous,
+                current
+            );
+
             Debug.Log(
                 $"[NETWORK HEALTH] " +
                 $"{previous} -> {current}"
@@ -176,7 +182,7 @@ namespace FireLine.Scripts.Network
                 OnDeathStateChanged;
 
             DeathStateChanged = null;
-
+            HealthChanged = null;
             base.OnNetworkDespawn();
         }
     }
