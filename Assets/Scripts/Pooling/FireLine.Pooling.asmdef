@@ -4,7 +4,8 @@
     "references": [
         "Zenject",
         "Unity.InputSystem",
-        "FireLine.Core"
+        "FireLine.Core",
+        "FireLine.Effects"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

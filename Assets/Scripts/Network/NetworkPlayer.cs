@@ -23,6 +23,13 @@ namespace FireLine.Scripts.Network
         private PlayerGameplayController _gameplayController;
         private NetworkPlayerHealth _health;
 
+        [SerializeField]
+        private GameObject _visualRoot;
+
+        [SerializeField]
+        private ParticleSystem _deathParticle;
+        private Collider[] _colliders;
+
         private bool _healthSubscribed;
         private bool _injected;
 
@@ -365,6 +372,11 @@ namespace FireLine.Scripts.Network
 
             _health =
                 GetComponent<NetworkPlayerHealth>();
+
+            _colliders =
+                GetComponentsInChildren<Collider>(
+                    true
+                );
         }
 
         // ============================================================
@@ -467,24 +479,33 @@ namespace FireLine.Scripts.Network
 
             _healthSubscribed = true;
 
+            ApplyDeathVisual(
+                _health.IsDead
+            );
+
             Debug.Log(
                 $"[NET-PLAYER][HEALTH] " +
                 $"DeathStateChanged subscribed | " +
-                $"ClientId={OwnerClientId}"
+                $"ClientId={OwnerClientId} | " +
+                $"IsDead={_health.IsDead}"
             );
         }
 
         private void OnDeathStateChanged(bool isDead)
         {
-            if (!IsOwner)
-                return;
-
             Debug.Log(
                 $"[NET-PLAYER][HEALTH] " +
                 $"DeathStateChanged | " +
                 $"ClientId={OwnerClientId} | " +
                 $"Dead={isDead}"
             );
+
+            ApplyDeathVisual(
+                isDead
+            );
+
+            if (!IsOwner)
+                return;
 
             if (isDead)
             {
@@ -493,6 +514,43 @@ namespace FireLine.Scripts.Network
             else
             {
                 EnableLocalInput();
+            }
+        }
+
+        private void ApplyDeathVisual(bool isDead)
+        {
+            if (_visualRoot != null)
+            {
+                _visualRoot.SetActive(!isDead);
+            }
+
+            if (_colliders != null)
+            {
+                foreach (Collider collider in _colliders)
+                {
+                    if (collider == null)
+                        continue;
+
+                    collider.enabled = !isDead;
+                }
+            }
+
+            if (_deathParticle != null)
+            {
+                if (isDead)
+                {
+                    _deathParticle.transform.position =
+                        transform.position;
+
+                    _deathParticle.Play();
+                }
+                else
+                {
+                    _deathParticle.Stop(
+                        true,
+                        ParticleSystemStopBehavior.StopEmittingAndClear
+                    );
+                }
             }
         }
 

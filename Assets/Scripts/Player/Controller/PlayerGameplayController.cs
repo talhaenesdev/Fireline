@@ -11,6 +11,7 @@ namespace FireLine.Scripts.Player.Controller
         private NetworkObject _networkObject;
 
         public event System.Action OnFire;
+        private Coroutine _reloadCoroutine;
 
         private void Awake()
         {
@@ -80,13 +81,54 @@ namespace FireLine.Scripts.Player.Controller
                 return;
             }
 
-            if (!_inputController.FirePressed)
+            // ============================================================
+            // RELOAD
+            // ============================================================
+
+            if (_inputController.ReloadPressed)
+            {
+                Debug.Log(
+                    "[GAMEPLAY] Reload input received!"
+                );
+
+                StartReload();
+            }
+
+            if (_weaponController.CurrentAmmo <= 0 &&
+                !_weaponController.IsReloading)
+            {
+                Debug.Log(
+                    "[GAMEPLAY] Magazine empty | Starting automatic reload!"
+                );
+
+                StartReload();
+            }
+
+            // ============================================================
+            // FIRE
+            // ============================================================
+
+            bool shouldFire;
+
+            if (_weaponController.IsAutomatic())
+            {
+                shouldFire =
+                    _inputController.FirePressed;
+            }
+            else
+            {
+                shouldFire =
+                    _inputController.FireStarted;
+            }
+
+            if (!shouldFire)
                 return;
 
             Debug.Log(
-                $"[GAMEPLAY] FirePressed | " +
+                $"[GAMEPLAY] Fire | " +
                 $"OwnerClientId: {_networkObject.OwnerClientId} | " +
-                $"IsOwner: {_networkObject.IsOwner}"
+                $"IsOwner: {_networkObject.IsOwner} | " +
+                $"Automatic: {_weaponController.IsAutomatic()}"
             );
 
             _weaponController.Shoot(
@@ -94,6 +136,58 @@ namespace FireLine.Scripts.Player.Controller
             );
 
             OnFire?.Invoke();
+        }
+
+        private void StartReload()
+        {
+            if (_reloadCoroutine != null)
+            {
+                Debug.Log("[GAMEPLAY] Reload already running!");
+                return;
+            }
+
+            if (_weaponController.IsReloading)
+            {
+                Debug.Log("[GAMEPLAY] Weapon is already reloading!");
+                return;
+            }
+
+            if (!_weaponController.StartReload())
+            {
+                Debug.Log("[GAMEPLAY] Reload cannot start!");
+                return;
+            }
+
+            Debug.Log(
+                $"[GAMEPLAY] Reload started | " +
+                $"Ammo={_weaponController.CurrentAmmo}/" +
+                $"{_weaponController.MagazineSize}"
+            );
+
+            _reloadCoroutine =
+                StartCoroutine(ReloadRoutine());
+        }
+
+        private System.Collections.IEnumerator ReloadRoutine()
+        {
+            Debug.Log(
+                $"[GAMEPLAY] Reloading... | " +
+                $"Duration={_weaponController.ReloadDuration}"
+            );
+
+            yield return new WaitForSeconds(
+                _weaponController.ReloadDuration
+            );
+
+            _weaponController.CompleteReload();
+
+            Debug.Log(
+                $"[GAMEPLAY] Reload completed | " +
+                $"Ammo={_weaponController.CurrentAmmo}/" +
+                $"{_weaponController.MagazineSize}"
+            );
+
+            _reloadCoroutine = null;
         }
     }
 }

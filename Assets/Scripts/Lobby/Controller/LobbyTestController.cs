@@ -54,7 +54,7 @@ namespace FireLine.Scripts.Lobby.Controller
         private TMP_Text playerCountText;
 
         [SerializeField]
-        private TMP_Text readyText;
+        private GameObject readyText;
         private bool _isBusy;
 
         [Inject]
@@ -531,10 +531,9 @@ namespace FireLine.Scripts.Lobby.Controller
         {
             if (readyText != null)
             {
-                readyText.text =
-                    isReady
-                        ? "READY ✓"
-                        : "READY";
+                readyText.SetActive(isReady
+                        ? true
+                        : false);
             }
         }
         private void OnEnable()

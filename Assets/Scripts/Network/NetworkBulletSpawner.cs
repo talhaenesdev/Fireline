@@ -88,10 +88,9 @@ namespace FireLine.Scripts.Network
             Debug.Log(
                 $"[BULLET SPAWNER] " +
                 $"Network Bullet Spawned | " +
-                $"NetworkObjectId: {networkObject.NetworkObjectId} | " +
-                $"OwnerClientId: {ownerClientId} | " +
-                $"Position: {position} | " +
-                $"Direction: {direction}"
+                $"NetworkObjectId: " +
+                $"{networkObject.NetworkObjectId} | " +
+                $"OwnerClientId: {ownerClientId}"
             );
         }
     }

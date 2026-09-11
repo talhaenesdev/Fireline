@@ -1,4 +1,5 @@
-﻿using Unity.Netcode;
+﻿using FireLine.Scripts.Network.Service;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace FireLine.Scripts.Network
@@ -86,43 +87,79 @@ namespace FireLine.Scripts.Network
             NetworkPlayer targetPlayer =
                 other.GetComponentInParent<NetworkPlayer>();
 
-            if (targetPlayer == null)
-                return;
-
-            if (targetPlayer.OwnerClientId ==
-                _ownerClientId)
+            // PLAYER HIT
+            if (targetPlayer != null)
             {
+                if (targetPlayer.OwnerClientId ==
+                    _ownerClientId)
+                {
+                    return;
+                }
+
+                NetworkPlayerHealth health =
+                    targetPlayer.GetComponent<
+                        NetworkPlayerHealth>();
+
+                if (health == null)
+                {
+                    Debug.LogError(
+                        $"[NETWORK BULLET] " +
+                        $"NetworkPlayerHealth missing on " +
+                        $"{targetPlayer.name}"
+                    );
+
+                    return;
+                }
+
+                Debug.Log(
+                    $"[NETWORK BULLET] HIT PLAYER | " +
+                    $"Target: {targetPlayer.OwnerClientId} | " +
+                    $"Damage: {damage} | " +
+                    $"Attacker: {_ownerClientId}"
+                );
+
+                health.TakeDamageServer(
+                    damage,
+                    _ownerClientId
+                );
+
+                Despawn();
+
                 return;
             }
 
-            NetworkPlayerHealth health =
-                targetPlayer.GetComponent<
-                    NetworkPlayerHealth>();
+            // WALL / OTHER COLLIDER HIT
+            Debug.Log(
+                $"[NETWORK BULLET] HIT WALL | " +
+                $"Collider: {other.name} | " +
+                $"Position: {transform.position}"
+            );
 
-            if (health == null)
+            PlayWallImpact();
+
+            Despawn();
+        }
+
+        private void PlayWallImpact()
+        {
+            NetworkWallImpactEffectService service =
+                FindFirstObjectByType<
+                    NetworkWallImpactEffectService>();
+
+            if (service == null)
             {
                 Debug.LogError(
-                    $"[NETWORK BULLET] " +
-                    $"NetworkPlayerHealth missing on " +
-                    $"{targetPlayer.name}"
+                    "[NETWORK BULLET] " +
+                    "NetworkWallImpactEffectService " +
+                    "NOT FOUND!"
                 );
 
                 return;
             }
 
-            Debug.Log(
-                $"[NETWORK BULLET] HIT PLAYER | " +
-                $"Target: {targetPlayer.OwnerClientId} | " +
-                $"Damage: {damage} | " +
-                $"Attacker: {_ownerClientId}"
+            service.PlayWallImpact(
+                transform.position
             );
-
-            health.TakeDamageServer(
-                damage,
-                _ownerClientId
-            );
-
-            Despawn();
         }
 
         private void Despawn()

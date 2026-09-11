@@ -12,7 +12,9 @@
         "Unity.Services.Multiplayer",
         "Unity.Networking.Transport",
         "FireLine.Entities",
-        "Unity.Collections"
+        "Unity.Collections",
+        "FireLine.Pooling",
+        "FireLine.Audio"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

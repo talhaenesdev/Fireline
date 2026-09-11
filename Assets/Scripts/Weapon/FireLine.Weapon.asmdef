@@ -4,7 +4,8 @@
     "references": [
         "Zenject",
         "FireLine.Pooling",
-        "FireLine.Core"
+        "FireLine.Core",
+        "FireLine.Audio"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

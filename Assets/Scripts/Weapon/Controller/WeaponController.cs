@@ -8,12 +8,36 @@ namespace FireLine.Scripts.Weapon.Controller
         private readonly WeaponData _weaponData;
 
         private float _nextFireTime;
+        private int _currentAmmo;
+        private bool _isReloading;
 
         public WeaponController(
             WeaponData weaponData)
         {
             _weaponData = weaponData;
+
+            if (_weaponData != null)
+            {
+                _currentAmmo =
+                    _weaponData.MagazineSize;
+            }
         }
+
+        public int CurrentAmmo =>
+            _currentAmmo;
+
+        public int MagazineSize =>
+            _weaponData != null
+                ? _weaponData.MagazineSize
+                : 0;
+
+        public float ReloadDuration =>
+            _weaponData != null
+                ? _weaponData.ReloadDuration
+                : 0f;
+
+        public bool IsReloading =>
+            _isReloading;
 
         public bool CanShoot()
         {
@@ -26,7 +50,31 @@ namespace FireLine.Scripts.Weapon.Controller
                 return false;
             }
 
+            if (_isReloading)
+            {
+                Debug.Log(
+                    "[WEAPON] Shoot blocked | Reloading"
+                );
+
+                return false;
+            }
+
+            if (_currentAmmo <= 0)
+            {
+                Debug.Log(
+                    "[WEAPON] Shoot blocked | Magazine empty"
+                );
+
+                return false;
+            }
+
             return Time.time >= _nextFireTime;
+        }
+
+        public bool IsAutomatic()
+        {
+            return _weaponData != null &&
+                   _weaponData.Automatic;
         }
 
         public void RegisterShot()
@@ -34,9 +82,87 @@ namespace FireLine.Scripts.Weapon.Controller
             if (_weaponData == null)
                 return;
 
+            if (_currentAmmo <= 0)
+                return;
+
+            _currentAmmo--;
+
             _nextFireTime =
                 Time.time +
                 _weaponData.FireRate;
+
+            Debug.Log(
+                $"[WEAPON] Shot registered | " +
+                $"Ammo={_currentAmmo}/" +
+                $"{_weaponData.MagazineSize}"
+            );
+        }
+
+        public bool CanReload()
+        {
+            if (_weaponData == null)
+            {
+                Debug.LogError(
+                    "[WEAPON] WeaponData is NULL!"
+                );
+
+                return false;
+            }
+
+            if (_isReloading)
+            {
+                Debug.Log(
+                    "[WEAPON] Reload blocked | Already reloading"
+                );
+
+                return false;
+            }
+
+            if (_currentAmmo >=
+                _weaponData.MagazineSize)
+            {
+                Debug.Log(
+                    "[WEAPON] Reload blocked | Magazine full"
+                );
+
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool StartReload()
+        {
+            if (!CanReload())
+                return false;
+
+            _isReloading = true;
+
+            Debug.Log(
+                $"[WEAPON] Reload started | " +
+                $"Ammo={_currentAmmo}/" +
+                $"{_weaponData.MagazineSize} | " +
+                $"Duration={_weaponData.ReloadDuration}"
+            );
+
+            return true;
+        }
+
+        public void CompleteReload()
+        {
+            if (_weaponData == null)
+                return;
+
+            _currentAmmo =
+                _weaponData.MagazineSize;
+
+            _isReloading = false;
+
+            Debug.Log(
+                $"[WEAPON] Reload completed | " +
+                $"Ammo={_currentAmmo}/" +
+                $"{_weaponData.MagazineSize}"
+            );
         }
     }
 }
