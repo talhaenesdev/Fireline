@@ -8,35 +8,44 @@ namespace FireLine.Scripts.Player.Controller
         private float moveSpeed = 5f;
 
         private PlayerInputController _inputController;
+        private PlayerAnimationController _animationController;
 
         private void Awake()
         {
             _inputController =
                 GetComponent<PlayerInputController>();
+
+            _animationController =
+                GetComponent<PlayerAnimationController>();
         }
 
         private void Update()
         {
             if (_inputController == null)
             {
-                Debug.LogError("Movement: InputController NULL!");
+                Debug.LogError(
+                    "[MOVEMENT] InputController NULL!"
+                );
+
                 return;
             }
 
-            Vector2 input = _inputController.MoveInput;
+            Vector2 input =
+                _inputController.MoveInput;
 
-            if (input != Vector2.zero)
-            {
-            }
+            _animationController?.SetMovement(input);
 
-            Vector3 movement = new Vector3(
-                input.x,
-                0f,
-                input.y
-            );
+            Vector3 movement =
+                new Vector3(
+                    input.x,
+                    0f,
+                    input.y
+                );
 
             transform.position +=
-                movement * moveSpeed * Time.deltaTime;
+                movement *
+                moveSpeed *
+                Time.deltaTime;
         }
     }
 }
