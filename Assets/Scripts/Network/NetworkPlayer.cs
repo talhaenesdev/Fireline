@@ -23,8 +23,6 @@ namespace FireLine.Scripts.Network
         private PlayerGameplayController _gameplayController;
         private NetworkPlayerHealth _health;
 
-        [SerializeField]
-        private GameObject _visualRoot;
 
         [SerializeField]
         private ParticleSystem _deathParticle;
@@ -519,11 +517,6 @@ namespace FireLine.Scripts.Network
 
         private void ApplyDeathVisual(bool isDead)
         {
-            if (_visualRoot != null)
-            {
-                _visualRoot.SetActive(!isDead);
-            }
-
             if (_colliders != null)
             {
                 foreach (Collider collider in _colliders)

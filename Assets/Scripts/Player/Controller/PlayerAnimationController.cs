@@ -11,6 +11,10 @@ namespace FireLine.Scripts.Player.Controller
         [SerializeField]
         private Transform aimTransform;
 
+        [Header("Animation Layers")]
+        [SerializeField]
+        private int upperBodyLayerIndex = 1;
+
         private static readonly int MoveXHash =
             Animator.StringToHash("MoveX");
 
@@ -20,18 +24,17 @@ namespace FireLine.Scripts.Player.Controller
         private static readonly int SpeedHash =
             Animator.StringToHash("Speed");
 
+        private static readonly int IsDeadHash =
+            Animator.StringToHash("IsDead");
+
         private void Awake()
         {
             if (animator == null)
-            {
                 animator =
                     GetComponentInChildren<Animator>();
-            }
 
             if (aimTransform == null)
-            {
                 aimTransform = transform;
-            }
 
             if (animator == null)
             {
@@ -46,6 +49,26 @@ namespace FireLine.Scripts.Player.Controller
             if (animator == null)
                 return;
 
+            if (input.sqrMagnitude < 0.001f)
+            {
+                animator.SetFloat(
+                    MoveXHash,
+                    0f
+                );
+
+                animator.SetFloat(
+                    MoveYHash,
+                    0f
+                );
+
+                animator.SetFloat(
+                    SpeedHash,
+                    0f
+                );
+
+                return;
+            }
+
             Vector3 worldMovement =
                 new Vector3(
                     input.x,
@@ -53,35 +76,51 @@ namespace FireLine.Scripts.Player.Controller
                     input.y
                 );
 
-            float speed =
-                worldMovement.magnitude;
-
-            if (speed > 1f)
-            {
-                worldMovement.Normalize();
-            }
-
             Vector3 localMovement =
                 aimTransform.InverseTransformDirection(
                     worldMovement
                 );
 
-            float moveX = localMovement.x;
-            float moveY = localMovement.z;
-
             animator.SetFloat(
                 MoveXHash,
-                moveX
+                localMovement.x
             );
 
             animator.SetFloat(
                 MoveYHash,
-                moveY
+                localMovement.z
             );
 
             animator.SetFloat(
                 SpeedHash,
-                speed
+                input.magnitude
+            );
+        }
+
+        public void SetDeath(bool isDead)
+        {
+            if (animator == null)
+                return;
+
+            animator.SetBool(
+                IsDeadHash,
+                isDead
+            );
+
+            if (upperBodyLayerIndex >= 0 &&
+                upperBodyLayerIndex < animator.layerCount)
+            {
+                animator.SetLayerWeight(
+                    upperBodyLayerIndex,
+                    isDead ? 0f : 1f
+                );
+            }
+
+            Debug.Log(
+                $"[PLAYER ANIMATION] " +
+                $"Death={isDead} | " +
+                $"UpperBodyWeight=" +
+                $"{animator.GetLayerWeight(upperBodyLayerIndex)}"
             );
         }
     }
