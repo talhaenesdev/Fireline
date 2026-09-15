@@ -2,7 +2,8 @@
     "name": "FireLine.Core",
     "rootNamespace": "",
     "references": [
-        "GUID:0d8beb7f090555447a6cf5ce9e54dbb4"
+        "GUID:0d8beb7f090555447a6cf5ce9e54dbb4",
+        "GUID:b81c29e281cdc0149bb591a66e269835"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
