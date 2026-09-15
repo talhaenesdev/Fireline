@@ -23,21 +23,24 @@ namespace FireLine.Scripts.Network
         private PlayerGameplayController _gameplayController;
         private NetworkPlayerHealth _health;
 
-
         [SerializeField]
         private ParticleSystem _deathParticle;
+
         private Collider[] _colliders;
 
         private bool _healthSubscribed;
         private bool _injected;
 
         private readonly NetworkVariable<FixedString64Bytes> _playerName =
-                new NetworkVariable<FixedString64Bytes>(
+            new NetworkVariable<FixedString64Bytes>(
                 default,
                 NetworkVariableReadPermission.Everyone,
                 NetworkVariableWritePermission.Server
-        );
+            );
 
+        // ============================================================
+        // ZENJECT
+        // ============================================================
 
         [Inject]
         public void Construct(
@@ -48,11 +51,15 @@ namespace FireLine.Scripts.Network
             _scoreService = scoreService;
 
             Debug.Log(
-                $"[NET-PLAYER][NAME] PlayerNameService injected | Player={gameObject.name}"
+                $"[NET-PLAYER][NAME] " +
+                $"PlayerNameService injected | " +
+                $"Player={gameObject.name}"
             );
         }
+
         public string PlayerName =>
             _playerName.Value.ToString();
+
         // ============================================================
         // NETWORK SPAWN
         // ============================================================
@@ -84,26 +91,17 @@ namespace FireLine.Scripts.Network
                 $"Health={_health != null}"
             );
 
-            if (SceneManager.GetActiveScene().name == "Game")
-            {
-                StartCoroutine(
-                    WaitForSceneContextAndInject()
-                );
-            }
-            else
-            {
-                DisableLocalInput();
-
-                Debug.Log(
-                    $"[NET-PLAYER][INPUT] " +
-                    $"Gameplay disabled outside Game | " +
-                    $"Scene={SceneManager.GetActiveScene().name} | " +
-                    $"ClientId={OwnerClientId}"
-                );
-            }
+            StartCoroutine(
+                WaitForSceneContextAndInject()
+            );
 
             SubscribeHealth();
         }
+
+        // ============================================================
+        // PLAYER NAME
+        // ============================================================
+
         private void SendPlayerName()
         {
             if (_playerNameService == null)
@@ -139,7 +137,8 @@ namespace FireLine.Scripts.Network
         }
 
         [ServerRpc]
-        private void SetPlayerNameServerRpc(string playerName)
+        private void SetPlayerNameServerRpc(
+            string playerName)
         {
             if (!IsServer)
                 return;
@@ -150,13 +149,17 @@ namespace FireLine.Scripts.Network
             playerName = playerName.Trim();
 
             if (playerName.Length > 32)
-                playerName = playerName.Substring(0, 32);
+            {
+                playerName =
+                    playerName.Substring(0, 32);
+            }
 
             _playerName.Value =
                 new FixedString64Bytes(playerName);
 
             Debug.Log(
-                $"[NET-PLAYER][NAME] Name registered | " +
+                $"[NET-PLAYER][NAME] " +
+                $"Name registered | " +
                 $"ClientId={OwnerClientId} | " +
                 $"Name={playerName}"
             );
@@ -177,37 +180,6 @@ namespace FireLine.Scripts.Network
             );
         }
 
-
-        private void OnEnable()
-        {
-            SceneManager.sceneLoaded += OnSceneLoaded;
-        }
-
-        private void OnDisable()
-        {
-            SceneManager.sceneLoaded -= OnSceneLoaded;
-        }
-
-        private void OnSceneLoaded(
-            Scene scene,
-            LoadSceneMode mode)
-        {
-            Debug.Log(
-                $"[NET-PLAYER][SCENE] Scene loaded | " +
-                $"Scene={scene.name}"
-            );
-
-            if (scene.name != "Game")
-                return;
-
-            if (_injected)
-                return;
-
-            StartCoroutine(
-                WaitForSceneContextAndInject()
-            );
-        }
-
         // ============================================================
         // ZENJECT INJECTION
         // ============================================================
@@ -217,7 +189,8 @@ namespace FireLine.Scripts.Network
             if (_injected)
             {
                 Debug.Log(
-                    $"[NET-PLAYER][INJECT] Already injected | " +
+                    $"[NET-PLAYER][INJECT] " +
+                    $"Already injected | " +
                     $"Player={gameObject.name}"
                 );
 
@@ -225,7 +198,8 @@ namespace FireLine.Scripts.Network
             }
 
             Debug.Log(
-                $"[NET-PLAYER][SCENE] Searching SceneContext | " +
+                $"[NET-PLAYER][SCENE] " +
+                $"Searching SceneContext | " +
                 $"PlayerScene={gameObject.scene.name}"
             );
 
@@ -238,7 +212,8 @@ namespace FireLine.Scripts.Network
                 if (context == null)
                 {
                     Debug.Log(
-                        $"[NET-PLAYER][SCENE] SceneContext not found yet | " +
+                        $"[NET-PLAYER][SCENE] " +
+                        $"SceneContext not found yet | " +
                         $"PlayerScene={gameObject.scene.name}"
                     );
 
@@ -247,25 +222,25 @@ namespace FireLine.Scripts.Network
             }
 
             Debug.Log(
-                $"[NET-PLAYER][SCENE] SceneContext found | " +
+                $"[NET-PLAYER][SCENE] " +
+                $"SceneContext found | " +
                 $"Scene={context.gameObject.scene.name} | " +
                 $"Instance={context.GetInstanceID()}"
             );
 
-            InjectWithSceneContext(context);
+            InjectWithSceneContext(
+                context
+            );
         }
 
-        private void InjectWithSceneContext(SceneContext context)
+        private void InjectWithSceneContext(
+            SceneContext context)
         {
-            Debug.Log(
-                $"[NET-PLAYER][INJECT] " +
-                $"Context={context.GetInstanceID()} | " +
-                $"Container={context.Container.GetHashCode()}"
-            );
             if (_injected)
             {
                 Debug.Log(
-                    $"[NET-PLAYER][INJECT] Skipped | Already injected | " +
+                    $"[NET-PLAYER][INJECT] " +
+                    $"Skipped | Already injected | " +
                     $"Player={gameObject.name}"
                 );
 
@@ -284,19 +259,22 @@ namespace FireLine.Scripts.Network
             }
 
             Debug.Log(
-                $"[NET-PLAYER][INJECT] Starting | " +
+                $"[NET-PLAYER][INJECT] " +
+                $"Starting | " +
                 $"Player={gameObject.name} | " +
                 $"PlayerScene={gameObject.scene.name} | " +
                 $"ContextScene={context.gameObject.scene.name} | " +
                 $"Context={context.GetInstanceID()}"
             );
+
             try
             {
                 SignalBus signalBus =
                     context.Container.Resolve<SignalBus>();
 
                 Debug.Log(
-                    $"[NET-PLAYER][SIGNAL] SignalBus resolved | " +
+                    $"[NET-PLAYER][SIGNAL] " +
+                    $"SignalBus resolved | " +
                     $"Context={context.GetInstanceID()} | " +
                     $"SignalBus={signalBus.GetHashCode()}"
                 );
@@ -304,12 +282,14 @@ namespace FireLine.Scripts.Network
             catch (Exception exception)
             {
                 Debug.LogError(
-                    $"[NET-PLAYER][SIGNAL] SignalBus resolve FAILED | " +
+                    $"[NET-PLAYER][SIGNAL] " +
+                    $"SignalBus resolve FAILED | " +
                     $"Context={context.GetInstanceID()} | " +
                     $"Scene={context.gameObject.scene.name} | " +
                     $"Reason={exception.Message}"
                 );
             }
+
             try
             {
                 context.Container.InjectGameObject(
@@ -386,8 +366,10 @@ namespace FireLine.Scripts.Network
             if (!IsOwner)
             {
                 Debug.Log(
-                    $"[NET-PLAYER][INPUT] Remote player | " +
-                    $"ClientId={OwnerClientId} | Input disabled"
+                    $"[NET-PLAYER][INPUT] " +
+                    $"Remote player | " +
+                    $"ClientId={OwnerClientId} | " +
+                    $"Input disabled"
                 );
 
                 DisableLocalInput();
@@ -396,8 +378,10 @@ namespace FireLine.Scripts.Network
             }
 
             Debug.Log(
-                $"[NET-PLAYER][INPUT] Local owner | " +
-                $"ClientId={OwnerClientId} | Input enabled"
+                $"[NET-PLAYER][INPUT] " +
+                $"Local owner | " +
+                $"ClientId={OwnerClientId} | " +
+                $"Input enabled"
             );
 
             EnableLocalInput();
@@ -424,7 +408,8 @@ namespace FireLine.Scripts.Network
                 _gameplayController.enabled = true;
 
             Debug.Log(
-                $"[NET-PLAYER][INPUT] ENABLED | " +
+                $"[NET-PLAYER][INPUT] " +
+                $"ENABLED | " +
                 $"ClientId={OwnerClientId}"
             );
         }
@@ -447,7 +432,8 @@ namespace FireLine.Scripts.Network
                 _gameplayController.enabled = false;
 
             Debug.Log(
-                $"[NET-PLAYER][INPUT] DISABLED | " +
+                $"[NET-PLAYER][INPUT] " +
+                $"DISABLED | " +
                 $"ClientId={OwnerClientId}"
             );
         }
@@ -489,7 +475,8 @@ namespace FireLine.Scripts.Network
             );
         }
 
-        private void OnDeathStateChanged(bool isDead)
+        private void OnDeathStateChanged(
+            bool isDead)
         {
             Debug.Log(
                 $"[NET-PLAYER][HEALTH] " +
@@ -515,7 +502,8 @@ namespace FireLine.Scripts.Network
             }
         }
 
-        private void ApplyDeathVisual(bool isDead)
+        private void ApplyDeathVisual(
+            bool isDead)
         {
             if (_colliders != null)
             {
@@ -541,7 +529,8 @@ namespace FireLine.Scripts.Network
                 {
                     _deathParticle.Stop(
                         true,
-                        ParticleSystemStopBehavior.StopEmittingAndClear
+                        ParticleSystemStopBehavior
+                            .StopEmittingAndClear
                     );
                 }
             }
@@ -554,7 +543,8 @@ namespace FireLine.Scripts.Network
         private SceneContext FindSceneContext()
         {
             Scene activeScene =
-                SceneManager.GetActiveScene();
+                UnityEngine.SceneManagement
+                    .SceneManager.GetActiveScene();
 
             SceneContext[] contexts =
                 FindObjectsByType<SceneContext>(
@@ -571,7 +561,8 @@ namespace FireLine.Scripts.Network
                     continue;
 
                 Debug.Log(
-                    $"[NET-PLAYER][SCENE] MATCH | " +
+                    $"[NET-PLAYER][SCENE] " +
+                    $"MATCH | " +
                     $"Scene={activeScene.name} | " +
                     $"Context={context.GetInstanceID()}"
                 );

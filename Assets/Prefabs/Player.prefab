@@ -229,9 +229,9 @@ Transform:
   m_GameObject: {fileID: 1375552513785914909}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 0, z: 0}
+  m_LocalPosition: {x: 0.08, y: 0.51, z: 0.53}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
-  m_ConstrainProportionsScale: 1
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8587788849489917253}
   m_Father: {fileID: 8709621768593786735}
@@ -532,7 +532,7 @@ Transform:
   m_GameObject: {fileID: 6517178516213573905}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.6, y: 0, z: 8.41}
+  m_LocalPosition: {x: 0, y: 0, z: 1}
   m_LocalScale: {x: 10, y: 10, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -908,7 +908,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: FireLine.Network::FireLine.Scripts.Network.NetworkPlayer
   ShowTopMostFoldoutHeaderGroup: 1
-  _visualRoot: {fileID: 791474784457131319}
   _deathParticle: {fileID: 8041190354046442819}
 --- !u!114 &4219172794803520995
 MonoBehaviour:
@@ -1087,6 +1086,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.PlayerAnimationController
   animator: {fileID: 7847318833953607452}
   aimTransform: {fileID: 115344442681767431}
+  upperBodyLayerIndex: 1
 --- !u!114 &5576505171622893172
 MonoBehaviour:
   m_ObjectHideFlags: 0

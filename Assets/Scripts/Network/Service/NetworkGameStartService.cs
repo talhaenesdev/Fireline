@@ -1,15 +1,24 @@
 ﻿using System;
 using System.Threading.Tasks;
+using FireLine.Scripts.Core.Scene.Model;
 using Unity.Netcode;
 using Unity.Services.Multiplayer;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Zenject;
 
 namespace FireLine.Scripts.Network.Service
 {
     public class NetworkGameStartService
     {
-        private const string GameSceneName = "Game";
+        private readonly SceneReference _gameScene;
+
+        public NetworkGameStartService(
+            [Inject(Id = "GameScene")]
+            SceneReference gameScene)
+        {
+            _gameScene = gameScene;
+        }
 
         public async Task<bool> StartGame(
             ISession session)
@@ -27,6 +36,26 @@ namespace FireLine.Scripts.Network.Service
             {
                 Debug.LogWarning(
                     "[GAME START] Only host can start game."
+                );
+
+                return false;
+            }
+
+            if (_gameScene == null)
+            {
+                Debug.LogError(
+                    "[GAME START] " +
+                    "Game SceneReference is NULL!"
+                );
+
+                return false;
+            }
+
+            if (!_gameScene.IsValid)
+            {
+                Debug.LogError(
+                    "[GAME START] " +
+                    "Game SceneReference is invalid!"
                 );
 
                 return false;
@@ -94,7 +123,7 @@ namespace FireLine.Scripts.Network.Service
                     return false;
                 }
 
-                AsyncOperationStatus(
+                LoadGameScene(
                     networkManager
                 );
 
@@ -111,17 +140,17 @@ namespace FireLine.Scripts.Network.Service
             }
         }
 
-        private void AsyncOperationStatus(
+        private void LoadGameScene(
             NetworkManager networkManager)
         {
             Debug.Log(
                 $"[GAME START] " +
-                $"Loading scene: {GameSceneName}"
+                $"Loading scene: {_gameScene.SceneName}"
             );
 
             SceneEventProgressStatus status =
                 networkManager.SceneManager.LoadScene(
-                    GameSceneName,
+                    _gameScene.SceneName,
                     LoadSceneMode.Single
                 );
 
