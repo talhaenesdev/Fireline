@@ -18,49 +18,65 @@ namespace FireLine.Scripts.UI.Service
             UIButtonAudioData audioData)
         {
             _audioData = audioData;
+
+            Debug.Log(
+                "[UI AUDIO] " +
+                "Constructor called."
+            );
         }
 
         public void Initialize()
         {
+            Debug.Log(
+                "[UI AUDIO] " +
+                "Initialize called."
+            );
+
             CreateAudioSource();
 
             Debug.Log(
-                "[UI AUDIO] " +
-                "UIAudioService initialized."
+                $"[UI AUDIO] " +
+                $"Initialize finished | " +
+                $"AudioSource={_audioSource}"
             );
         }
 
         private void CreateAudioSource()
         {
+            Debug.Log(
+                "[UI AUDIO] " +
+                "Creating AudioSource..."
+            );
+
             GameObject audioObject =
-                new GameObject("UIAudioService");
+                new GameObject(
+                    "UIAudioService"
+                );
 
             Object.DontDestroyOnLoad(
                 audioObject
             );
 
             _audioSource =
-                audioObject.AddComponent<AudioSource>();
+                audioObject.AddComponent<
+                    AudioSource>();
 
             _audioSource.playOnAwake = false;
             _audioSource.loop = false;
             _audioSource.spatialBlend = 0f;
             _audioSource.volume = _volume;
+
+            Debug.Log(
+                $"[UI AUDIO] " +
+                $"AudioSource created | " +
+                $"Object={audioObject.name} | " +
+                $"Source={_audioSource}"
+            );
         }
 
         public void PlayHover(
             UIButtonType type)
         {
-            if (_audioData == null)
-            {
-                Debug.LogWarning(
-                    "[UI AUDIO] " +
-                    "AudioData is NULL!"
-                );
-
-                return;
-            }
-
             AudioClip clip =
                 _audioData.GetHoverClip(type);
 
@@ -70,16 +86,6 @@ namespace FireLine.Scripts.UI.Service
         public void PlayClick(
             UIButtonType type)
         {
-            if (_audioData == null)
-            {
-                Debug.LogWarning(
-                    "[UI AUDIO] " +
-                    "AudioData is NULL!"
-                );
-
-                return;
-            }
-
             AudioClip clip =
                 _audioData.GetClickClip(type);
 
@@ -89,6 +95,12 @@ namespace FireLine.Scripts.UI.Service
         private void PlayClip(
             AudioClip clip)
         {
+            Debug.Log(
+                $"[UI AUDIO] PlayClip | " +
+                $"Clip={clip} | " +
+                $"AudioSource={_audioSource}"
+            );
+
             if (_audioSource == null)
             {
                 Debug.LogWarning(
@@ -100,7 +112,14 @@ namespace FireLine.Scripts.UI.Service
             }
 
             if (clip == null)
+            {
+                Debug.LogWarning(
+                    "[UI AUDIO] " +
+                    "AudioClip is NULL!"
+                );
+
                 return;
+            }
 
             _audioSource.PlayOneShot(
                 clip,

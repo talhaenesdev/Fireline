@@ -13,11 +13,11 @@ namespace FireLine.Scripts.UI.Installer
 
         public override void InstallBindings()
         {
-            BindAudio();
-        }
+            Debug.Log(
+                "[UI INSTALLER] " +
+                "InstallBindings called."
+            );
 
-        private void BindAudio()
-        {
             if (buttonAudioData == null)
             {
                 Debug.LogError(
@@ -32,14 +32,13 @@ namespace FireLine.Scripts.UI.Installer
                     buttonAudioData)
                 .AsSingle();
 
-            Container.Bind<IUIAudioService>()
-                .To<UIAudioService>()
+            Container.BindInterfacesTo<UIAudioService>()
                 .AsSingle()
                 .NonLazy();
 
             Debug.Log(
                 "[UI INSTALLER] " +
-                "UI Audio Service bound."
+                "UIAudioService bound."
             );
         }
     }

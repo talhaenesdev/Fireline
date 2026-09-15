@@ -14,5 +14,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FireLine.Scripts.UI.Model.UIButtonAudioData
   entries:
   - Type: 0
-    HoverClip: {fileID: 0}
-    ClickClip: {fileID: 0}
+    HoverClip: {fileID: 8300000, guid: eeae9e4a76e42ae4bb167d88afb07af5, type: 3}
+    ClickClip: {fileID: 8300000, guid: e724d99656b2c7642a8861e0671ddaad, type: 3}
+  - Type: 1
+    HoverClip: {fileID: 8300000, guid: eeae9e4a76e42ae4bb167d88afb07af5, type: 3}
+    ClickClip: {fileID: 8300000, guid: e724d99656b2c7642a8861e0671ddaad, type: 3}
+  - Type: 2
+    HoverClip: {fileID: 8300000, guid: eeae9e4a76e42ae4bb167d88afb07af5, type: 3}
+    ClickClip: {fileID: 8300000, guid: e724d99656b2c7642a8861e0671ddaad, type: 3}
+  - Type: 3
+    HoverClip: {fileID: 8300000, guid: eeae9e4a76e42ae4bb167d88afb07af5, type: 3}
+    ClickClip: {fileID: 8300000, guid: e724d99656b2c7642a8861e0671ddaad, type: 3}
+  - Type: 4
+    HoverClip: {fileID: 8300000, guid: eeae9e4a76e42ae4bb167d88afb07af5, type: 3}
+    ClickClip: {fileID: 8300000, guid: e724d99656b2c7642a8861e0671ddaad, type: 3}
+  - Type: 5
+    HoverClip: {fileID: 8300000, guid: eeae9e4a76e42ae4bb167d88afb07af5, type: 3}
+    ClickClip: {fileID: 8300000, guid: e724d99656b2c7642a8861e0671ddaad, type: 3}
+  - Type: 6
+    HoverClip: {fileID: 8300000, guid: eeae9e4a76e42ae4bb167d88afb07af5, type: 3}
+    ClickClip: {fileID: 8300000, guid: e724d99656b2c7642a8861e0671ddaad, type: 3}
+  - Type: 0
+    HoverClip: {fileID: 8300000, guid: eeae9e4a76e42ae4bb167d88afb07af5, type: 3}
+    ClickClip: {fileID: 8300000, guid: e724d99656b2c7642a8861e0671ddaad, type: 3}
