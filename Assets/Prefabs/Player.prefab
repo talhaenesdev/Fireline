@@ -1115,6 +1115,7 @@ MonoBehaviour:
   muzzleFlash: {fileID: 698681430937003452}
   animator: {fileID: 7847318833953607452}
   fireTrigger: Fire
+  cameraShakeData: {fileID: 11400000, guid: 4ed82796d11b51e46baa9cba3567cdc9, type: 2}
 --- !u!1 &7050262185231087442
 GameObject:
   m_ObjectHideFlags: 0

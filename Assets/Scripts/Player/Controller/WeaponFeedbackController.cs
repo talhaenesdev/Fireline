@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using FireLine.Scripts.Player.Model;
+using UnityEngine;
 
 namespace FireLine.Scripts.Player.Controller
 {
@@ -15,13 +16,18 @@ namespace FireLine.Scripts.Player.Controller
         [SerializeField]
         private string fireTrigger = "Fire";
 
-        private PlayerWeaponController _weaponController;
+        [Header("Camera Shake")]
+        [SerializeField]
+        private CameraShakeData cameraShakeData;
 
+        private PlayerWeaponController _weaponController;
+        private PlayerCameraController _cameraController;
         private void Awake()
         {
             _weaponController =
                 GetComponent<PlayerWeaponController>();
-
+            _cameraController =
+                GetComponent<PlayerCameraController>();
             if (_weaponController == null)
             {
                 Debug.LogError(
@@ -59,6 +65,19 @@ namespace FireLine.Scripts.Player.Controller
         {
             PlayMuzzleFlash();
             PlayFireAnimation();
+            PlayCameraShake();
+        }
+        private void PlayCameraShake()
+        {
+            if (_cameraController == null)
+                return;
+
+            if (cameraShakeData == null)
+                return;
+
+            _cameraController.Shake(
+                cameraShakeData
+            );
         }
 
         private void PlayMuzzleFlash()
