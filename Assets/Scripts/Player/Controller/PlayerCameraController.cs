@@ -38,7 +38,8 @@ namespace FireLine.Scripts.Player.Controller
             if (playerCamera == null)
             {
                 Debug.LogError(
-                    "[PLAYER-CAMERA] Main Camera not found!"
+                    "[PLAYER-CAMERA] " +
+                    "Main Camera not found!"
                 );
 
                 return;

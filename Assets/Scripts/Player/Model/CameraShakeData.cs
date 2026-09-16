@@ -8,12 +8,12 @@ namespace FireLine.Scripts.Player.Model
     )]
     public class CameraShakeData : ScriptableObject
     {
-        [Header("Position")]
+        [Header("Shake")]
         [SerializeField]
         private float duration = 0.06f;
 
         [SerializeField]
-        private float strength = 0.05f;
+        private float strength = 0.04f;
 
         [SerializeField]
         private float frequency = 25f;

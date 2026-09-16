@@ -22,17 +22,28 @@ namespace FireLine.Scripts.Player.Controller
 
         private PlayerWeaponController _weaponController;
         private PlayerCameraController _cameraController;
+
         private void Awake()
         {
             _weaponController =
                 GetComponent<PlayerWeaponController>();
+
             _cameraController =
                 GetComponent<PlayerCameraController>();
+
             if (_weaponController == null)
             {
                 Debug.LogError(
                     "[WEAPON FEEDBACK] " +
                     "PlayerWeaponController not found!"
+                );
+            }
+
+            if (_cameraController == null)
+            {
+                Debug.LogError(
+                    "[WEAPON FEEDBACK] " +
+                    "PlayerCameraController not found!"
                 );
             }
 
@@ -67,18 +78,6 @@ namespace FireLine.Scripts.Player.Controller
             PlayFireAnimation();
             PlayCameraShake();
         }
-        private void PlayCameraShake()
-        {
-            if (_cameraController == null)
-                return;
-
-            if (cameraShakeData == null)
-                return;
-
-            _cameraController.Shake(
-                cameraShakeData
-            );
-        }
 
         private void PlayMuzzleFlash()
         {
@@ -98,7 +97,22 @@ namespace FireLine.Scripts.Player.Controller
             if (animator == null)
                 return;
 
-            animator.SetTrigger(fireTrigger);
+            animator.SetTrigger(
+                fireTrigger
+            );
+        }
+
+        private void PlayCameraShake()
+        {
+            if (_cameraController == null)
+                return;
+
+            if (cameraShakeData == null)
+                return;
+
+            _cameraController.Shake(
+                cameraShakeData
+            );
         }
     }
 }

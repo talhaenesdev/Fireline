@@ -13,5 +13,7 @@ MonoBehaviour:
   m_Name: CameraShakeData
   m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Model.CameraShakeData
   duration: 0.06
-  strength: 0.05
+  strength: 0.8
   frequency: 25
+  recoilDuration: 0
+  recoilStrength: 0
