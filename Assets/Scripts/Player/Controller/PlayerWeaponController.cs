@@ -1,6 +1,7 @@
 ﻿using FireLine.Scripts.Core.Weapon;
 using FireLine.Scripts.Weapon.Controller;
 using FireLine.Scripts.Weapon.Service;
+using System;
 using Unity.Netcode;
 using UnityEngine;
 using Zenject;
@@ -14,7 +15,7 @@ namespace FireLine.Scripts.Player.Controller
         private IWeaponFireService _fireService;
 
         private NetworkObject _networkObject;
-
+        public event Action Fired;
         [SerializeField]
         private Transform muzzlePoint;
         public event System.Action<int, int> AmmoChanged;
@@ -239,6 +240,7 @@ namespace FireLine.Scripts.Player.Controller
                 position,
                 direction
             );
+            Fired?.Invoke();
         }
 
         private ulong GetOwnerId()
