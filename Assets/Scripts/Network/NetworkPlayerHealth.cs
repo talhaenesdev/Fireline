@@ -9,9 +9,15 @@ namespace FireLine.Scripts.Network
     {
         [SerializeField]
         private float maxHealth = 100f;
+
+        [SerializeField]
+        private ParticleSystem hitParticle;
+
         public float MaxHealth =>
-    maxHealth;
+            maxHealth;
+
         private SignalBus _signalBus;
+
         private readonly NetworkVariable<float> _health =
             new NetworkVariable<float>(
                 100f,
@@ -35,7 +41,9 @@ namespace FireLine.Scripts.Network
         public event System.Action<bool>
             DeathStateChanged;
 
-        public event System.Action<float, float> HealthChanged;
+        public event System.Action<float, float>
+            HealthChanged;
+
         [Inject]
         public void Initialize(
             SignalBus signalBus)
@@ -130,12 +138,36 @@ namespace FireLine.Scripts.Network
                 $"Health: {_health.Value}"
             );
 
+            PlayDamageEffectClientRpc();
+
             if (_health.Value <= 0)
             {
                 _health.Value = 0;
 
                 Die(attackerClientId);
             }
+        }
+
+        [ClientRpc]
+        private void PlayDamageEffectClientRpc()
+        {
+            if (hitParticle == null)
+            {
+                Debug.LogWarning(
+                    "[NETWORK HEALTH] " +
+                    "Hit Particle is NULL!"
+                );
+
+                return;
+            }
+
+            hitParticle.Play();
+
+            Debug.Log(
+                $"[NETWORK HEALTH] " +
+                $"Hit Particle Played | " +
+                $"Victim: {OwnerClientId}"
+            );
         }
 
         private void Die(
@@ -183,6 +215,7 @@ namespace FireLine.Scripts.Network
 
             DeathStateChanged = null;
             HealthChanged = null;
+
             base.OnNetworkDespawn();
         }
     }
