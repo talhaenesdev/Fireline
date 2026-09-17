@@ -23,5 +23,10 @@ namespace FireLine.Scripts.Enemy
         {
             Debug.Log($"Enemy despawned: {name}");
         }
+
+        public void Initialize(IPoolService poolService, string poolKey)
+        {
+
+        }
     }
 }

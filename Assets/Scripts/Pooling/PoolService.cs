@@ -100,19 +100,20 @@ namespace FireLine.Scripts.Pooling
 
         private GameObject CreateInstance(Pool pool)
         {
-            GameObject instance = Object.Instantiate(
-                pool.Data.Prefab,
-                _poolRoot
-            );
+            GameObject instance =
+                Object.Instantiate(
+                    pool.Data.Prefab,
+                    _poolRoot
+                );
 
             _container.InjectGameObject(instance);
 
-            PooledParticleEffect particleEffect =
-                instance.GetComponent<PooledParticleEffect>();
+            IPoolable poolable =
+                instance.GetComponent<IPoolable>();
 
-            if (particleEffect != null)
+            if (poolable != null)
             {
-                particleEffect.Initialize(
+                poolable.Initialize(
                     this,
                     pool.Data.PoolKey
                 );

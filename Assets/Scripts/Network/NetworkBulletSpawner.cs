@@ -1,9 +1,12 @@
-﻿using Unity.Netcode;
+﻿using FireLine.Scripts.Pooling;
+using Unity.Netcode;
 using UnityEngine;
+using Zenject;
 
 namespace FireLine.Scripts.Network
 {
-    public class NetworkBulletSpawner : MonoBehaviour
+    public class NetworkBulletSpawner :
+        MonoBehaviour
     {
         [Header("Network Bullet")]
         [SerializeField]
@@ -12,6 +15,22 @@ namespace FireLine.Scripts.Network
         [Header("Predicted Bullet")]
         [SerializeField]
         private PredictedBullet predictedBulletPrefab;
+
+        private IPoolService _poolService;
+
+        [Inject]
+        public void Construct(
+            IPoolService poolService)
+        {
+            _poolService =
+                poolService;
+
+            Debug.Log(
+                $"[BULLET SPAWNER] " +
+                $"PoolService injected | " +
+                $"Success={_poolService != null}"
+            );
+        }
 
         public void Spawn(
             Vector3 position,
@@ -83,7 +102,9 @@ namespace FireLine.Scripts.Network
                 return;
             }
 
-            networkObject.SpawnWithOwnership(ownerClientId);
+            networkObject.SpawnWithOwnership(
+                ownerClientId
+            );
 
             bullet.Initialize(
                 direction,
@@ -100,21 +121,17 @@ namespace FireLine.Scripts.Network
         }
 
         public void SpawnPredicted(
-    Vector3 position,
-    Vector3 direction,
-    float speed,
-    float lifetime,
-    Transform ownerTransform)
+            Vector3 position,
+            Vector3 direction,
+            float speed,
+            float lifetime,
+            Transform ownerTransform)
         {
-
-
-
-
-            if (predictedBulletPrefab == null)
+            if (_poolService == null)
             {
                 Debug.LogError(
                     "[BULLET SPAWNER] " +
-                    "PredictedBullet Prefab is NULL!"
+                    "PoolService is NULL!"
                 );
 
                 return;
@@ -123,27 +140,40 @@ namespace FireLine.Scripts.Network
             if (direction == Vector3.zero)
                 return;
 
+            direction.Normalize();
+
             PredictedBullet bullet =
-                Instantiate(
-                    predictedBulletPrefab,
+                _poolService.Spawn<PredictedBullet>(
+                    "PredictedBullet",
                     position,
                     Quaternion.LookRotation(direction)
                 );
 
+            if (bullet == null)
+            {
+                Debug.LogWarning(
+                    "[BULLET SPAWNER] " +
+                    "Failed to spawn PredictedBullet " +
+                    "from pool."
+                );
 
-            Debug.Log(
-    $"[PREDICTED BULLET] Spawn | " +
-    $"Position={position} | " +
-    $"Direction={direction} | " +
-    $"Speed={speed} | " +
-    $"Lifetime={lifetime}"
-);
+                return;
+            }
 
             bullet.Initialize(
                 direction,
                 speed,
                 lifetime,
                 ownerTransform
+            );
+
+            Debug.Log(
+                $"[PREDICTED BULLET] " +
+                $"Pool Spawn | " +
+                $"Position={position} | " +
+                $"Direction={direction} | " +
+                $"Speed={speed} | " +
+                $"Lifetime={lifetime}"
             );
         }
     }
