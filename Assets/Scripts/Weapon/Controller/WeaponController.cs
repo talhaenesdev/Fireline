@@ -39,6 +39,11 @@ namespace FireLine.Scripts.Weapon.Controller
         public bool IsReloading =>
             _isReloading;
 
+        public BulletData BulletData =>
+            _weaponData != null
+                ? _weaponData.BulletData
+                : null;
+
         public bool CanShoot()
         {
             if (_weaponData == null)

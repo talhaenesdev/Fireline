@@ -5,8 +5,13 @@ namespace FireLine.Scripts.Network
 {
     public class NetworkBulletSpawner : MonoBehaviour
     {
+        [Header("Network Bullet")]
         [SerializeField]
         private NetworkBullet bulletPrefab;
+
+        [Header("Predicted Bullet")]
+        [SerializeField]
+        private PredictedBullet predictedBulletPrefab;
 
         public void Spawn(
             Vector3 position,
@@ -78,7 +83,7 @@ namespace FireLine.Scripts.Network
                 return;
             }
 
-            networkObject.Spawn();
+            networkObject.SpawnWithOwnership(ownerClientId);
 
             bullet.Initialize(
                 direction,
@@ -91,6 +96,54 @@ namespace FireLine.Scripts.Network
                 $"NetworkObjectId: " +
                 $"{networkObject.NetworkObjectId} | " +
                 $"OwnerClientId: {ownerClientId}"
+            );
+        }
+
+        public void SpawnPredicted(
+    Vector3 position,
+    Vector3 direction,
+    float speed,
+    float lifetime,
+    Transform ownerTransform)
+        {
+
+
+
+
+            if (predictedBulletPrefab == null)
+            {
+                Debug.LogError(
+                    "[BULLET SPAWNER] " +
+                    "PredictedBullet Prefab is NULL!"
+                );
+
+                return;
+            }
+
+            if (direction == Vector3.zero)
+                return;
+
+            PredictedBullet bullet =
+                Instantiate(
+                    predictedBulletPrefab,
+                    position,
+                    Quaternion.LookRotation(direction)
+                );
+
+
+            Debug.Log(
+    $"[PREDICTED BULLET] Spawn | " +
+    $"Position={position} | " +
+    $"Direction={direction} | " +
+    $"Speed={speed} | " +
+    $"Lifetime={lifetime}"
+);
+
+            bullet.Initialize(
+                direction,
+                speed,
+                lifetime,
+                ownerTransform
             );
         }
     }

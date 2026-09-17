@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9e0e38ec2d7fb34da774bb349148470, type: 3}
   m_Name: SceneReference
   m_EditorClassIdentifier: FireLine.Core::FireLine.Scripts.Core.Scene.Model.SceneReference
-  sceneAsset: {fileID: 102900000, guid: 4d9d98e728c9fba43a631ed0a16b6949, type: 3}
-  sceneName: GameMapTest
+  sceneAsset: {fileID: 102900000, guid: 2cb5c298f57940e418f372389857b393, type: 3}
+  sceneName: Game

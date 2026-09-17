@@ -36,10 +36,11 @@ namespace FireLine.Scripts.Network
                 lifetime;
 
             Debug.Log(
-                $"[NETWORK BULLET] Initialize | " +
-                $"NetworkObjectId: {NetworkObjectId} | " +
-                $"OwnerClientId: {_ownerClientId} | " +
-                $"Direction: {_direction}"
+                $"[NETWORK BULLET DEBUG] SERVER INIT | " +
+                $"Position={transform.position} | " +
+                $"Layer={LayerMask.LayerToName(gameObject.layer)} | " +
+                $"Collider={GetComponent<Collider>() != null} | " +
+                $"Rigidbody={GetComponent<Rigidbody>() != null}"
             );
         }
 
@@ -47,15 +48,35 @@ namespace FireLine.Scripts.Network
         {
             base.OnNetworkSpawn();
 
+            if (IsOwner)
+            {
+                HideVisualForOwner();
+            }
+
             Debug.Log(
-                $"[NETWORK BULLET] OnNetworkSpawn | " +
-                $"Name: {name} | " +
-                $"NetworkObjectId: {NetworkObjectId} | " +
-                $"OwnerClientId: {OwnerClientId} | " +
-                $"IsOwner: {IsOwner} | " +
-                $"IsServer: {IsServer} | " +
-                $"IsClient: {IsClient} | " +
-                $"Position: {transform.position}"
+                $"[NETWORK BULLET DEBUG] " +
+                $"Layer={gameObject.layer} | " +
+                $"LayerName={LayerMask.LayerToName(gameObject.layer)} | " +
+                $"Collider={GetComponent<Collider>() != null} | " +
+                $"Rigidbody={GetComponent<Rigidbody>() != null}"
+            );
+        }
+
+        private void HideVisualForOwner()
+        {
+            Renderer[] renderers =
+                GetComponentsInChildren<Renderer>(
+                    true
+                );
+
+            foreach (Renderer renderer in renderers)
+            {
+                renderer.enabled = false;
+            }
+
+            Debug.Log(
+                "[NETWORK BULLET] " +
+                "Visual hidden for owner."
             );
         }
 
@@ -63,6 +84,14 @@ namespace FireLine.Scripts.Network
         {
             if (!IsServer)
                 return;
+
+            Debug.Log(
+                $"[NETWORK BULLET UPDATE] " +
+                $"ID={NetworkObjectId} | " +
+                $"Pos={transform.position} | " +
+                $"Direction={_direction} | " +
+                $"Speed={speed}"
+            );
 
             transform.position +=
                 _direction *
@@ -83,6 +112,13 @@ namespace FireLine.Scripts.Network
         {
             if (!IsServer)
                 return;
+
+            Debug.Log(
+    $"[NETWORK BULLET] SERVER COLLISION | " +
+    $"Bullet={name} | " +
+    $"Other={other.name} | " +
+    $"Position={transform.position}"
+);
 
             NetworkPlayer targetPlayer =
                 other.GetComponentInParent<NetworkPlayer>();
