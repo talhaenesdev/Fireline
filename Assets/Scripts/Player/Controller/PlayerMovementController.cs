@@ -4,8 +4,12 @@ namespace FireLine.Scripts.Player.Controller
 {
     public class PlayerMovementController : MonoBehaviour
     {
+        [Header("Movement")]
         [SerializeField]
         private float moveSpeed = 5f;
+
+        [SerializeField]
+        private float sprintSpeed = 8f;
 
         private PlayerInputController _inputController;
         private PlayerAnimationController _animationController;
@@ -42,9 +46,14 @@ namespace FireLine.Scripts.Player.Controller
                     input.y
                 );
 
+            float currentSpeed =
+                _inputController.SprintInput
+                    ? sprintSpeed
+                    : moveSpeed;
+
             transform.position +=
                 movement *
-                moveSpeed *
+                currentSpeed *
                 Time.deltaTime;
         }
     }

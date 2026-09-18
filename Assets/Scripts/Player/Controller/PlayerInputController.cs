@@ -7,20 +7,33 @@ namespace FireLine.Scripts.Player.Controller
     {
         public Vector2 MoveInput { get; private set; }
 
+        public bool SprintInput { get; private set; }
+
         public bool FirePressed { get; private set; }
 
         public bool FireStarted { get; private set; }
 
         public bool ReloadPressed { get; private set; }
 
-        public void OnMove(InputAction.CallbackContext context)
+        public void OnMove(
+            InputAction.CallbackContext context)
         {
-            MoveInput = context.ReadValue<Vector2>();
+            MoveInput =
+                context.ReadValue<Vector2>();
         }
 
-        public void OnFire(InputAction.CallbackContext context)
+        public void OnSprint(
+            InputAction.CallbackContext context)
         {
-            FirePressed = context.ReadValueAsButton();
+            SprintInput =
+                context.ReadValueAsButton();
+        }
+
+        public void OnFire(
+            InputAction.CallbackContext context)
+        {
+            FirePressed =
+                context.ReadValueAsButton();
 
             if (context.started)
             {
@@ -28,13 +41,16 @@ namespace FireLine.Scripts.Player.Controller
             }
         }
 
-        public void OnReload(InputAction.CallbackContext context)
+        public void OnReload(
+            InputAction.CallbackContext context)
         {
             if (context.started)
             {
                 ReloadPressed = true;
 
-                Debug.Log("[INPUT] Reload pressed!");
+                Debug.Log(
+                    "[INPUT] Reload pressed!"
+                );
             }
         }
 
