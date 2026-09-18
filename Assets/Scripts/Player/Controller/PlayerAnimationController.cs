@@ -27,6 +27,7 @@ namespace FireLine.Scripts.Player.Controller
         private static readonly int IsDeadHash =
             Animator.StringToHash("IsDead");
 
+
         private void Awake()
         {
             if (animator == null)
@@ -44,7 +45,9 @@ namespace FireLine.Scripts.Player.Controller
             }
         }
 
-        public void SetMovement(Vector2 input)
+        public void SetMovement(
+    Vector2 input,
+    bool isSprinting)
         {
             if (animator == null)
                 return;
@@ -91,9 +94,14 @@ namespace FireLine.Scripts.Player.Controller
                 localMovement.z
             );
 
+            float animationSpeed =
+                isSprinting
+                    ? 2f
+                    : 1f;
+
             animator.SetFloat(
                 SpeedHash,
-                input.magnitude
+                animationSpeed
             );
         }
 

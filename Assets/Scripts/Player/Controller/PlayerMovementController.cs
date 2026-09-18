@@ -37,7 +37,10 @@ namespace FireLine.Scripts.Player.Controller
             Vector2 input =
                 _inputController.MoveInput;
 
-            _animationController?.SetMovement(input);
+            _animationController?.SetMovement(
+                input,
+                _inputController.SprintInput
+            );
 
             Vector3 movement =
                 new Vector3(
