@@ -1,0 +1,19 @@
+{
+  "name": "Modules.Hud.Screen",
+  "references": [
+    "FlowIoC",
+    "Modules.Hud.Screen.Signals",
+    "Modules.Player.Shared",
+    "Unity.TextMeshPro",
+    "UnityEngine.UI"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

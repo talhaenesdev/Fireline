@@ -273,7 +273,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3490780677958503669}
-  - component: {fileID: 1039158532998735507}
+  - component: {fileID: 3932142586914867345}
   m_Layer: 0
   m_Name: PredictedBullet
   m_TagString: Untagged
@@ -298,7 +298,7 @@ Transform:
   - {fileID: 2095975977280323961}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1039158532998735507
+--- !u!114 &3932142586914867345
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -307,6 +307,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 8830941139861758923}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6bb082729ae7cee4daca5d7151576488, type: 3}
+  m_Script: {fileID: 11500000, guid: 408e51402b83694478ebbb4abe1959fb, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: FireLine.Network::FireLine.Scripts.Network.PredictedBullet
+  m_EditorClassIdentifier: Modules.Weapon::Modules.WeaponModule.Entities.PredictedBullet

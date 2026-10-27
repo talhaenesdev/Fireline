@@ -1,0 +1,21 @@
+{
+  "name": "Modules.Lobby.Screen",
+  "references": [
+    "FlowIoC",
+    "Modules.Lobby.Screen.Signals",
+    "Modules.Lobby.Shared",
+    "Modules.PlayerName",
+    "Unity.TextMeshPro",
+    "UnityEngine.UI",
+    "Modules.Match.Shared"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

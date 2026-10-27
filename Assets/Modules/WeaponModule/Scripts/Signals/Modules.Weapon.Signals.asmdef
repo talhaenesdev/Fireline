@@ -1,0 +1,16 @@
+{
+  "name": "Modules.Weapon.Signals",
+  "references": [
+    "FlowIoC",
+    "Modules.Weapon.Shared"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

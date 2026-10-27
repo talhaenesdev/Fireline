@@ -492,7 +492,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6718411323140185431}
-  - component: {fileID: 985621882011572900}
+  - component: {fileID: 6359159341144124785}
   m_Layer: 5
   m_Name: ScoreboardRow_UI
   m_TagString: Untagged
@@ -524,7 +524,7 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 425.684, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &985621882011572900
+--- !u!114 &6359159341144124785
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -533,13 +533,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 3112712343811206204}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 146f71ccb899d26469d1c52caad3f0c1, type: 3}
+  m_Script: {fileID: 11500000, guid: 629c89d9f21b0eb4d909a91ae2a59a85, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FireLine.Scripts.UI.Scoreboard.ScoreboardRowView
-  playerNameText: {fileID: 445035110509667678}
-  killsText: {fileID: 3055740191573150611}
-  deathsText: {fileID: 2092427720445055312}
-  kdaText: {fileID: 7386887263169278353}
+  m_EditorClassIdentifier: Modules.Match.Screen::Modules.MatchModule.MatchScreenModule.ViewsMediators.ScoreboardRowView
+  _playerNameText: {fileID: 445035110509667678}
+  _killsText: {fileID: 3055740191573150611}
+  _deathsText: {fileID: 2092427720445055312}
+  _kdaText: {fileID: 7386887263169278353}
 --- !u!1 &6687204920762127004
 GameObject:
   m_ObjectHideFlags: 0

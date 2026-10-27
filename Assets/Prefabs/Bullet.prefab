@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 3459532013339640685}
   - component: {fileID: 7504359601646117982}
   - component: {fileID: 6930093281005143109}
-  - component: {fileID: 6448626046045300862}
-  - component: {fileID: 776399044916393240}
+  - component: {fileID: 5174188033113290667}
+  - component: {fileID: 3566247973743742024}
   m_Layer: 0
   m_Name: Bullet
   m_TagString: Untagged
@@ -111,7 +111,7 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
---- !u!114 &6448626046045300862
+--- !u!114 &5174188033113290667
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -120,22 +120,27 @@ MonoBehaviour:
   m_GameObject: {fileID: 1563889568419805077}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4b05d5a2c926d324caae008e01741044, type: 3}
+  m_Script: {fileID: 11500000, guid: 03cab3481c6e0644b9556052741d16c8, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: FireLine.Network::FireLine.Scripts.Network.NetworkBullet
+  m_EditorClassIdentifier: FlowIoC::FlowIoC.BaseModule.Injectable.Components.ViewInjector
+  viewDataList:
+  - View: {fileID: 3566247973743742024}
+    AutoRegister: 1
+    InjectableView: 0
+    ContextSource: 2
+    SelectedRoot: {fileID: 0}
+    RootName: WeaponSystemRoot
+    IsRegistered: 0
+--- !u!114 &3566247973743742024
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1563889568419805077}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd4c6f0dcae596d438a6128620875889, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Modules.Weapon::Modules.WeaponModule.ViewsMediators.NetworkBulletView
   ShowTopMostFoldoutHeaderGroup: 1
-  speed: 20
-  lifetime: 3
-  damage: 10
---- !u!114 &776399044916393240
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1563889568419805077}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9e05ecad17b3e774e957ea6d4427e7e4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FireLine.Weapon::FireLine.Scripts.Weapon.View.BulletView

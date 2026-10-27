@@ -211,7 +211,6 @@ GameObject:
   - component: {fileID: 5359069091162498836}
   - component: {fileID: 4988749942851675408}
   - component: {fileID: 857845879566730407}
-  - component: {fileID: 4165358966343681739}
   m_Layer: 0
   m_Name: Weapon
   m_TagString: Untagged
@@ -292,19 +291,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &4165358966343681739
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1375552513785914909}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9abbfd7bb27f3294c9479bec168a637a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FireLine.Weapon::FireLine.Scripts.Weapon.View.WeaponView
-  muzzlePoint: {fileID: 8587788849489917253}
 --- !u!1 &3788681117593944517
 GameObject:
   m_ObjectHideFlags: 0
@@ -548,28 +534,21 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 311929678271989319}
-  - component: {fileID: 7612163908192422989}
-  - component: {fileID: 8266686966715429905}
-  - component: {fileID: 3426552689247225756}
-  - component: {fileID: 2116892378908411366}
-  - component: {fileID: 7179617274299999568}
-  - component: {fileID: 3540882109280776243}
   - component: {fileID: 6958581961677697610}
   - component: {fileID: 2512482561696496404}
   - component: {fileID: 7853310734115405942}
-  - component: {fileID: 6536783911784415948}
-  - component: {fileID: 4219172794803520995}
-  - component: {fileID: 5419852331436352164}
   - component: {fileID: 5006476606668121105}
   - component: {fileID: 4162238347015880299}
   - component: {fileID: 8149004686171555721}
-  - component: {fileID: 6842709419260223899}
-  - component: {fileID: 2274199593103484380}
-  - component: {fileID: 294294179912840190}
-  - component: {fileID: 6882452062047279220}
-  - component: {fileID: 6424406429432433405}
-  - component: {fileID: 5576505171622893172}
-  - component: {fileID: 7626321583316295627}
+  - component: {fileID: 262789605884804354}
+  - component: {fileID: 1575281211462126264}
+  - component: {fileID: 5325744316693739951}
+  - component: {fileID: 4618399304754188994}
+  - component: {fileID: 5327427502139282181}
+  - component: {fileID: 2957750100485641002}
+  - component: {fileID: 1593028955294145048}
+  - component: {fileID: 5489066500811363722}
+  - component: {fileID: 4256359592281015775}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -598,84 +577,6 @@ Transform:
   - {fileID: 4818170225334139756}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7612163908192422989
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6727836590595305734}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0cdee241c716f5e4fb4cefe4d31a5205, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FireLine.Scripts.Player.View.PlayerView
-  muzzlePoint: {fileID: 8587788849489917253}
---- !u!114 &8266686966715429905
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6727836590595305734}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: adf285de5a7e5b3439e2a617f4181497, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.PlayerInputController
---- !u!114 &3426552689247225756
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6727836590595305734}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2fe18664e565cdb489565ff505131a48, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.PlayerAimController
-  playerCamera: {fileID: 0}
-  aimTransform: {fileID: 311929678271989319}
---- !u!114 &2116892378908411366
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6727836590595305734}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 38a2ba3f4cca5e6499187ef0984c8123, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.PlayerWeaponController
-  muzzlePoint: {fileID: 8587788849489917253}
---- !u!114 &7179617274299999568
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6727836590595305734}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c9eba817b22da564cabce3bc0010c7f1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.PlayerGameplayController
---- !u!114 &3540882109280776243
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6727836590595305734}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1038965de223447479b236e831f12ab9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.PlayerMovementController
-  moveSpeed: 5
-  sprintSpeed: 8
 --- !u!114 &6958581961677697610
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -683,13 +584,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6727836590595305734}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.PlayerInput
   m_Actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  m_NotificationBehavior: 2
+  m_NotificationBehavior: 3
   m_UIInputModule: {fileID: 0}
   m_DeviceLostEvent:
     m_PersistentCalls:
@@ -703,7 +604,7 @@ MonoBehaviour:
   m_ActionEvents:
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8266686966715429905}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: FireLine.Scripts.Player.Controller.PlayerInputController,
           FireLine.Player
         m_MethodName: OnMove
@@ -724,7 +625,7 @@ MonoBehaviour:
     m_ActionName: 'Player/Look[/Mouse/delta]'
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8266686966715429905}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: FireLine.Scripts.Player.Controller.PlayerInputController,
           FireLine.Player
         m_MethodName: OnFire
@@ -761,7 +662,7 @@ MonoBehaviour:
     m_ActionName: 'Player/Next[/Keyboard/2]'
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8266686966715429905}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: FireLine.Scripts.Player.Controller.PlayerInputController,
           FireLine.Player
         m_MethodName: OnSprint
@@ -818,7 +719,7 @@ MonoBehaviour:
     m_ActionName: UI/TrackedDeviceOrientation
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8266686966715429905}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: FireLine.Scripts.Player.Controller.PlayerInputController,
           FireLine.Player
         m_MethodName: OnReload
@@ -911,48 +812,6 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
---- !u!114 &6536783911784415948
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6727836590595305734}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 22b64712856cdf74fb2985821453df7c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FireLine.Network::FireLine.Scripts.Network.NetworkPlayer
-  ShowTopMostFoldoutHeaderGroup: 1
-  _deathParticle: {fileID: 8041190354046442819}
---- !u!114 &4219172794803520995
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6727836590595305734}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 51f7aa16649a4ae42b62ff5fa3a3e7e9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FireLine.Network::FireLine.Scripts.Network.NetworkPlayerHealth
-  ShowTopMostFoldoutHeaderGroup: 1
-  maxHealth: 100
-  hitParticle: {fileID: 1182941049483041899}
---- !u!114 &5419852331436352164
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6727836590595305734}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6e017fb0f23ba1a47a689c39b9d58303, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FireLine.Network::FireLine.Scripts.Network.NetworkWeaponFireService
-  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!65 &5006476606668121105
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1024,7 +883,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 84
   m_CollisionDetection: 0
---- !u!114 &6842709419260223899
+--- !u!114 &262789605884804354
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1033,17 +892,154 @@ MonoBehaviour:
   m_GameObject: {fileID: 6727836590595305734}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2c0881a5c612c844bbec04f9c96d7d4c, type: 3}
+  m_Script: {fileID: 11500000, guid: 03cab3481c6e0644b9556052741d16c8, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: FireLine.Network::FireLine.Scripts.Network.Controller.NetworkPlayerVisionController
+  m_EditorClassIdentifier: FlowIoC::FlowIoC.BaseModule.Injectable.Components.ViewInjector
+  viewDataList:
+  - View: {fileID: 1575281211462126264}
+    AutoRegister: 1
+    InjectableView: 0
+    ContextSource: 2
+    SelectedRoot: {fileID: 0}
+    RootName: PlayerSystemRoot
+    IsRegistered: 0
+  - View: {fileID: 5325744316693739951}
+    AutoRegister: 1
+    InjectableView: 0
+    ContextSource: 2
+    SelectedRoot: {fileID: 0}
+    RootName: PlayerSystemRoot
+    IsRegistered: 0
+  - View: {fileID: 4618399304754188994}
+    AutoRegister: 1
+    InjectableView: 0
+    ContextSource: 2
+    SelectedRoot: {fileID: 0}
+    RootName: PlayerSystemRoot
+    IsRegistered: 0
+  - View: {fileID: 5327427502139282181}
+    AutoRegister: 1
+    InjectableView: 0
+    ContextSource: 2
+    SelectedRoot: {fileID: 0}
+    RootName: PlayerSystemRoot
+    IsRegistered: 0
+  - View: {fileID: 2957750100485641002}
+    AutoRegister: 1
+    InjectableView: 0
+    ContextSource: 2
+    SelectedRoot: {fileID: 0}
+    RootName: PlayerSystemRoot
+    IsRegistered: 0
+  - View: {fileID: 1593028955294145048}
+    AutoRegister: 1
+    InjectableView: 0
+    ContextSource: 2
+    SelectedRoot: {fileID: 0}
+    RootName: PlayerSystemRoot
+    IsRegistered: 0
+  - View: {fileID: 4256359592281015775}
+    AutoRegister: 1
+    InjectableView: 0
+    ContextSource: 2
+    SelectedRoot: {fileID: 0}
+    RootName: WeaponSystemRoot
+    IsRegistered: 0
+--- !u!114 &1575281211462126264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6727836590595305734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cda4b443040fb9408d21fab0d3d306a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Modules.Player::Modules.PlayerModule.ViewsMediators.PlayerAvatarView
   ShowTopMostFoldoutHeaderGroup: 1
-  vision: {fileID: 879746745281773250}
-  visionRange: 50
-  visionAngle: 90
-  obstacleLayers:
+  _moveSpeed: 5
+  _sprintSpeed: 8
+  _maxHealth: 100
+  _hitParticle: {fileID: 1182941049483041899}
+  _deathParticle: {fileID: 8041190354046442819}
+--- !u!114 &5325744316693739951
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6727836590595305734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38abe0a64813e13468e6986fcd8939f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Modules.Player::Modules.PlayerModule.ViewsMediators.PlayerInputView
+  _playerInput: {fileID: 6958581961677697610}
+--- !u!114 &4618399304754188994
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6727836590595305734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b1f0762c6943884fb3c297a8cf28c17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Modules.Player::Modules.PlayerModule.ViewsMediators.PlayerMotorView
+  _animator: {fileID: 7847318833953607452}
+  _aimTransform: {fileID: 115344442681767431}
+  _upperBodyLayerIndex: 1
+--- !u!114 &5327427502139282181
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6727836590595305734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2a7b2f399fc7314b973c1c33de3ca3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Modules.Player::Modules.PlayerModule.ViewsMediators.PlayerAimView
+  _playerCamera: {fileID: 0}
+  _aimTransform: {fileID: 311929678271989319}
+--- !u!114 &2957750100485641002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6727836590595305734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63bfb7eaf5f385140b487372b25e1d68, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Modules.Player::Modules.PlayerModule.ViewsMediators.PlayerCameraView
+  _playerCamera: {fileID: 0}
+  _cameraOffset: {x: 0, y: 10, z: -0.01}
+  _followSpeed: 10
+  _shake: {fileID: 11400000, guid: 0fe48be82382c76479a1430e5b439f40, type: 2}
+--- !u!114 &1593028955294145048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6727836590595305734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9ffeb0c227d5c549aee89bf6f9cb26b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Modules.Player::Modules.PlayerModule.ViewsMediators.PlayerVisionView
+  _vision: {fileID: 879746745281773250}
+  _visionRange: 50
+  _visionAngle: 90
+  _obstacleLayers:
     serializedVersion: 2
     m_Bits: 64
---- !u!114 &2274199593103484380
+--- !u!114 &5489066500811363722
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1052,15 +1048,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 6727836590595305734}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ef62c141534fe8e4face5f0562cc2eae, type: 3}
+  m_Script: {fileID: 11500000, guid: 069b3a488f471b3499cb0a48591c8e7f, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.PlayerFootstepAudioController
-  audioSource: {fileID: 4848236523332474789}
-  footstepClips:
+  m_EditorClassIdentifier: Modules.Player::Modules.PlayerModule.ViewsMediators.PlayerFootstepAudio
+  _audioSource: {fileID: 4848236523332474789}
+  _footstepClips:
   - {fileID: 8300000, guid: 08afef9f36dbf434faa5e70edde1de38, type: 3}
-  stepInterval: 0.35
-  movementThreshold: 0.01
---- !u!114 &294294179912840190
+  _stepInterval: 0.35
+  _movementThreshold: 0.01
+--- !u!114 &4256359592281015775
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1069,69 +1065,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 6727836590595305734}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 87cd7c89ba089f04d9ff5aba574d2807, type: 3}
+  m_Script: {fileID: 11500000, guid: 418fbd6917c03784183e30af48f3a2b5, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.NetworkPlayerAudioListener
+  m_EditorClassIdentifier: Modules.Weapon::Modules.WeaponModule.ViewsMediators.WeaponView
   ShowTopMostFoldoutHeaderGroup: 1
---- !u!114 &6882452062047279220
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6727836590595305734}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3733ed9121c590544a4e65d756852e80, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.PlayerCameraController
-  ShowTopMostFoldoutHeaderGroup: 1
-  playerCamera: {fileID: 0}
-  cameraOffset: {x: 0, y: 10, z: -0.01}
-  followSpeed: 10
---- !u!114 &6424406429432433405
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6727836590595305734}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3b1632e81cf376c409d08c3b8659c325, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.PlayerAnimationController
-  animator: {fileID: 7847318833953607452}
-  aimTransform: {fileID: 115344442681767431}
-  upperBodyLayerIndex: 1
---- !u!114 &5576505171622893172
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6727836590595305734}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0d32cb8ea2ab6f4386af5fcb4129555, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FireLine.Network::FireLine.Scripts.Network.Controller.NetworkPlayerDeathAnimationController
---- !u!114 &7626321583316295627
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6727836590595305734}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f82e8475b3973fb4cae8934964320890, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FireLine.Player::FireLine.Scripts.Player.Controller.WeaponFeedbackController
-  muzzleFlash: {fileID: 698681430937003452}
-  animator: {fileID: 7847318833953607452}
-  fireTrigger: Fire
-  cameraShakeData: {fileID: 11400000, guid: 4ed82796d11b51e46baa9cba3567cdc9, type: 2}
+  _config: {fileID: 11400000, guid: 66ed50e3127b61b4db6b4bf518a10b37, type: 2}
+  _muzzlePoint: {fileID: 8587788849489917253}
+  _muzzleFlash: {fileID: 698681430937003452}
+  _animator: {fileID: 7847318833953607452}
+  _fireTrigger: Fire
 --- !u!1 &7050262185231087442
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,0 +1,21 @@
+{
+  "name": "Modules.Lobby",
+  "references": [
+    "FlowIoC",
+    "Modules.Lobby.Shared",
+    "Modules.Lobby.Signals",
+    "Modules.NetworkSession",
+    "Modules.NetworkSession.Shared",
+    "Modules.PlayerName",
+    "Modules.Match.Shared"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

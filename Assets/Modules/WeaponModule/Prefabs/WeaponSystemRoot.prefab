@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2651246020180219774
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7050234711064001396}
+  - component: {fileID: 5503295341256992358}
+  m_Layer: 0
+  m_Name: WeaponSystemRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7050234711064001396
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2651246020180219774}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5503295341256992358
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2651246020180219774}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82aeb4e4a540f3c4bb14362e214b613e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Modules.Weapon::Modules.WeaponModule.RootsContexts.WeaponSystemRoot
+  SubContextTypes:
+  - ContextScript: {fileID: 11500000, guid: bf1723558fa67e648a7466d21f2ae441, type: 3}
+    ContextFullName: FlowIoC.PoolModule.RootsContexts.PoolSubContext
+    ContextName: PoolSubContext
+    AutoSetup: 1
+    IsTest: 0
+    Settings:
+      rid: 5633828748410748928
+  initializeOrder: 2
+  AutoBindInjections: 1
+  AutoBindMediations: 1
+  AutoInitialize: 1
+  AutoSetup: 1
+  AutoLaunch: 1
+  IsTest: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 5633828748410748928
+      type: {class: PoolSubContextSettingsCVO, ns: FlowIoC.PoolModule.Data.ValueObjects, asm: FlowIoC}
+      data:
+        Groups:
+          m_Keys:
+          - match
+          m_Values:
+          - Group: {fileID: 11400000, guid: 8691059e902c84842b2333e3d73d427d, type: 2}
+            AutoInitialize: 1
+            GroupSpecificPools: 0
+        UnregisterWhenRootDestroyed: 1

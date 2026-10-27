@@ -1,0 +1,20 @@
+{
+  "name": "Modules.Match",
+  "references": [
+    "FlowIoC",
+    "Modules.Match.Shared",
+    "Modules.Match.Signals",
+    "Unity.Netcode.Runtime",
+    "Unity.Collections",
+    "Modules.NetworkSession"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

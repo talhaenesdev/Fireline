@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Audio
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Audio
+  m_GUID: 26a737dfabcad2247ac56432ad3ba0d4
+  m_SerializeEntries:
+  - m_GUID: 12657a0a67dc1544faf2c24cf63955d5
+    m_Address: Assets/Sound/gun-sound-1.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 58de94aad38b43a49a88194878437959
+    m_Address: Assets/Modules/AudioModule/zTestModules/AudioTestModule/Art/Audio/SND_Music_ThemeB_01.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8ae0312b405a59944b9e2b098549c3ea
+    m_Address: Assets/Modules/AudioModule/zTestModules/AudioTestModule/Art/Audio/SND_UI_Click_01.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 969f2db2a88718f4f8dbf9cd7300ccb9
+    m_Address: Assets/Modules/AudioModule/zTestModules/AudioTestModule/Art/Audio/SND_SFX_Boom_01.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 983426284b8f71c47a68277bd0e4dc47
+    m_Address: Assets/Modules/AudioModule/zTestModules/AudioTestModule/Art/Audio/SND_SFX_Beep_01.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a5aaef4ae0c6ba748831c94ba26e0184
+    m_Address: Assets/Sound/BulletImpactSound-1.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d9ddf3c58dfe4e44bbe422bdb8ff597e
+    m_Address: Assets/Modules/AudioModule/zTestModules/AudioTestModule/Art/Audio/SND_SFX_Beep_02.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e0d056eae03a9184aad791291ca51f24
+    m_Address: Assets/Modules/AudioModule/zTestModules/AudioTestModule/Art/Audio/SND_Music_ThemeA_01.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e724d99656b2c7642a8861e0671ddaad
+    m_Address: Assets/Sound/MenuButtons/M1_Garand.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eeae9e4a76e42ae4bb167d88afb07af5
+    m_Address: Assets/Sound/MenuButtons/sound1.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 955f8a9c7fd5ebb45a6d77c810da86c3, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: d47ae6f304b2a9b46aa7e0231c270384, type: 2}
+    - {fileID: 11400000, guid: b9821cbd226a23b4aaa0c351bdfae528, type: 2}

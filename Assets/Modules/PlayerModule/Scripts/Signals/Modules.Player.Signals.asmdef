@@ -1,0 +1,16 @@
+{
+  "name": "Modules.Player.Signals",
+  "references": [
+    "FlowIoC",
+    "Modules.Player.Shared"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

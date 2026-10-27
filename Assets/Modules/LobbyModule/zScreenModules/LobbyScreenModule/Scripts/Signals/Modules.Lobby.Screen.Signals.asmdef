@@ -1,0 +1,17 @@
+{
+  "name": "Modules.Lobby.Screen.Signals",
+  "references": [
+    "FlowIoC",
+    "Modules.Lobby.Shared",
+    "Modules.Match.Shared"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

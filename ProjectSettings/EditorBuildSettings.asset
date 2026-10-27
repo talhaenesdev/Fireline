@@ -6,17 +6,15 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/MainMenu.unity
-    guid: 89ff555b14ff36a4ea533c077ca88b3e
+    path: Assets/Modules/MainModule/Scenes/MainScene.unity
+    guid: c9c21b82de9061234bc44a35ab1442b7
   - enabled: 1
     path: Assets/Scenes/Game.unity
     guid: 2cb5c298f57940e418f372389857b393
   - enabled: 1
-    path: Assets/Scenes/GameMapTest.unity
-    guid: 4d9d98e728c9fba43a631ed0a16b6949
-  - enabled: 1
-    path: Assets/Scenes/Game 1.unity
-    guid: 6c561d0af413df54fb4e83513c548725
+    path: Assets/Scenes/ZombieArena.unity
+    guid: 2ecce69dcea7e0c46a4dd50023526e6c
   m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: 01eb522db76cfac449cf576217889fe3, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

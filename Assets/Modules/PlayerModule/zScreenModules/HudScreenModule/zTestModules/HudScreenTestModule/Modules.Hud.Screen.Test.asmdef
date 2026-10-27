@@ -1,0 +1,18 @@
+{
+  "name": "Modules.Hud.Screen.Test",
+  "references": [
+    "FlowIoC",
+    "Modules.Hud.Screen",
+    "Modules.Hud.Screen.Signals",
+    "Modules.Player.Shared"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

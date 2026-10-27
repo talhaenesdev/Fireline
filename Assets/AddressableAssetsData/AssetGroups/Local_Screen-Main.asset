@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Local_Screen-Main
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Local_Screen-Main
+  m_GUID: a5a4578e0d1412b488e3fd0a5f06b90a
+  m_SerializeEntries:
+  - m_GUID: 539852652eb78a44e8fcc7c58909220a
+    m_Address: MainScreen
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ScreenPrefab
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 955f8a9c7fd5ebb45a6d77c810da86c3, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: a960514df3ab3b843884da11f5a2eec5, type: 2}
+    - {fileID: 11400000, guid: 92b69366b0c1c634fa3b26544cff6741, type: 2}

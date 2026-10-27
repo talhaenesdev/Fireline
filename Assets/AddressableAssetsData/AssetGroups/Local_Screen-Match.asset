@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Local_Screen-Match
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Local_Screen-Match
+  m_GUID: 11fb417763ff5b544a84f25c98214771
+  m_SerializeEntries:
+  - m_GUID: 2787a02f280f26f4d83d76c0a8f3ea67
+    m_Address: MatchScreen
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ScreenPrefab
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 955f8a9c7fd5ebb45a6d77c810da86c3, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 6dbfa9bca9a018d47bc82dffd129b015, type: 2}
+    - {fileID: 11400000, guid: 799a4a20031893343ab22eaf13af734d, type: 2}

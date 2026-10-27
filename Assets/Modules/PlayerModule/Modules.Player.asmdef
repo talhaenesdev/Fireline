@@ -1,0 +1,22 @@
+{
+  "name": "Modules.Player",
+  "references": [
+    "FlowIoC",
+    "Modules.Player.Shared",
+    "Modules.Player.Signals",
+    "Unity.Netcode.Runtime",
+    "Unity.Collections",
+    "Unity.InputSystem",
+    "Modules.PlayerName",
+    "UnityEngine.UI"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
