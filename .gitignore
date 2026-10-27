@@ -105,3 +105,6 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Rider settings per assembly, written by Tools/FlowIoC/Module Scanner; the solution-wide Fireline.sln.DotSettings stays tracked
+*.csproj.DotSettings
