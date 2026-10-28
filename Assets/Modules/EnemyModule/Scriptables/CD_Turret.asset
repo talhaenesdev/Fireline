@@ -16,4 +16,4 @@ MonoBehaviour:
   _fireInterval: 0.45
   _damage: 10
   _health: 150
-  _placeDistance: 1.5
+  _maxPlaceDistance: 8

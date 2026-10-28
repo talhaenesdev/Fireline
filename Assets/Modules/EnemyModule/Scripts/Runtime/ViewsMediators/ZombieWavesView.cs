@@ -65,6 +65,11 @@ namespace Modules.EnemyModule.ViewsMediators
 
         /// <summary>The wave, the seconds until it starts (zero once it is on), and the zombies left.</summary>
         public Action<int, float, int> StateChanged;
+        public Action TurretGranted;
+        public Action<ulong, Vector3> TurretPlaceRequested;
+
+        private Transform _preview;
+        private Renderer[] _previewRenderers;
 
         public CD_ZombieWaves Config => _config;
         public CD_Turret TurretConfig => _turret;
@@ -152,6 +157,53 @@ namespace Modules.EnemyModule.ViewsMediators
             if (IsServer)
                 TurretShotClientRpc(id, target);
         }
+
+        public void GrantTurretServer(ulong clientId)
+        {
+            if (!IsServer)
+                return;
+
+            var target = new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { clientId } } };
+            TurretGrantedClientRpc(target);
+        }
+
+        public void RequestPlaceTurret(Vector3 position) => PlaceTurretServerRpc(position);
+
+        public void ShowPlacementPreview(bool isShown, Vector3 position, bool isValid)
+        {
+            if (!isShown)
+            {
+                if (_preview != null)
+                    _preview.gameObject.SetActive(false);
+                return;
+            }
+
+            if (_preview == null)
+            {
+                _preview = CreateTurret(new NetworkTurret { Id = -1, Position = position }).Root;
+                _preview.name = "TurretPreview";
+                _previewRenderers = _preview.GetComponentsInChildren<Renderer>(true);
+                foreach (LineRenderer line in _preview.GetComponentsInChildren<LineRenderer>(true))
+                    line.enabled = false;
+            }
+
+            _preview.gameObject.SetActive(true);
+            _preview.position = position;
+
+            Color tint = isValid ? new Color(0.3f, 1f, 0.4f, 1f) : new Color(1f, 0.3f, 0.25f, 1f);
+            foreach (Renderer part in _previewRenderers)
+            {
+                if (part is not LineRenderer)
+                    part.material.color = tint;
+            }
+        }
+
+        [ClientRpc]
+        private void TurretGrantedClientRpc(ClientRpcParams rpcParams = default) => TurretGranted?.Invoke();
+
+        [ServerRpc(RequireOwnership = false)]
+        private void PlaceTurretServerRpc(Vector3 position, ServerRpcParams rpcParams = default) =>
+            TurretPlaceRequested?.Invoke(rpcParams.Receive.SenderClientId, position);
 
         [ClientRpc]
         private void TurretShotClientRpc(int id, Vector3 target)

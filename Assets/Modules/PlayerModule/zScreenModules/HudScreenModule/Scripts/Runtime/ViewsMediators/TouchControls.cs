@@ -154,6 +154,27 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
             return text;
         }
 
+        /// <summary>A wide button at the bottom centre, above the phone's controls.</summary>
+        public static Button WideButton(Transform parent, string name, string label)
+        {
+            RectTransform rect = Rect(name, parent, new Vector2(0.5f, 0f), new Vector2(0f, 150f), new Vector2(320f, 70f));
+            var image = rect.gameObject.AddComponent<Image>();
+            image.color = new Color(0.2f, 0.6f, 0.3f, 0.9f);
+            var button = rect.gameObject.AddComponent<Button>();
+            button.targetGraphic = image;
+
+            RectTransform labelRect = Rect("Label", rect, Vector2.zero, Vector2.zero, Vector2.zero);
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            var text = labelRect.gameObject.AddComponent<TextMeshProUGUI>();
+            text.text = label;
+            text.fontSize = 26f;
+            text.fontStyle = FontStyles.Bold;
+            text.alignment = TextAlignmentOptions.Center;
+            text.raycastTarget = false;
+            return button;
+        }
+
         /// <summary>A round button with a ring that fills as the revive goes on.</summary>
         public static Button ReviveButton(Transform parent, out Image progress, out TMP_Text label)
         {

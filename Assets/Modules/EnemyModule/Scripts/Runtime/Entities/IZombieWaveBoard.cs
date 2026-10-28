@@ -27,5 +27,14 @@ namespace Modules.EnemyModule.Entities
 
         /// <summary>Server only: every client sees the turret fire at this point.</summary>
         void ShowTurretShotServer(int id, Vector3 target);
+
+        /// <summary>Server: tells the buyer it has a turret to place.</summary>
+        void GrantTurretServer(ulong clientId);
+
+        /// <summary>Client: asks the server to put the local player's turret here.</summary>
+        void RequestPlaceTurret(Vector3 position);
+
+        /// <summary>Client: the local preview of the turret being placed, green where it may go; hidden when not shown.</summary>
+        void ShowPlacementPreview(bool isShown, Vector3 position, bool isValid);
     }
 }

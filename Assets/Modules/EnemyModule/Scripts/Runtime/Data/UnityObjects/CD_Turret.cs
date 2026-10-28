@@ -10,13 +10,13 @@ namespace Modules.EnemyModule.Data.UnityObjects
         [SerializeField] private float _fireInterval = 0.45f;
         [SerializeField] private int _damage = 10;
         [SerializeField] private int _health = 150;
-        [Tooltip("How far in front of the buyer it is put down.")]
-        [SerializeField] private float _placeDistance = 1.5f;
+        [Tooltip("How far from the buyer it may be put down.")]
+        [SerializeField] private float _maxPlaceDistance = 8f;
 
         public float Range => _range;
         public float FireInterval => _fireInterval;
         public int Damage => _damage;
         public int Health => _health;
-        public float PlaceDistance => _placeDistance;
+        public float MaxPlaceDistance => _maxPlaceDistance;
     }
 }

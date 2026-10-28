@@ -23,8 +23,14 @@ namespace Modules.EnemyModule.Signals
         /// <summary>Victim, then killer. A downed player is no longer chased. Server only.</summary>
         public Signal<ulong, ulong> PlayerDied = new();
 
-        /// <summary>A player bought a turret; it goes down in front of them. Server only.</summary>
-        public Signal<ulong> PlaceTurret = new();
+        /// <summary>A player bought a turret; they now choose where it goes. Server only.</summary>
+        public Signal<ulong> GrantTurret = new();
+
+        /// <summary>The point the local player aims at, where a turret being placed would go.</summary>
+        public Signal<Vector3> AimAt = new(hideCommandLog: true);
+
+        /// <summary>The local player puts the turret down where its preview stands.</summary>
+        public Signal ConfirmTurretPlacement = new();
 
         /// <summary>A downed player is back up and is a target again. Server only.</summary>
         public Signal<ulong> PlayerRevived = new();
@@ -46,5 +52,8 @@ namespace Modules.EnemyModule.Signals
         /// standing. On every client.
         /// </summary>
         public Signal<int, float, int> WaveStateChanged = new();
+
+        /// <summary>The local player has a turret to place, or no longer has one.</summary>
+        public Signal<bool> TurretPlacementChanged = new();
     }
 }

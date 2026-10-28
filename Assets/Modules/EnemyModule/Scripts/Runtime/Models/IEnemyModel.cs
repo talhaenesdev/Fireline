@@ -22,6 +22,14 @@ namespace Modules.EnemyModule.Models
         Dictionary<int, TurretRVO> Turrets { get; }
         int NextTurretId { get; set; }
 
+        /// <summary>Server: turrets each player has bought and not put down yet.</summary>
+        Dictionary<ulong, int> PendingTurrets { get; }
+
+        /// <summary>The local player's turrets waiting to be placed, and where the preview stands.</summary>
+        int LocalTurretsToPlace { get; set; }
+        UnityEngine.Vector3 PlacementPoint { get; set; }
+        bool IsPlacementValid { get; set; }
+
         bool IsTicking { get; set; }
         bool IsHooked { get; set; }
     }
@@ -55,6 +63,10 @@ namespace Modules.EnemyModule.Models
         public HashSet<ulong> DownedClients { get; } = new();
         public Dictionary<int, TurretRVO> Turrets { get; } = new();
         public int NextTurretId { get; set; }
+        public Dictionary<ulong, int> PendingTurrets { get; } = new();
+        public int LocalTurretsToPlace { get; set; }
+        public UnityEngine.Vector3 PlacementPoint { get; set; }
+        public bool IsPlacementValid { get; set; }
         public bool IsTicking { get; set; }
         public bool IsHooked { get; set; }
     }

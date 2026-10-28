@@ -30,6 +30,9 @@ namespace Modules.PlayerModule.HudScreenModule.Signals
 
         /// <summary>A downed teammate in reach, where it lies, and the revive's progress (below zero: none).</summary>
         public Signal<bool, Vector3, float> ApplyRevive = new(hideCommandLog: true);
+
+        /// <summary>The local player has a turret to place: show the button that puts it down.</summary>
+        public Signal<bool> ApplyTurretPlacement = new();
     }
 
     public class HudScreenSignalsOutgoing
@@ -44,5 +47,8 @@ namespace Modules.PlayerModule.HudScreenModule.Signals
 
         /// <summary>The revive button over a downed teammate was pressed.</summary>
         public Signal ReviveClicked = new();
+
+        /// <summary>The place-turret button was pressed.</summary>
+        public Signal PlaceTurretClicked = new();
     }
 }

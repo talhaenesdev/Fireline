@@ -43,6 +43,8 @@ namespace Modules.ConnectorModule.RootsContexts
             _weaponSignals.Outgoing.ObjectHit.Connect(_enemySignals.Incoming.DamageZombie, GROUP);
             _playerSignals.Outgoing.PlayerDied.Connect(_enemySignals.Incoming.PlayerDied, GROUP);
             _playerSignals.Outgoing.PlayerRevived.Connect(_enemySignals.Incoming.PlayerRevived, GROUP);
+            _playerSignals.Outgoing.AimChanged.Connect(_enemySignals.Incoming.AimAt, GROUP);
+            _hudScreenSignals.Outgoing.PlaceTurretClicked.Connect(_enemySignals.Incoming.ConfirmTurretPlacement, GROUP);
         }
 
         private void OutgoingSignals()
@@ -50,6 +52,7 @@ namespace Modules.ConnectorModule.RootsContexts
             _enemySignals.Outgoing.PlayerAttacked.Connect(_playerSignals.Incoming.ApplyDamage, GROUP);
             _enemySignals.Outgoing.ZombieKilled.Connect(_matchSignals.Incoming.ZombieKilled, GROUP);
             _enemySignals.Outgoing.WaveStateChanged.Connect(_hudScreenSignals.Incoming.ApplyWave, GROUP);
+            _enemySignals.Outgoing.TurretPlacementChanged.Connect(_hudScreenSignals.Incoming.ApplyTurretPlacement, GROUP);
         }
 
         public override void DestroyContext()

@@ -55,9 +55,17 @@ namespace Modules.EnemyModule.RootsContexts
                 .ToSequence<ChaseAndAttackCommand>()
                 .ToSequence<TurretsFireCommand>();
 
-            CommandBinder.Bind(_signals.Incoming.PlaceTurret)
+            CommandBinder.Bind(_signals.Incoming.GrantTurret)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<GrantTurretCommand>();
+
+            CommandBinder.Bind(_internalSignals.TurretPlaceRequested)
                 .ToSequence<RequireServerCommand>()
                 .ToSequence<PlaceTurretCommand>();
+
+            CommandBinder.Bind(_internalSignals.TurretGranted).ToSequence<BeginTurretPlacementCommand>();
+            CommandBinder.Bind(_signals.Incoming.AimAt).ToSequence<MoveTurretPreviewCommand>();
+            CommandBinder.Bind(_signals.Incoming.ConfirmTurretPlacement).ToSequence<ConfirmTurretPlacementCommand>();
 
             CommandBinder.Bind(_signals.Incoming.StopWaves)
                 .ToSequence<RequireServerCommand>()

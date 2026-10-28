@@ -23,6 +23,11 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         /// <summary>The revive button over a downed teammate was pressed.</summary>
         public Action ReviveClicked;
 
+        /// <summary>The place-turret button was pressed.</summary>
+        public Action PlaceTurretClicked;
+
+        private Button _placeTurretButton;
+
         private TouchJoystick _stick;
         private TouchHoldButton _fire;
         private Button _reload;
@@ -61,6 +66,9 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
             _reviveRect = (RectTransform) _reviveButton.transform;
             _reviveButton.gameObject.SetActive(false);
 
+            _placeTurretButton = TouchControlsBuilder.WideButton(transform, "PlaceTurretButton", "TARETİ YERLEŞTİR");
+            _placeTurretButton.gameObject.SetActive(false);
+
             if (!Application.isMobilePlatform)
                 return;
 
@@ -98,6 +106,7 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         private void OnEnable()
         {
             _reviveButton.onClick.AddListener(OnReviveClicked);
+            _placeTurretButton.onClick.AddListener(OnPlaceTurretClicked);
 
             if (_stick == null)
                 return;
@@ -110,6 +119,7 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         private void OnDisable()
         {
             _reviveButton.onClick.RemoveListener(OnReviveClicked);
+            _placeTurretButton.onClick.RemoveListener(OnPlaceTurretClicked);
 
             if (_stick == null)
                 return;
@@ -123,6 +133,9 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         private void OnFireHeld(bool isHeld) => TouchFireChanged?.Invoke(isHeld, isHeld);
         private void OnReloadClicked() => TouchReloadPressed?.Invoke();
         private void OnReviveClicked() => ReviveClicked?.Invoke();
+        private void OnPlaceTurretClicked() => PlaceTurretClicked?.Invoke();
+
+        public void ShowTurretPlacement(bool isPlacing) => _placeTurretButton.gameObject.SetActive(isPlacing);
 
         public void ShowHealth(float health, float maxHealth)
         {
