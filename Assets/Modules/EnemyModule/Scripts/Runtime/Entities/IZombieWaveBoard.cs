@@ -10,6 +10,7 @@ namespace Modules.EnemyModule.Entities
     internal interface IZombieWaveBoard
     {
         CD_ZombieWaves Config { get; }
+        CD_Turret TurretConfig { get; }
         int SpawnPointCount { get; }
         Vector3 GetSpawnPoint(int index);
 
@@ -18,5 +19,13 @@ namespace Modules.EnemyModule.Entities
 
         /// <summary>Server only: a wave is on, with this many zombies still standing.</summary>
         void SetWaveServer(int wave, int zombiesLeft);
+
+        /// <summary>Server only: a turret stands here, facing this way, with this much health left.</summary>
+        void SetTurretServer(int id, Vector3 position, float yaw, int health);
+
+        void RemoveTurretServer(int id);
+
+        /// <summary>Server only: every client sees the turret fire at this point.</summary>
+        void ShowTurretShotServer(int id, Vector3 target);
     }
 }

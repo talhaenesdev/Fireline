@@ -98,6 +98,7 @@ namespace Modules.EconomyModule.ShopScreenModule.ViewsMediators
             ShopItemType.Heal => $"+{item.Amount:0} can",
             ShopItemType.Shield => $"+{item.Amount:0} kalkan",
             ShopItemType.FireRate => $"%{item.Amount * 100f:0} daha hızlı ateş",
+            ShopItemType.Turret => "önüne kurulur, zombilere ateş eder",
             _ => string.Empty
         };
 

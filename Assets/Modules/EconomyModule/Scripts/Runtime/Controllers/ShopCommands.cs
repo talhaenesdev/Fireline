@@ -102,6 +102,9 @@ namespace Modules.EconomyModule.Controllers
                 case ShopItemType.FireRate:
                     _model.Board.ConfirmPurchaseServer(_clientId, _item);
                     break;
+                case ShopItemType.Turret:
+                    _signals.Outgoing.TurretPurchased.Dispatch(_clientId);
+                    break;
             }
         }
     }

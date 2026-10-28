@@ -23,6 +23,9 @@ namespace Modules.EnemyModule.Signals
         /// <summary>Victim, then killer. A downed player is no longer chased. Server only.</summary>
         public Signal<ulong, ulong> PlayerDied = new();
 
+        /// <summary>A player bought a turret; it goes down in front of them. Server only.</summary>
+        public Signal<ulong> PlaceTurret = new();
+
         /// <summary>A downed player is back up and is a target again. Server only.</summary>
         public Signal<ulong> PlayerRevived = new();
     }

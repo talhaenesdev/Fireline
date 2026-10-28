@@ -55,6 +55,7 @@ namespace Modules.ConnectorModule.RootsContexts
             _economySignals.Outgoing.HealPurchased.Connect(_playerSignals.Incoming.Heal, GROUP);
             _economySignals.Outgoing.ShieldPurchased.Connect(_playerSignals.Incoming.AddShield, GROUP);
             _economySignals.Outgoing.FireRatePurchased.Connect(_weaponSignals.Incoming.ImproveFireRate, GROUP);
+            _economySignals.Outgoing.TurretPurchased.Connect(_enemySignals.Incoming.PlaceTurret, GROUP);
         }
 
         public override void DestroyContext()

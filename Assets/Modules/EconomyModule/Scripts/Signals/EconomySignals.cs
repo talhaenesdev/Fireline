@@ -36,6 +36,9 @@ namespace Modules.EconomyModule.Signals
         /// <summary>A player bought a shield: client id, points. Server only.</summary>
         public Signal<ulong, float> ShieldPurchased = new();
 
+        /// <summary>A player bought a turret: client id. Server only.</summary>
+        public Signal<ulong> TurretPurchased = new();
+
         /// <summary>The local player bought a faster trigger: how much shorter each shot's wait gets.</summary>
         public Signal<float> FireRatePurchased = new();
     }

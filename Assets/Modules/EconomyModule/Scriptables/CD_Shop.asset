@@ -25,3 +25,7 @@ MonoBehaviour:
     Price: 150
     Type: 2
     Amount: 0.15
+  - Name: Taret
+    Price: 200
+    Type: 3
+    Amount: 0

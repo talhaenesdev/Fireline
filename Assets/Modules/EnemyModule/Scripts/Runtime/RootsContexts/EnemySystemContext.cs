@@ -51,7 +51,13 @@ namespace Modules.EnemyModule.RootsContexts
                 .ToSequence<WaitWaveClearedCommand>()
                 .ToSequence<SignalDispatchCommand>(_internalSignals.NextWave);
 
-            CommandBinder.Bind(_internalSignals.Tick).ToSequence<ChaseAndAttackCommand>();
+            CommandBinder.Bind(_internalSignals.Tick)
+                .ToSequence<ChaseAndAttackCommand>()
+                .ToSequence<TurretsFireCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.PlaceTurret)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<PlaceTurretCommand>();
 
             CommandBinder.Bind(_signals.Incoming.StopWaves)
                 .ToSequence<RequireServerCommand>()

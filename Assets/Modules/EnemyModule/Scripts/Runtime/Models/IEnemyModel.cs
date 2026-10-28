@@ -18,6 +18,10 @@ namespace Modules.EnemyModule.Models
         /// <summary>Players who are down; zombies leave them be.</summary>
         HashSet<ulong> DownedClients { get; }
 
+        /// <summary>The turrets standing, by id.</summary>
+        Dictionary<int, TurretRVO> Turrets { get; }
+        int NextTurretId { get; set; }
+
         bool IsTicking { get; set; }
         bool IsHooked { get; set; }
     }
@@ -30,6 +34,17 @@ namespace Modules.EnemyModule.Models
         public float NextAttackTime;
     }
 
+    /// <summary>A turret's state that only the server keeps.</summary>
+    internal class TurretRVO
+    {
+        public int Id;
+        public ulong OwnerClientId;
+        public UnityEngine.Vector3 Position;
+        public float Yaw;
+        public int Health;
+        public float NextFireTime;
+    }
+
     internal class EnemyModel : IEnemyModel
     {
         public IZombieWaveBoard Board { get; set; }
@@ -38,6 +53,8 @@ namespace Modules.EnemyModule.Models
         public int Wave { get; set; }
         public Dictionary<ulong, ZombieRVO> Zombies { get; } = new();
         public HashSet<ulong> DownedClients { get; } = new();
+        public Dictionary<int, TurretRVO> Turrets { get; } = new();
+        public int NextTurretId { get; set; }
         public bool IsTicking { get; set; }
         public bool IsHooked { get; set; }
     }

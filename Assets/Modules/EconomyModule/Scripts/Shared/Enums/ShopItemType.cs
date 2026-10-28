@@ -5,6 +5,7 @@ namespace Modules.EconomyModule.Shared.Enums
     {
         Heal = 0,
         Shield = 1,
-        FireRate = 2
+        FireRate = 2,
+        Turret = 3
     }
 }
