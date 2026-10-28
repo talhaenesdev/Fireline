@@ -60,7 +60,7 @@ namespace Modules.EnemyModule.Controllers
             if (_model.Zombies.Count == 0)
                 return;
 
-            List<Transform> players = PlayerTargets.Collect();
+            List<Transform> players = PlayerTargets.Collect(_model.DownedClients);
             float step = _model.Config.MoveSpeed * Time.deltaTime;
             float rangeSqr = _model.Config.AttackRange * _model.Config.AttackRange;
 
@@ -115,9 +115,12 @@ namespace Modules.EnemyModule.Controllers
             if (zombie.Health > 0)
                 return;
 
+            Vector3 fallenAt = zombie.Zombie.Position;
             _model.Zombies.Remove(_networkObjectId);
             zombie.Zombie.DespawnServer();
+            _model.Board.SetWaveServer(_model.Wave, _model.Zombies.Count);
             _signals.Outgoing.ZombieKilled.Dispatch(_shooterClientId);
+            _signals.Outgoing.ZombieDied.Dispatch(fallenAt);
         }
     }
 }

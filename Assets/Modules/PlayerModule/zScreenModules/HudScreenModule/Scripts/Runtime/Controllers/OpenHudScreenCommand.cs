@@ -5,6 +5,7 @@ using FlowIoC.ConsoleModule;
 using FlowIoC.ScreenModule.Service;
 using Modules.PlayerModule.HudScreenModule.Models;
 using Modules.PlayerModule.HudScreenModule.ViewsMediators;
+using UnityEngine;
 
 namespace Modules.PlayerModule.HudScreenModule.Controllers
 {
@@ -29,6 +30,10 @@ namespace Modules.PlayerModule.HudScreenModule.Controllers
 
                 screen.ShowHealth(_model.Health, _model.MaxHealth);
                 screen.ShowAmmo(_model.Ammo, _model.MagazineSize);
+                screen.ShowShield(_model.Shield);
+                if (_model.HasWallet)
+                    screen.ShowWallet(_model.Money, _model.Carried);
+                screen.ShowWave(_model.Wave, Mathf.Max(0f, _model.WaveStartTime - Time.time), _model.ZombiesLeft);
                 Release();
             }
             catch (Exception exception)

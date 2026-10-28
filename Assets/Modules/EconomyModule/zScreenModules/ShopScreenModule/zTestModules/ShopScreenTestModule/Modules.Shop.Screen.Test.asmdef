@@ -1,0 +1,18 @@
+{
+  "name": "Modules.Shop.Screen.Test",
+  "references": [
+    "FlowIoC",
+    "Modules.Shop.Screen",
+    "Modules.Shop.Screen.Signals",
+    "Modules.Economy.Shared"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

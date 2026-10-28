@@ -20,6 +20,7 @@ namespace Modules.PlayerModule.Entities
         float Health { get; }
         float MaxHealth { get; }
         bool IsDead { get; }
+        float Shield { get; }
 
         /// <summary>Owner only: asks the server to put this name on the avatar.</summary>
         void RequestName(string playerName);
@@ -27,6 +28,10 @@ namespace Modules.PlayerModule.Entities
         void SetNameServer(string playerName);
         void SetHealthServer(float health);
         void SetDeadServer(bool isDead);
+        void SetShieldServer(float shield);
+
+        /// <summary>Owner only: asks the server to start reviving the player with this client id.</summary>
+        void RequestRevive(ulong targetClientId);
         void PlayHitEffectServer();
     }
 }

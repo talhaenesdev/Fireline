@@ -39,6 +39,7 @@ namespace Modules.MatchModule.MatchScreenModule.RootsContexts
             base.CommandBindings();
             CommandBinder.Bind(_signals.Incoming.Open).ToSequence<OpenMatchScreenCommand>();
             CommandBinder.Bind(_signals.Incoming.ApplyScores).ToSequence<RememberScoresCommand>();
+            CommandBinder.Bind(_signals.Incoming.ApplyCameraSettings).ToSequence<RememberCameraSettingsCommand>();
         }
     }
 }

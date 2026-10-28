@@ -17,6 +17,9 @@ namespace Modules.MatchModule.Signals
         /// <summary>Victim, then killer.</summary>
         public Signal<ulong, ulong> PlayerDied = new();
 
+        /// <summary>A downed player of a zombie match is back up. Server only.</summary>
+        public Signal<ulong> PlayerRevived = new();
+
         public Signal<ulong, string> PlayerNameChanged = new();
 
         public Signal ExitMatch = new();
@@ -34,6 +37,9 @@ namespace Modules.MatchModule.Signals
 
         /// <summary>The match is a zombie match: the waves begin. Server only.</summary>
         public Signal ZombieWavesStarted = new();
+
+        /// <summary>Every player of a zombie match is down. On every client.</summary>
+        public Signal GameOver = new();
 
         /// <summary>Whether players' rounds hurt other players. Server only.</summary>
         public Signal<bool> FriendlyFireChanged = new();

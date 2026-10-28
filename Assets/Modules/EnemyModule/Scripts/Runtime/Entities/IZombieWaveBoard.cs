@@ -1,0 +1,22 @@
+using Modules.EnemyModule.Data.UnityObjects;
+using UnityEngine;
+
+namespace Modules.EnemyModule.Entities
+{
+    /// <summary>
+    /// The match scene's zombie waves: their settings, the points they come in at, and the wave
+    /// state every client is shown. The server writes the state; the clients only read it.
+    /// </summary>
+    internal interface IZombieWaveBoard
+    {
+        CD_ZombieWaves Config { get; }
+        int SpawnPointCount { get; }
+        Vector3 GetSpawnPoint(int index);
+
+        /// <summary>Server only: the next wave comes in this many seconds from now.</summary>
+        void SetCountdownServer(int nextWave, float seconds);
+
+        /// <summary>Server only: a wave is on, with this many zombies still standing.</summary>
+        void SetWaveServer(int wave, int zombiesLeft);
+    }
+}

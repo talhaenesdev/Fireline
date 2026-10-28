@@ -16,7 +16,11 @@ namespace Modules.WeaponModule.Signals
 
         public Signal ReloadInput = new();
 
+        /// <summary>The point on the ground the local player aims at; rounds leave the muzzle towards it.</summary>
         public Signal<Vector3> AimChanged = new(hideCommandLog: true);
+
+        /// <summary>The local weapon fires faster: each shot's wait gets this much shorter, 0.15 is 15%.</summary>
+        public Signal<float> ImproveFireRate = new();
 
         /// <summary>Whether the local player may fire at all: alive and spawned.</summary>
         public Signal<bool> SetArmed = new();

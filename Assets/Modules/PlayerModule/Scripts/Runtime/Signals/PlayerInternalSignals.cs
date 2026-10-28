@@ -1,4 +1,5 @@
 using FlowIoC.BaseModule.Signals;
+using Modules.PlayerModule.Data.UnityObjects;
 using Modules.PlayerModule.Entities;
 using UnityEngine;
 
@@ -24,6 +25,12 @@ namespace Modules.PlayerModule.Signals
         /// <summary>Client id, dead.</summary>
         public Signal<ulong, bool> DeathChanged = new();
 
+        /// <summary>Client id, shield points.</summary>
+        public Signal<ulong, float> ShieldChanged = new();
+
+        /// <summary>Server: reviver, then the downed player it wants to bring back.</summary>
+        public Signal<ulong, ulong> ReviveRequested = new();
+
         public Signal<Vector2> MoveInput = new();
         public Signal<bool> SprintInput = new();
 
@@ -31,6 +38,12 @@ namespace Modules.PlayerModule.Signals
         public Signal<Vector3, Vector2, bool> MoveLocalAvatar = new(hideCommandLog: true);
 
         public Signal ShakeLocalCamera = new();
+
+        /// <summary>The local camera came up, with its config.</summary>
+        public Signal<CD_CameraSettings> LocalCameraRegistered = new();
+
+        /// <summary>Height, follow speed and shake for the local camera.</summary>
+        public Signal<float, float, float> ApplyLocalCamera = new();
 
         /// <summary>The way the local avatar is turned when it aims by itself.</summary>
         public Signal<Vector3> FaceLocalAvatar = new(hideCommandLog: true);

@@ -19,6 +19,7 @@ namespace Modules.PlayerModule.ViewsMediators
 
         public bool IsRegistered { get; set; }
 
+        /// <summary>The point on the ground under the mouse.</summary>
         public Action<Vector3> AimChanged;
 
         private void Awake()
@@ -55,15 +56,15 @@ namespace Modules.PlayerModule.ViewsMediators
             if (!ground.Raycast(ray, out float distance))
                 return;
 
-            Vector3 direction = ray.GetPoint(distance) - _aimTransform.position;
+            Vector3 point = ray.GetPoint(distance);
+            Vector3 direction = point - _aimTransform.position;
             direction.y = 0f;
 
             if (direction.sqrMagnitude < 0.001f)
                 return;
 
-            direction.Normalize();
-            _aimTransform.forward = direction;
-            AimChanged?.Invoke(direction);
+            _aimTransform.forward = direction.normalized;
+            AimChanged?.Invoke(point);
         }
     }
 }

@@ -40,6 +40,9 @@ namespace Modules.PlayerModule.HudScreenModule.RootsContexts
             CommandBinder.Bind(_signals.Incoming.Open).ToSequence<OpenHudScreenCommand>();
             CommandBinder.Bind(_signals.Incoming.ApplyHealth).ToSequence<RememberHealthCommand>();
             CommandBinder.Bind(_signals.Incoming.ApplyAmmo).ToSequence<RememberAmmoCommand>();
+            CommandBinder.Bind(_signals.Incoming.ApplyWave).ToSequence<RememberWaveCommand>();
+            CommandBinder.Bind(_signals.Incoming.ApplyShield).ToSequence<RememberShieldCommand>();
+            CommandBinder.Bind(_signals.Incoming.ApplyWallet).ToSequence<RememberWalletCommand>();
         }
     }
 }

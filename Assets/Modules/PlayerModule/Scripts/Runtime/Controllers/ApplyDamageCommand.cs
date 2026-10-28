@@ -29,13 +29,23 @@ namespace Modules.PlayerModule.Controllers
             if (!_model.IsFriendlyFire && _model.TryGet(_attackerClientId, out _))
                 return;
 
-            float health = Mathf.Max(0f, target.Health - _damage);
+            // A shield soaks up what it can before health is touched.
+            float damage = _damage;
+            if (target.Shield > 0f)
+            {
+                float absorbed = Mathf.Min(target.Shield, damage);
+                target.SetShieldServer(target.Shield - absorbed);
+                damage -= absorbed;
+            }
+
+            float health = Mathf.Max(0f, target.Health - damage);
             target.SetHealthServer(health);
             target.PlayHitEffectServer();
 
             if (health > 0f)
                 return;
 
+            target.SetShieldServer(0f);
             target.SetDeadServer(true);
             _signals.Outgoing.PlayerDied.Dispatch(_targetClientId, _attackerClientId);
         }

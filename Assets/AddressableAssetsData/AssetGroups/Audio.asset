@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: Audio
   m_GUID: 26a737dfabcad2247ac56432ad3ba0d4
   m_SerializeEntries:
+  - m_GUID: 2c0c3713366b31c4b9d37a4bf613db31
+    m_Address: Assets/Sound/gun-reload-1.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 12657a0a67dc1544faf2c24cf63955d5
     m_Address: Assets/Sound/gun-sound-1.wav
     m_ReadOnly: 0

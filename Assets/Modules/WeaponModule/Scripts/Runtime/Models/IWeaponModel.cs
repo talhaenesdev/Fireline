@@ -15,7 +15,12 @@ namespace Modules.WeaponModule.Models
 
         bool IsTriggerHeld { get; set; }
         bool WasTriggerPressed { get; set; }
-        Vector3 AimDirection { get; set; }
+        /// <summary>The point on the ground being aimed at, and whether there is one yet.</summary>
+        Vector3 AimPoint { get; set; }
+        bool HasAim { get; set; }
+
+        /// <summary>Multiplies the weapon's time between shots; bought upgrades bring it down.</summary>
+        float FireRateMultiplier { get; set; }
 
         /// <summary>Where and which way the round just fired went, for the steps after the shot.</summary>
         Vector3 ShotPosition { get; set; }
@@ -34,7 +39,9 @@ namespace Modules.WeaponModule.Models
         public float NextFireTime { get; set; }
         public bool IsTriggerHeld { get; set; }
         public bool WasTriggerPressed { get; set; }
-        public Vector3 AimDirection { get; set; }
+        public Vector3 AimPoint { get; set; }
+        public bool HasAim { get; set; }
+        public float FireRateMultiplier { get; set; } = 1f;
         public Vector3 ShotPosition { get; set; }
         public Vector3 ShotDirection { get; set; }
         public bool IsTicking { get; set; }

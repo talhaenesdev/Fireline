@@ -17,8 +17,8 @@ MonoBehaviour:
   _countIncreasePerWave: 2
   _firstWaveDelay: 3
   _timeBetweenWaves: 8
-  _spawnRadiusMin: 12
-  _spawnRadiusMax: 18
+  _spawnRadiusMin: 22
+  _spawnRadiusMax: 30
   _health: 30
   _moveSpeed: 2.5
   _damage: 10

@@ -33,6 +33,9 @@ namespace Modules.PlayerModule.ViewsMediators
         private readonly NetworkVariable<bool> _isDead = new(false,
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        private readonly NetworkVariable<float> _shield = new(0f,
+            NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         private Collider[] _colliders;
         private AudioListener _audioListener;
 
@@ -44,6 +47,10 @@ namespace Modules.PlayerModule.ViewsMediators
         public Action<string> NameChanged;
         public Action<float, float> HealthChanged;
         public Action<bool> DeathChanged;
+        public Action<float> ShieldChanged;
+
+        /// <summary>Server: this avatar's owner asked to revive the player with this client id.</summary>
+        public Action<ulong> ReviveRequested;
 
         public ulong ClientId => OwnerClientId;
         public Transform Transform => transform;
@@ -53,6 +60,7 @@ namespace Modules.PlayerModule.ViewsMediators
         public float Health => _health.Value;
         public float MaxHealth => _maxHealth;
         public bool IsDead => _isDead.Value;
+        public float Shield => _shield.Value;
 
         private void Awake()
         {
@@ -67,11 +75,13 @@ namespace Modules.PlayerModule.ViewsMediators
             _playerName.OnValueChanged += OnNameChanged;
             _health.OnValueChanged += OnHealthChanged;
             _isDead.OnValueChanged += OnDeathChanged;
+            _shield.OnValueChanged += OnShieldChanged;
 
             if (IsServer)
             {
                 _health.Value = _maxHealth;
                 _isDead.Value = false;
+                _shield.Value = 0f;
             }
 
             // Only the owner hears the world from this avatar.
@@ -87,6 +97,7 @@ namespace Modules.PlayerModule.ViewsMediators
             _playerName.OnValueChanged -= OnNameChanged;
             _health.OnValueChanged -= OnHealthChanged;
             _isDead.OnValueChanged -= OnDeathChanged;
+            _shield.OnValueChanged -= OnShieldChanged;
 
             Despawned?.Invoke();
             base.OnNetworkDespawn();
@@ -114,6 +125,18 @@ namespace Modules.PlayerModule.ViewsMediators
         {
             if (IsServer)
                 _isDead.Value = isDead;
+        }
+
+        public void SetShieldServer(float shield)
+        {
+            if (IsServer)
+                _shield.Value = shield;
+        }
+
+        public void RequestRevive(ulong targetClientId)
+        {
+            if (IsOwner)
+                RequestReviveServerRpc(targetClientId);
         }
 
         public void PlayHitEffectServer()
@@ -150,6 +173,9 @@ namespace Modules.PlayerModule.ViewsMediators
         [ServerRpc]
         private void RequestNameServerRpc(string playerName) => NameRequested?.Invoke(playerName);
 
+        [ServerRpc]
+        private void RequestReviveServerRpc(ulong targetClientId) => ReviveRequested?.Invoke(targetClientId);
+
         [ClientRpc]
         private void PlayHitEffectClientRpc()
         {
@@ -163,5 +189,7 @@ namespace Modules.PlayerModule.ViewsMediators
         private void OnHealthChanged(float previous, float current) => HealthChanged?.Invoke(current, _maxHealth);
 
         private void OnDeathChanged(bool previous, bool current) => DeathChanged?.Invoke(current);
+
+        private void OnShieldChanged(float previous, float current) => ShieldChanged?.Invoke(current);
     }
 }

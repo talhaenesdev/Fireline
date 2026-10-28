@@ -30,7 +30,7 @@ namespace Modules.WeaponModule.Controllers
                            && !_model.IsReloading
                            && _model.Ammo > 0
                            && Time.time >= _model.NextFireTime
-                           && _model.AimDirection != Vector3.zero;
+                           && _model.HasAim;
 
             if (!canFire)
             {
@@ -39,10 +39,22 @@ namespace Modules.WeaponModule.Controllers
                 return;
             }
 
+            // From the muzzle to the aimed point, level with the ground, so the round meets what was aimed at.
+            Vector3 muzzle = weapon.MuzzlePosition;
+            Vector3 direction = _model.AimPoint - muzzle;
+            direction.y = 0f;
+
+            if (direction.sqrMagnitude < 0.01f)
+            {
+                Retain();
+                Stop();
+                return;
+            }
+
             _model.Ammo--;
-            _model.NextFireTime = Time.time + config.FireRate;
-            _model.ShotPosition = weapon.MuzzlePosition;
-            _model.ShotDirection = _model.AimDirection.normalized;
+            _model.NextFireTime = Time.time + config.FireRate * _model.FireRateMultiplier;
+            _model.ShotPosition = muzzle;
+            _model.ShotDirection = direction.normalized;
         }
     }
 }

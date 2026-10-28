@@ -1021,6 +1021,7 @@ MonoBehaviour:
   _cameraOffset: {x: 0, y: 10, z: -0.01}
   _followSpeed: 10
   _shake: {fileID: 11400000, guid: 0fe48be82382c76479a1430e5b439f40, type: 2}
+  _settings: {fileID: 11400000, guid: c67c8552999b496facd9f7fcc55fa1b8, type: 2}
 --- !u!114 &1593028955294145048
 MonoBehaviour:
   m_ObjectHideFlags: 0

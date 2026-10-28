@@ -6,6 +6,7 @@ using FlowIoC.ScreenModule.Service;
 using Modules.MatchModule.MatchScreenModule.Models;
 using Modules.MatchModule.MatchScreenModule.ViewsMediators;
 using Modules.MatchModule.Shared.Data.ValueObjects;
+using Modules.PlayerModule.Shared.Data.ValueObjects;
 
 namespace Modules.MatchModule.MatchScreenModule.Controllers
 {
@@ -29,6 +30,8 @@ namespace Modules.MatchModule.MatchScreenModule.Controllers
                 }
 
                 screen.ShowScores(_model.Scores);
+                if (_model.CameraSettings.HasValue)
+                    screen.ShowCameraSettings(_model.CameraSettings.Value);
                 Release();
             }
             catch (Exception exception)
@@ -46,5 +49,14 @@ namespace Modules.MatchModule.MatchScreenModule.Controllers
         [SignalParam] private ScoreEntryVO[] _scores { get; set; }
 
         public override void Execute() => _model.Scores = _scores;
+    }
+
+    internal class RememberCameraSettingsCommand : Command
+    {
+        [Inject] private IMatchScreenModel _model { get; set; }
+
+        [SignalParam] private CameraSettingsVO _settings { get; set; }
+
+        public override void Execute() => _model.CameraSettings = _settings;
     }
 }

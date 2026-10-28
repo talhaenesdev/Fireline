@@ -34,10 +34,16 @@ namespace Modules.MatchModule.ViewsMediators
     {
         private NetworkList<NetworkScoreEntry> _entries;
 
+        private readonly NetworkVariable<bool> _isGameOver = new(false,
+            NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         public bool IsRegistered { get; set; }
 
         public Action Spawned;
         public Action EntriesChanged;
+        public Action GameOver;
+
+        public bool IsGameOver => _isGameOver.Value;
 
         private void Awake() => _entries = new NetworkList<NetworkScoreEntry>();
 
@@ -45,13 +51,18 @@ namespace Modules.MatchModule.ViewsMediators
         {
             base.OnNetworkSpawn();
             _entries.OnListChanged += OnListChanged;
+            _isGameOver.OnValueChanged += OnGameOverChanged;
             Spawned?.Invoke();
             EntriesChanged?.Invoke();
+
+            if (_isGameOver.Value)
+                GameOver?.Invoke();
         }
 
         public override void OnNetworkDespawn()
         {
             _entries.OnListChanged -= OnListChanged;
+            _isGameOver.OnValueChanged -= OnGameOverChanged;
             base.OnNetworkDespawn();
         }
 
@@ -104,6 +115,18 @@ namespace Modules.MatchModule.ViewsMediators
             return entries;
         }
 
+        public void SetGameOverServer()
+        {
+            if (IsServer)
+                _isGameOver.Value = true;
+        }
+
         private void OnListChanged(NetworkListEvent<NetworkScoreEntry> changeEvent) => EntriesChanged?.Invoke();
+
+        private void OnGameOverChanged(bool previous, bool current)
+        {
+            if (current)
+                GameOver?.Invoke();
+        }
     }
 }

@@ -36,7 +36,7 @@ namespace Modules.EnemyModule.RootsContexts
         {
             base.CommandBindings();
 
-            CommandBinder.Bind(_internalSignals.ConfigRegistered).ToSequence<StoreConfigCommand>();
+            CommandBinder.Bind(_internalSignals.BoardRegistered).ToSequence<StoreBoardCommand>();
 
             CommandBinder.Bind(_signals.Incoming.StartWaves)
                 .ToSequence<RequireServerCommand>()
@@ -52,6 +52,18 @@ namespace Modules.EnemyModule.RootsContexts
                 .ToSequence<SignalDispatchCommand>(_internalSignals.NextWave);
 
             CommandBinder.Bind(_internalSignals.Tick).ToSequence<ChaseAndAttackCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.StopWaves)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<StopWavesCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.PlayerDied)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<MarkPlayerDownCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.PlayerRevived)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<MarkPlayerUpCommand>();
 
             CommandBinder.Bind(_signals.Incoming.DamageZombie)
                 .ToSequence<RequireServerCommand>()

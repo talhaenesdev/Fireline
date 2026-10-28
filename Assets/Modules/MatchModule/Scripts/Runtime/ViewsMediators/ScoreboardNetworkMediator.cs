@@ -14,6 +14,7 @@ namespace Modules.MatchModule.ViewsMediators
         {
             _view.Spawned += OnSpawned;
             _view.EntriesChanged += OnEntriesChanged;
+            _view.GameOver += OnGameOver;
 
             if (_view.IsSpawned)
             {
@@ -26,10 +27,13 @@ namespace Modules.MatchModule.ViewsMediators
         {
             _view.Spawned -= OnSpawned;
             _view.EntriesChanged -= OnEntriesChanged;
+            _view.GameOver -= OnGameOver;
         }
 
         private void OnSpawned() => _internalSignals.ScoreboardRegistered.Dispatch(_view);
 
         private void OnEntriesChanged() => _signals.Outgoing.ScoresChanged.Dispatch(_view.ToEntries());
+
+        private void OnGameOver() => _signals.Outgoing.GameOver.Dispatch();
     }
 }

@@ -16,6 +16,8 @@ namespace Modules.EnemyModule.Entities
         private static readonly int ColorId = Shader.PropertyToID("_Color");
 
         [SerializeField] private ParticleSystem _hitEffect;
+        [Tooltip("Multiplies the model's colours, so a zombie never reads as a player.")]
+        [SerializeField] private Color _skinTint = new(0.45f, 0.85f, 0.3f, 1f);
         [SerializeField] private Color _flashColor = new(1f, 0.15f, 0.15f, 1f);
         [SerializeField] private float _flashDuration = 0.12f;
 
@@ -31,6 +33,7 @@ namespace Modules.EnemyModule.Entities
             gameObject.tag = "Zombie";
             _renderers = GetComponentsInChildren<Renderer>(true);
             _block = new MaterialPropertyBlock();
+            SetTint(_skinTint);
         }
 
         public void StepTowards(Vector3 target, float distance)
@@ -81,26 +84,20 @@ namespace Modules.EnemyModule.Entities
         {
             SetTint(_flashColor);
             yield return new WaitForSeconds(_flashDuration);
-            SetTint(null);
+            SetTint(_skinTint);
             _flash = null;
         }
 
-        private void SetTint(Color? color)
+        private void SetTint(Color color)
         {
             foreach (Renderer target in _renderers)
             {
                 if (target == null)
                     continue;
 
-                if (color == null)
-                {
-                    target.SetPropertyBlock(null);
-                    continue;
-                }
-
                 target.GetPropertyBlock(_block);
-                _block.SetColor(BaseColorId, color.Value);
-                _block.SetColor(ColorId, color.Value);
+                _block.SetColor(BaseColorId, color);
+                _block.SetColor(ColorId, color);
                 target.SetPropertyBlock(_block);
             }
         }

@@ -18,6 +18,18 @@ namespace Modules.PlayerModule.HudScreenModule.Signals
 
         /// <summary>Rounds left, then the magazine's size.</summary>
         public Signal<int, int> ApplyAmmo = new();
+
+        /// <summary>The wave, the seconds until it comes in (zero once it is on), and the zombies left.</summary>
+        public Signal<int, float, int> ApplyWave = new();
+
+        /// <summary>Shield points of the local player.</summary>
+        public Signal<float> ApplyShield = new();
+
+        /// <summary>Money, then how many pieces of loot are carried.</summary>
+        public Signal<int, int> ApplyWallet = new();
+
+        /// <summary>A downed teammate in reach, where it lies, and the revive's progress (below zero: none).</summary>
+        public Signal<bool, Vector3, float> ApplyRevive = new(hideCommandLog: true);
     }
 
     public class HudScreenSignalsOutgoing
@@ -29,5 +41,8 @@ namespace Modules.PlayerModule.HudScreenModule.Signals
         public Signal<bool, bool> TouchFire = new();
 
         public Signal TouchReload = new();
+
+        /// <summary>The revive button over a downed teammate was pressed.</summary>
+        public Signal ReviveClicked = new();
     }
 }

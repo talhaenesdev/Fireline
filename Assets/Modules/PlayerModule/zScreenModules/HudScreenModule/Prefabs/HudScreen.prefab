@@ -326,7 +326,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15139663c2520384a8ba4e43e11e92d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Modules.Hud.Screen::Modules.PlayerModule.HudScreenModule.ViewsMediators.HudScreenView
-  _healthFill: {fileID: 0}
+  _healthFill: {fileID: 9090235647515498731}
   _healthText: {fileID: 1378927390734644094}
   _ammoText: {fileID: 7747119763958712564}
 --- !u!1 &5076763754195380455

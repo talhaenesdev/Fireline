@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Modules.PlayerModule.Data.UnityObjects;
 using Modules.PlayerModule.Entities;
 using UnityEngine;
 
@@ -17,6 +18,13 @@ namespace Modules.PlayerModule.Models
 
         public bool IsFriendlyFire { get; set; } = true;
         public bool IsTouchInput { get; set; }
+        public CD_CameraSettings CameraConfig { get; set; }
+        public float CameraHeight { get; set; }
+        public float CameraFollowSpeed { get; set; }
+        public float CameraShake { get; set; }
+        public IPlayerAvatar ReviveTarget { get; set; }
+        public float ReviveEndTime { get; set; }
+        public Dictionary<ulong, (ulong target, float endTime)> Revives { get; } = new();
         public bool IsTicking { get; set; }
         public bool IsHooked { get; set; }
 

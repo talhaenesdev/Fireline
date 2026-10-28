@@ -19,6 +19,8 @@ namespace Modules.PlayerModule.ViewsMediators
             _view.NameChanged += OnNameChanged;
             _view.HealthChanged += OnHealthChanged;
             _view.DeathChanged += OnDeathChanged;
+            _view.ShieldChanged += OnShieldChanged;
+            _view.ReviveRequested += OnReviveRequested;
 
             // Netcode spawns the avatar before the injector's Start registers it, so the spawn has
             // usually happened by the time the Mediator exists.
@@ -34,6 +36,8 @@ namespace Modules.PlayerModule.ViewsMediators
             _view.NameChanged -= OnNameChanged;
             _view.HealthChanged -= OnHealthChanged;
             _view.DeathChanged -= OnDeathChanged;
+            _view.ShieldChanged -= OnShieldChanged;
+            _view.ReviveRequested -= OnReviveRequested;
 
             OnDespawned();
         }
@@ -46,6 +50,7 @@ namespace Modules.PlayerModule.ViewsMediators
             _announced = true;
             _internalSignals.AvatarSpawned.Dispatch(_view);
             _internalSignals.HealthChanged.Dispatch(_view.ClientId, _view.Health, _view.MaxHealth);
+            _internalSignals.ShieldChanged.Dispatch(_view.ClientId, _view.Shield);
         }
 
         private void OnDespawned()
@@ -63,6 +68,10 @@ namespace Modules.PlayerModule.ViewsMediators
 
         private void OnHealthChanged(float health, float maxHealth) =>
             _internalSignals.HealthChanged.Dispatch(_view.ClientId, health, maxHealth);
+
+        private void OnShieldChanged(float shield) => _internalSignals.ShieldChanged.Dispatch(_view.ClientId, shield);
+
+        private void OnReviveRequested(ulong targetClientId) => _internalSignals.ReviveRequested.Dispatch(_view.ClientId, targetClientId);
 
         // How death looks is the same whoever decided it, so the avatar shows it at once.
         private void OnDeathChanged(bool isDead)

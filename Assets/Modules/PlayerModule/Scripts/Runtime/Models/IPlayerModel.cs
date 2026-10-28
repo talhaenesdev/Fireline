@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Modules.PlayerModule.Data.UnityObjects;
 using Modules.PlayerModule.Entities;
 using UnityEngine;
 
@@ -21,6 +22,21 @@ namespace Modules.PlayerModule.Models
 
         /// <summary>The local player plays on a touchscreen: on-screen controls, and aiming by itself.</summary>
         bool IsTouchInput { get; set; }
+
+        /// <summary>The local camera's config, once the camera is up; its ranges bound the settings.</summary>
+        CD_CameraSettings CameraConfig { get; set; }
+        float CameraHeight { get; set; }
+        float CameraFollowSpeed { get; set; }
+        float CameraShake { get; set; }
+
+        /// <summary>The downed teammate the local player is next to, or null.</summary>
+        IPlayerAvatar ReviveTarget { get; set; }
+
+        /// <summary>Time.time the local player's revive completes, or zero when none is under way.</summary>
+        float ReviveEndTime { get; set; }
+
+        /// <summary>Server: revives under way, by reviver, with the downed player and the time they finish.</summary>
+        Dictionary<ulong, (ulong target, float endTime)> Revives { get; }
 
         bool IsTicking { get; set; }
         bool IsHooked { get; set; }

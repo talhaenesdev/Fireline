@@ -2,6 +2,10 @@
     "name": "Modules.Connector",
     "rootNamespace": "",
     "references": [
+    "Modules.Shop.Screen.Signals",
+    "Modules.Economy.Shared",
+    "Modules.Economy.Signals",
+    "Modules.Player.Shared",
         "FlowIoC",
         "Modules.Main.Signals",
         "Modules.Main.Screen.Signals",

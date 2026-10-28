@@ -1,0 +1,19 @@
+{
+  "name": "Modules.Shop.Screen",
+  "references": [
+    "UnityEngine.UI",
+    "Unity.TextMeshPro",
+    "FlowIoC",
+    "Modules.Shop.Screen.Signals",
+    "Modules.Economy.Shared"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

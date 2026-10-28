@@ -56,17 +56,33 @@ namespace Modules.PlayerModule.RootsContexts
             CommandBinder.Bind(_internalSignals.NameChanged).ToSequence<PublishPlayerNameCommand>();
             CommandBinder.Bind(_internalSignals.HealthChanged).ToSequence<PublishLocalHealthCommand>();
             CommandBinder.Bind(_internalSignals.DeathChanged).ToSequence<ApplyLocalDeathCommand>();
+            CommandBinder.Bind(_internalSignals.ShieldChanged).ToSequence<PublishLocalShieldCommand>();
+            CommandBinder.Bind(_internalSignals.ReviveRequested).ToSequence<BeginServerReviveCommand>();
 
             CommandBinder.Bind(_internalSignals.MoveInput).ToSequence<StoreMoveInputCommand>();
             CommandBinder.Bind(_internalSignals.SprintInput).ToSequence<StoreSprintInputCommand>();
 
             CommandBinder.Bind(_internalSignals.Tick)
                 .ToSequence<MoveLocalAvatarCommand>()
-                .ToSequence<AutoAimCommand>();
+                .ToSequence<AutoAimCommand>()
+                .ToSequence<TrackReviveCommand>()
+                .ToSequence<ResolveRevivesCommand>();
 
             CommandBinder.Bind(_signals.Incoming.ApplyDamage).ToSequence<ApplyDamageCommand>();
+            CommandBinder.Bind(_signals.Incoming.Heal).ToSequence<HealCommand>();
+            CommandBinder.Bind(_signals.Incoming.AddShield).ToSequence<AddShieldCommand>();
+            CommandBinder.Bind(_signals.Incoming.StartRevive).ToSequence<StartReviveCommand>();
             CommandBinder.Bind(_signals.Incoming.TouchMove).ToSequence<StoreMoveInputCommand>();
             CommandBinder.Bind(_signals.Incoming.SetFriendlyFire).ToSequence<StoreFriendlyFireCommand>();
+            CommandBinder.Bind(_internalSignals.LocalCameraRegistered)
+                .ToSequence<LoadCameraSettingsCommand>()
+                .ToSequence<PublishCameraSettingsCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.SetCameraSettings)
+                .ToSequence<StoreCameraSettingsCommand>()
+                .ToSequence<SaveCameraSettingsCommand>()
+                .ToSequence<PublishCameraSettingsCommand>();
+
             CommandBinder.Bind(_signals.Incoming.ShakeCamera).ToSequence<SignalDispatchCommand>(_internalSignals.ShakeLocalCamera);
         }
 

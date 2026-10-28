@@ -15,6 +15,7 @@ namespace Modules.PlayerModule.Controllers
     {
         private const string ZOMBIE_TAG = "Zombie";
         private const float AUTO_AIM_RANGE = 25f;
+        private const float WALK_AIM_DISTANCE = 10f;
 
         [Inject] private IPlayerModel _model { get; set; }
         [InjectSignal] private PlayerSignals _signals { get; set; }
@@ -28,6 +29,7 @@ namespace Modules.PlayerModule.Controllers
 
             Vector3 origin = avatar.Transform.position;
             Vector3 direction = Vector3.zero;
+            Vector3 target = Vector3.zero;
             float nearest = AUTO_AIM_RANGE * AUTO_AIM_RANGE;
 
             foreach (GameObject zombie in GameObject.FindGameObjectsWithTag(ZOMBIE_TAG))
@@ -40,17 +42,21 @@ namespace Modules.PlayerModule.Controllers
 
                 nearest = offset.sqrMagnitude;
                 direction = offset;
+                target = zombie.transform.position;
             }
 
             if (direction == Vector3.zero)
+            {
                 direction = new Vector3(_model.MoveInput.x, 0f, _model.MoveInput.y);
+                target = origin + direction.normalized * WALK_AIM_DISTANCE;
+            }
 
             if (direction.sqrMagnitude < 0.001f)
                 return;
 
-            direction.Normalize();
-            _internalSignals.FaceLocalAvatar.Dispatch(direction);
-            _signals.Outgoing.AimChanged.Dispatch(direction);
+            // The avatar turns to the zombie, and the round is sent at the zombie itself from the muzzle.
+            _internalSignals.FaceLocalAvatar.Dispatch(direction.normalized);
+            _signals.Outgoing.AimChanged.Dispatch(target);
         }
     }
 }

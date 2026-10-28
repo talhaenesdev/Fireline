@@ -1,6 +1,7 @@
 {
   "name": "Modules.Match.Screen",
   "references": [
+    "Modules.Player.Shared",
     "FlowIoC",
     "Modules.Match.Screen.Signals",
     "Modules.Match.Shared",

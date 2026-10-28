@@ -30,7 +30,12 @@ MonoBehaviour:
     MaxDistance: 30
     MinInterval: 0
   - Key: WeaponModule/Reload
-    Clips: []
+    Clips:
+    - m_AssetGUID: 2c0c3713366b31c4b9d37a4bf613db31
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
     Volume: 1
     Channel: 1
     Loop: 0

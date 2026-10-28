@@ -13,9 +13,9 @@ namespace Modules.EnemyModule.Data.UnityObjects
         [SerializeField] private float _firstWaveDelay = 3f;
         [SerializeField] private float _timeBetweenWaves = 8f;
 
-        [Header("Spawning, around a random player")]
-        [SerializeField] private float _spawnRadiusMin = 12f;
-        [SerializeField] private float _spawnRadiusMax = 18f;
+        [Header("Spawning: points closer than the minimum to a player are skipped; with no points, a ring around a player")]
+        [SerializeField] private float _spawnRadiusMin = 22f;
+        [SerializeField] private float _spawnRadiusMax = 30f;
 
         [Header("Zombie")]
         [SerializeField] private int _health = 30;

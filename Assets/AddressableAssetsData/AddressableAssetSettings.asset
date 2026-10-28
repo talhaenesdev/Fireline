@@ -16,6 +16,7 @@ MonoBehaviour:
   m_currentHash:
     serializedVersion: 2
     Hash: 00000000000000000000000000000000
+  m_DisableWriteTypeTree: 0
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 0
   m_CatalogRequestsTimeout: 0
@@ -66,6 +67,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: cbd66161ddf153a4cb497f62aba9c373, type: 2}
   - {fileID: 11400000, guid: c4b6ef91995211c4aa4f27517ba62a2a, type: 2}
   - {fileID: 11400000, guid: 75cc359a32ff92a408d759f26981798f, type: 2}
+  - {fileID: 11400000, guid: d905b942881c64847a75d22d6cf7f618, type: 2}
   - {fileID: 11400000, guid: bbecb59704d44ef4bbdfe1f149094f81, type: 2}
   - {fileID: 11400000, guid: 920a1ee531654d7418c5c697f6c8ff9d, type: 2}
   m_BuildSettings:

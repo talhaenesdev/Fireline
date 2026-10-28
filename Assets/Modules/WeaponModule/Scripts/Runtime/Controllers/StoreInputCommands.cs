@@ -26,9 +26,26 @@ namespace Modules.WeaponModule.Controllers
     {
         [Inject] private IWeaponModel _model { get; set; }
 
-        [SignalParam] private Vector3 _direction { get; set; }
+        [SignalParam] private Vector3 _point { get; set; }
 
-        public override void Execute() => _model.AimDirection = _direction;
+        public override void Execute()
+        {
+            _model.AimPoint = _point;
+            _model.HasAim = true;
+        }
+    }
+
+    /// <summary>A bought upgrade: never faster than a fifth of the weapon's own rate.</summary>
+    internal class ImproveFireRateCommand : Command
+    {
+        private const float FASTEST = 0.2f;
+
+        [Inject] private IWeaponModel _model { get; set; }
+
+        [SignalParam] private float _amount { get; set; }
+
+        public override void Execute() =>
+            _model.FireRateMultiplier = Mathf.Max(FASTEST, _model.FireRateMultiplier * (1f - _amount));
     }
 
     internal class StoreArmedCommand : Command

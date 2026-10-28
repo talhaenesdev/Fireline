@@ -19,6 +19,9 @@ namespace Modules.MatchModule.Models
 
         GameMode Mode { get; set; }
 
+        /// <summary>Players down for good in a zombie match.</summary>
+        HashSet<ulong> DownedClients { get; }
+
         ScoreEntryVO GetScore(ulong clientId);
         void SetScore(ScoreEntryVO entry);
         void RemoveScore(ulong clientId);
@@ -32,6 +35,7 @@ namespace Modules.MatchModule.Models
         public IScoreboard Scoreboard { get; set; }
         public bool IsLaunched { get; set; }
         public GameMode Mode { get; set; }
+        public HashSet<ulong> DownedClients { get; } = new();
 
         public ScoreEntryVO GetScore(ulong clientId) =>
             _scores.TryGetValue(clientId, out ScoreEntryVO entry)

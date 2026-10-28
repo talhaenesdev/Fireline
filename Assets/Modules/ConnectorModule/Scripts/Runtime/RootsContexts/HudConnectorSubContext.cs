@@ -29,6 +29,8 @@ namespace Modules.ConnectorModule.RootsContexts
         private void IncomingSignals()
         {
             _playerSignals.Outgoing.LocalHealthChanged.Connect(_hudScreenSignals.Incoming.ApplyHealth, GROUP);
+            _playerSignals.Outgoing.LocalShieldChanged.Connect(_hudScreenSignals.Incoming.ApplyShield, GROUP);
+            _playerSignals.Outgoing.ReviveStateChanged.Connect(_hudScreenSignals.Incoming.ApplyRevive, GROUP);
         }
 
         // A phone's on-screen controls drive the same player and weapon the keyboard and mouse do.
@@ -37,6 +39,7 @@ namespace Modules.ConnectorModule.RootsContexts
             _hudScreenSignals.Outgoing.TouchMove.Connect(_playerSignals.Incoming.TouchMove, GROUP);
             _hudScreenSignals.Outgoing.TouchFire.Connect(_weaponSignals.Incoming.FireInput, GROUP);
             _hudScreenSignals.Outgoing.TouchReload.Connect(_weaponSignals.Incoming.ReloadInput, GROUP);
+            _hudScreenSignals.Outgoing.ReviveClicked.Connect(_playerSignals.Incoming.StartRevive, GROUP);
         }
 
         public override void DestroyContext()

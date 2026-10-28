@@ -61,7 +61,8 @@ namespace Modules.MatchModule.RootsContexts
 
             CommandBinder.Bind(_signals.Incoming.ClientDisconnected)
                 .ToSequence<RequireServerCommand>()
-                .ToSequence<RemoveScoreCommand>();
+                .ToSequence<RemoveScoreCommand>()
+                .ToSequence<CheckZombieGameOverCommand>();
 
             CommandBinder.Bind(_signals.Incoming.PlayerNameChanged)
                 .ToSequence<RequireServerCommand>()
@@ -70,8 +71,13 @@ namespace Modules.MatchModule.RootsContexts
             CommandBinder.Bind(_signals.Incoming.PlayerDied)
                 .ToSequence<RequireServerCommand>()
                 .ToSequence<RecordKillCommand>()
+                .ToSequence<ResolveZombieDeathCommand>()
                 .ToSequence<WaitRespawnDelayCommand>()
                 .ToSequence<RespawnPlayerCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.PlayerRevived)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<MarkPlayerStandingCommand>();
 
             CommandBinder.Bind(_signals.Incoming.ZombieKilled)
                 .ToSequence<RequireServerCommand>()

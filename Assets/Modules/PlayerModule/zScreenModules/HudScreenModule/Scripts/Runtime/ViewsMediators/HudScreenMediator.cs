@@ -27,6 +27,11 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         {
             _signals.Incoming.ApplyHealth.AddListener(_view.ShowHealth);
             _signals.Incoming.ApplyAmmo.AddListener(_view.ShowAmmo);
+            _signals.Incoming.ApplyWave.AddListener(_view.ShowWave);
+            _signals.Incoming.ApplyShield.AddListener(_view.ShowShield);
+            _signals.Incoming.ApplyWallet.AddListener(_view.ShowWallet);
+            _signals.Incoming.ApplyRevive.AddListener(_view.ShowRevive);
+            _view.ReviveClicked += OnReviveClicked;
             _view.TouchMoved += OnTouchMoved;
             _view.TouchFireChanged += OnTouchFireChanged;
             _view.TouchReloadPressed += OnTouchReloadPressed;
@@ -36,6 +41,11 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         {
             _signals.Incoming.ApplyHealth.RemoveListener(_view.ShowHealth);
             _signals.Incoming.ApplyAmmo.RemoveListener(_view.ShowAmmo);
+            _signals.Incoming.ApplyWave.RemoveListener(_view.ShowWave);
+            _signals.Incoming.ApplyShield.RemoveListener(_view.ShowShield);
+            _signals.Incoming.ApplyWallet.RemoveListener(_view.ShowWallet);
+            _signals.Incoming.ApplyRevive.RemoveListener(_view.ShowRevive);
+            _view.ReviveClicked -= OnReviveClicked;
             _view.TouchMoved -= OnTouchMoved;
             _view.TouchFireChanged -= OnTouchFireChanged;
             _view.TouchReloadPressed -= OnTouchReloadPressed;
@@ -44,5 +54,6 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         private void OnTouchMoved(Vector2 move) => _signals.Outgoing.TouchMove.Dispatch(move);
         private void OnTouchFireChanged(bool isHeld, bool wasPressed) => _signals.Outgoing.TouchFire.Dispatch(isHeld, wasPressed);
         private void OnTouchReloadPressed() => _signals.Outgoing.TouchReload.Dispatch();
+        private void OnReviveClicked() => _signals.Outgoing.ReviveClicked.Dispatch();
     }
 }

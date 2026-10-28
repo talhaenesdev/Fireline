@@ -39,9 +39,11 @@ namespace Modules.ConnectorModule.RootsContexts
             _networkSessionSignals.Outgoing.ClientDisconnected.Connect(_matchSignals.Incoming.ClientDisconnected, GROUP);
 
             _playerSignals.Outgoing.PlayerDied.Connect(_matchSignals.Incoming.PlayerDied, GROUP);
+            _playerSignals.Outgoing.PlayerRevived.Connect(_matchSignals.Incoming.PlayerRevived, GROUP);
             _playerSignals.Outgoing.PlayerNameChanged.Connect(_matchSignals.Incoming.PlayerNameChanged, GROUP);
 
             _matchScreenSignals.Outgoing.ExitClicked.Connect(_matchSignals.Incoming.ExitMatch, GROUP);
+            _matchScreenSignals.Outgoing.CameraSettingsEdited.Connect(_playerSignals.Incoming.SetCameraSettings, GROUP);
         }
 
         private void OutgoingSignals()
@@ -49,7 +51,9 @@ namespace Modules.ConnectorModule.RootsContexts
             _matchSignals.Outgoing.Started.Connect(_hudScreenSignals.Incoming.Open, GROUP);
             _matchSignals.Outgoing.Started.Connect(_matchScreenSignals.Incoming.Open, GROUP);
             _matchSignals.Outgoing.ScoresChanged.Connect(_matchScreenSignals.Incoming.ApplyScores, GROUP);
+            _matchSignals.Outgoing.GameOver.Connect(_matchScreenSignals.Incoming.ShowGameOver, GROUP);
             _matchSignals.Outgoing.FriendlyFireChanged.Connect(_playerSignals.Incoming.SetFriendlyFire, GROUP);
+            _playerSignals.Outgoing.CameraSettingsChanged.Connect(_matchScreenSignals.Incoming.ApplyCameraSettings, GROUP);
         }
 
         public override void DestroyContext()

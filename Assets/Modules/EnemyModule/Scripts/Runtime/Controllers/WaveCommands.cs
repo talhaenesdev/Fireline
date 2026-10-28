@@ -14,13 +14,13 @@ using Random = UnityEngine.Random;
 
 namespace Modules.EnemyModule.Controllers
 {
-    internal class StoreConfigCommand : Command
+    internal class StoreBoardCommand : Command
     {
         [Inject] private IEnemyModel _model { get; set; }
 
-        [SignalParam] private CD_ZombieWaves _config { get; set; }
+        [SignalParam] private IZombieWaveBoard _board { get; set; }
 
-        public override void Execute() => _model.Config = _config;
+        public override void Execute() => _model.Board = _board;
     }
 
     /// <summary>Zombies live on the server; on a client the flow ends here.</summary>
@@ -45,7 +45,7 @@ namespace Modules.EnemyModule.Controllers
         {
             if (_model.Config == null || _model.Config.ZombiePrefab == null)
             {
-                FlowLogger.LogError("BeginWavesCommand - no CD_ZombieWaves with a zombie prefab is filed on EnemySystemRoot.");
+                FlowLogger.LogError("BeginWavesCommand - the ZombieWaves object under EnemySystemRoot has no CD_ZombieWaves with a zombie prefab.");
                 Retain();
                 Stop();
                 return;
@@ -53,7 +53,40 @@ namespace Modules.EnemyModule.Controllers
 
             _model.IsRunning = true;
             _model.Wave = 0;
+            _model.DownedClients.Clear();
         }
+    }
+
+    /// <summary>The match is over: the waves stop where they are and the zombies stand still.</summary>
+    internal class StopWavesCommand : Command
+    {
+        [Inject] private IEnemyModel _model { get; set; }
+
+        public override void Execute()
+        {
+            _model.IsRunning = false;
+            _model.IsTicking = false;
+        }
+    }
+
+    /// <summary>A revived player is a target again.</summary>
+    internal class MarkPlayerUpCommand : Command
+    {
+        [Inject] private IEnemyModel _model { get; set; }
+
+        [SignalParam] private ulong _clientId { get; set; }
+
+        public override void Execute() => _model.DownedClients.Remove(_clientId);
+    }
+
+    /// <summary>A player who went down is no longer anyone's target.</summary>
+    internal class MarkPlayerDownCommand : Command
+    {
+        [Inject] private IEnemyModel _model { get; set; }
+
+        [SignalParam(0)] private ulong _victimClientId { get; set; }
+
+        public override void Execute() => _model.DownedClients.Add(_victimClientId);
     }
 
     /// <summary>The pause before a wave: a short one before the first, a longer one between the rest.</summary>
@@ -73,30 +106,54 @@ namespace Modules.EnemyModule.Controllers
             }
 
             float delay = _model.Wave == 0 ? _model.Config.FirstWaveDelay : _model.Config.TimeBetweenWaves;
-            _coroutineProvider.WaitForSeconds(delay, () => Release());
+            _model.Board.SetCountdownServer(_model.Wave + 1, delay);
+
+            IEnemyModel model = _model;
+            _coroutineProvider.WaitForSeconds(delay, () =>
+            {
+                if (model.IsRunning)
+                    Release();
+                else
+                    Stop();
+            });
         }
     }
 
-    /// <summary>The next wave, larger than the last, comes in on a ring around the players.</summary>
+    /// <summary>
+    /// The next wave, larger than the last, comes in at the scene's spawn points - those far enough
+    /// from every player - or, in a scene with none, on a ring around the players.
+    /// </summary>
     internal class SpawnWaveCommand : Command
     {
+        private const float POINT_SCATTER = 2f;
+
         [Inject] private IEnemyModel _model { get; set; }
 
         public override void Execute()
         {
-            List<Transform> players = PlayerTargets.Collect();
+            List<Transform> players = PlayerTargets.Collect(_model.DownedClients);
             if (players.Count == 0)
                 return;
 
             _model.Wave++;
             CD_ZombieWaves config = _model.Config;
             int count = config.CountForWave(_model.Wave);
+            List<Vector3> points = FarPoints(players, config.SpawnRadiusMin);
 
             for (int i = 0; i < count; i++)
             {
-                Transform anchor = players[Random.Range(0, players.Count)];
-                Vector2 ring = Random.insideUnitCircle.normalized * Random.Range(config.SpawnRadiusMin, config.SpawnRadiusMax);
-                Vector3 position = anchor.position + new Vector3(ring.x, 0f, ring.y);
+                Vector3 position;
+                if (points.Count > 0)
+                {
+                    Vector2 scatter = Random.insideUnitCircle * POINT_SCATTER;
+                    position = points[Random.Range(0, points.Count)] + new Vector3(scatter.x, 0f, scatter.y);
+                }
+                else
+                {
+                    Transform anchor = players[Random.Range(0, players.Count)];
+                    Vector2 ring = Random.insideUnitCircle.normalized * Random.Range(config.SpawnRadiusMin, config.SpawnRadiusMax);
+                    position = anchor.position + new Vector3(ring.x, 0f, ring.y);
+                }
 
                 GameObject instance = UnityEngine.Object.Instantiate(config.ZombiePrefab, position, Quaternion.identity);
                 var networkObject = instance.GetComponent<NetworkObject>();
@@ -109,7 +166,36 @@ namespace Modules.EnemyModule.Controllers
                 };
             }
 
+            _model.Board.SetWaveServer(_model.Wave, _model.Zombies.Count);
             FlowLogger.Log($"SpawnWaveCommand - wave {_model.Wave}: {count} zombies.");
+        }
+
+        // Points a player stands right next to are skipped; when every point is close, all of them are used.
+        private List<Vector3> FarPoints(List<Transform> players, float minDistance)
+        {
+            var all = new List<Vector3>();
+            var far = new List<Vector3>();
+            float minSqr = minDistance * minDistance;
+
+            for (int i = 0; i < _model.Board.SpawnPointCount; i++)
+            {
+                Vector3 point = _model.Board.GetSpawnPoint(i);
+                all.Add(point);
+
+                bool isFar = true;
+                foreach (Transform player in players)
+                {
+                    Vector3 offset = player.position - point;
+                    offset.y = 0f;
+                    if (offset.sqrMagnitude < minSqr)
+                        isFar = false;
+                }
+
+                if (isFar)
+                    far.Add(point);
+            }
+
+            return far.Count > 0 ? far : all;
         }
     }
 
@@ -138,7 +224,7 @@ namespace Modules.EnemyModule.Controllers
     /// <summary>The living players the zombies can go for.</summary>
     internal static class PlayerTargets
     {
-        public static List<Transform> Collect()
+        public static List<Transform> Collect(HashSet<ulong> downedClients)
         {
             var players = new List<Transform>();
             NetworkManager manager = NetworkManager.Singleton;
@@ -147,7 +233,7 @@ namespace Modules.EnemyModule.Controllers
 
             foreach (NetworkClient client in manager.ConnectedClientsList)
             {
-                if (client.PlayerObject != null && client.PlayerObject.IsSpawned)
+                if (client.PlayerObject != null && client.PlayerObject.IsSpawned && !downedClients.Contains(client.ClientId))
                     players.Add(client.PlayerObject.transform);
             }
 
