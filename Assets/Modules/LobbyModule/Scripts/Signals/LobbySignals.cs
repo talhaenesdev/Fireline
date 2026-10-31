@@ -25,6 +25,12 @@ namespace Modules.LobbyModule.Signals
         /// <summary>The host moves the lobby on to the next game mode.</summary>
         public Signal CycleGameMode = new();
 
+        /// <summary>The next difficulty for a zombie match.</summary>
+        public Signal CycleDifficulty = new();
+
+        /// <summary>The next map for a zombie match.</summary>
+        public Signal CycleMap = new();
+
         /// <summary>The network session changed under the lobby.</summary>
         public Signal<SessionStateVO> SessionChanged = new();
     }

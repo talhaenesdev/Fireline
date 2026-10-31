@@ -66,7 +66,7 @@ namespace Modules.PlayerModule.Controllers
 
             float progress = -1f;
             if (target != null && _model.ReviveEndTime > 0f)
-                progress = Mathf.Clamp01(1f - (_model.ReviveEndTime - Time.time) / Revive.DURATION);
+                progress = Mathf.Clamp01(1f - (_model.ReviveEndTime - Time.time) / (Revive.DURATION * _model.LocalAvatar.ReviveScale));
 
             _signals.Outgoing.ReviveStateChanged.Dispatch(target != null, target != null ? target.Transform.position : Vector3.zero, progress);
         }
@@ -82,7 +82,7 @@ namespace Modules.PlayerModule.Controllers
             if (_model.ReviveTarget == null || _model.LocalAvatar == null || _model.ReviveEndTime > 0f)
                 return;
 
-            _model.ReviveEndTime = Time.time + Revive.DURATION;
+            _model.ReviveEndTime = Time.time + Revive.DURATION * _model.LocalAvatar.ReviveScale;
             _model.LocalAvatar.RequestRevive(_model.ReviveTarget.ClientId);
         }
     }
@@ -104,7 +104,7 @@ namespace Modules.PlayerModule.Controllers
                 || !Revive.IsNear(reviver, target, Revive.SERVER_RANGE))
                 return;
 
-            _model.Revives[_reviverClientId] = (_targetClientId, Time.time + Revive.DURATION);
+            _model.Revives[_reviverClientId] = (_targetClientId, Time.time + Revive.DURATION * reviver.ReviveScale);
         }
     }
 

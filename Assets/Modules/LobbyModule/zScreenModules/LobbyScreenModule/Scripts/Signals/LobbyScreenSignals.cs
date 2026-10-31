@@ -29,5 +29,7 @@ namespace Modules.LobbyModule.LobbyScreenModule.Signals
         public Signal ReadyClicked = new();
         public Signal StartClicked = new();
         public Signal ModeClicked = new();
+        public Signal DifficultyClicked = new();
+        public Signal MapClicked = new();
     }
 }

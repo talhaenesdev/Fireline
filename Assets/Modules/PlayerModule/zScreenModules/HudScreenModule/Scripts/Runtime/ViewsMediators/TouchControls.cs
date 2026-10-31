@@ -139,6 +139,61 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
             return text;
         }
 
+        /// <summary>A large announcement across the upper middle of the screen.</summary>
+        public static TMP_Text Banner(Transform parent, string name)
+        {
+            RectTransform rect = Rect(name, parent, new Vector2(0.5f, 0.68f), Vector2.zero, new Vector2(900f, 200f));
+            var text = rect.gameObject.AddComponent<TextMeshProUGUI>();
+            text.fontSize = 64f;
+            text.fontStyle = FontStyles.Bold;
+            text.alignment = TextAlignmentOptions.Center;
+            text.color = Color.white;
+            text.outlineWidth = 0.25f;
+            text.outlineColor = new Color32(0, 0, 0, 220);
+            text.raycastTarget = false;
+            return text;
+        }
+
+        /// <summary>A wide health bar at the top, under the wave, for a boss.</summary>
+        public static RectTransform BossBar(Transform parent, out RectTransform fill, out TMP_Text label)
+        {
+            RectTransform bar = Rect("BossBar", parent, new Vector2(0.5f, 1f), new Vector2(0f, -150f), new Vector2(700f, 34f));
+            bar.gameObject.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.65f);
+
+            fill = Rect("Fill", bar, Vector2.zero, Vector2.zero, Vector2.zero);
+            fill.anchorMin = Vector2.zero;
+            fill.anchorMax = Vector2.one;
+            fill.offsetMin = new Vector2(3f, 3f);
+            fill.offsetMax = new Vector2(-3f, -3f);
+            var image = fill.gameObject.AddComponent<Image>();
+            image.color = new Color(0.85f, 0.15f, 0.2f, 1f);
+            image.raycastTarget = false;
+
+            RectTransform labelRect = Rect("Label", bar, Vector2.zero, Vector2.zero, Vector2.zero);
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            label = labelRect.gameObject.AddComponent<TextMeshProUGUI>();
+            label.fontSize = 22f;
+            label.fontStyle = FontStyles.Bold;
+            label.alignment = TextAlignmentOptions.Center;
+            label.raycastTarget = false;
+            return bar;
+        }
+
+        /// <summary>A screen-wide red edge, clear in the middle, shown when the player is hurt.</summary>
+        public static Image Vignette(Transform parent)
+        {
+            RectTransform rect = Rect("HurtVignette", parent, Vector2.zero, Vector2.zero, Vector2.zero);
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.SetAsFirstSibling();
+            var image = rect.gameObject.AddComponent<Image>();
+            image.sprite = VignetteSprite();
+            image.color = new Color(0.8f, 0f, 0f, 0f);
+            image.raycastTarget = false;
+            return image;
+        }
+
         /// <summary>Money and bag, top left under the match buttons, clear of the phone's stick.</summary>
         public static TMP_Text CornerLabel(Transform parent, string name)
         {
@@ -257,6 +312,28 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         private static Sprite Disc() => CircleSprite(0f);
 
         private static Sprite Ring() => CircleSprite(0.88f);
+
+        // White at the edges, fading to clear towards the middle.
+        private static Sprite VignetteSprite()
+        {
+            const int size = 128;
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+            var pixels = new Color32[size * size];
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = Mathf.Abs(x + 0.5f - size * 0.5f) / (size * 0.5f);
+                    float dy = Mathf.Abs(y + 0.5f - size * 0.5f) / (size * 0.5f);
+                    float edge = Mathf.Clamp01((Mathf.Max(dx, dy) - 0.55f) / 0.45f);
+                    pixels[y * size + x] = new Color32(255, 255, 255, (byte) (edge * edge * 255f));
+                }
+            }
+
+            texture.SetPixels32(pixels);
+            texture.Apply(false, true);
+            return Sprite.Create(texture, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), 100f);
+        }
 
         // White, anti-aliased: a full disc, or a ring whose inner edge sits at innerRadius of the outer.
         private static Sprite CircleSprite(float innerRadius)

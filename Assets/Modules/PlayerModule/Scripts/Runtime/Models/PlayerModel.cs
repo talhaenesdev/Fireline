@@ -13,6 +13,10 @@ namespace Modules.PlayerModule.Models
         public IPlayerAvatar LocalAvatar { get; private set; }
 
         public bool IsLocalAlive { get; set; }
+        public List<(Vector3 point, float until)> Pings { get; } = new();
+        public float NextMarkersTime { get; set; }
+        public Vector3 AimPoint { get; set; }
+        public float LastLocalHealth { get; set; } = -1f;
         public Vector2 MoveInput { get; set; }
         public bool IsSprinting { get; set; }
 

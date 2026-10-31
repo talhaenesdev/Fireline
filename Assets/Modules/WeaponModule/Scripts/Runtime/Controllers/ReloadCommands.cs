@@ -36,7 +36,7 @@ namespace Modules.WeaponModule.Controllers
         public override void Execute()
         {
             Retain();
-            _coroutineProvider.WaitForSeconds(_model.LocalWeapon.Config.ReloadDuration, () => Release());
+            _coroutineProvider.WaitForSeconds(_model.LocalWeapon.Config.ReloadDuration * _model.ReloadMultiplier, () => Release());
         }
     }
 

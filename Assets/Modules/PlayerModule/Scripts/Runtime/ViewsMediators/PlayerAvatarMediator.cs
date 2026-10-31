@@ -21,6 +21,8 @@ namespace Modules.PlayerModule.ViewsMediators
             _view.DeathChanged += OnDeathChanged;
             _view.ShieldChanged += OnShieldChanged;
             _view.ReviveRequested += OnReviveRequested;
+            _view.PingRequested += OnPingRequested;
+            _view.PingShown += OnPingShown;
 
             // Netcode spawns the avatar before the injector's Start registers it, so the spawn has
             // usually happened by the time the Mediator exists.
@@ -38,6 +40,8 @@ namespace Modules.PlayerModule.ViewsMediators
             _view.DeathChanged -= OnDeathChanged;
             _view.ShieldChanged -= OnShieldChanged;
             _view.ReviveRequested -= OnReviveRequested;
+            _view.PingRequested -= OnPingRequested;
+            _view.PingShown -= OnPingShown;
 
             OnDespawned();
         }
@@ -70,6 +74,10 @@ namespace Modules.PlayerModule.ViewsMediators
             _internalSignals.HealthChanged.Dispatch(_view.ClientId, health, maxHealth);
 
         private void OnShieldChanged(float shield) => _internalSignals.ShieldChanged.Dispatch(_view.ClientId, shield);
+
+        private void OnPingRequested(UnityEngine.Vector3 point) => _internalSignals.PingRequested.Dispatch(_view.ClientId, point);
+
+        private void OnPingShown(UnityEngine.Vector3 point) => _internalSignals.PingShown.Dispatch(point);
 
         private void OnReviveRequested(ulong targetClientId) => _internalSignals.ReviveRequested.Dispatch(_view.ClientId, targetClientId);
 

@@ -56,6 +56,7 @@ namespace Modules.PlayerModule.Controllers
 
             // The avatar turns to the zombie, and the round is sent at the zombie itself from the muzzle.
             _internalSignals.FaceLocalAvatar.Dispatch(direction.normalized);
+            _model.AimPoint = target;
             _signals.Outgoing.AimChanged.Dispatch(target);
         }
     }

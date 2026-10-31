@@ -1,7 +1,8 @@
 {
   "name": "Modules.Hud.Screen.Signals",
   "references": [
-    "FlowIoC"
+    "FlowIoC",
+    "Modules.Player.Shared"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

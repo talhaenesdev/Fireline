@@ -33,6 +33,8 @@ namespace Modules.LobbyModule.LobbyScreenModule.ViewsMediators
             _view.ReadyClicked += OnReadyClicked;
             _view.StartClicked += OnStartClicked;
             _view.ModeClicked += OnModeClicked;
+            _view.DifficultyClicked += OnDifficultyClicked;
+            _view.MapClicked += OnMapClicked;
             _signals.Incoming.ApplyState.AddListener(OnStateChanged);
         }
 
@@ -44,6 +46,8 @@ namespace Modules.LobbyModule.LobbyScreenModule.ViewsMediators
             _view.ReadyClicked -= OnReadyClicked;
             _view.StartClicked -= OnStartClicked;
             _view.ModeClicked -= OnModeClicked;
+            _view.DifficultyClicked -= OnDifficultyClicked;
+            _view.MapClicked -= OnMapClicked;
             _signals.Incoming.ApplyState.RemoveListener(OnStateChanged);
         }
 
@@ -83,6 +87,18 @@ namespace Modules.LobbyModule.LobbyScreenModule.ViewsMediators
         {
             if (CanSend())
                 _signals.Outgoing.ModeClicked.Dispatch();
+        }
+
+        private void OnDifficultyClicked()
+        {
+            if (CanSend())
+                _signals.Outgoing.DifficultyClicked.Dispatch();
+        }
+
+        private void OnMapClicked()
+        {
+            if (CanSend())
+                _signals.Outgoing.MapClicked.Dispatch();
         }
 
         private bool CanSend() => _view.Data.HasState(ScreenState.AvailableToSendSignal);

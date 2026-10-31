@@ -25,6 +25,7 @@ namespace Modules.PlayerModule.ViewsMediators
         public Action<bool> SprintChanged;
         public Action<bool, bool> FireChanged;
         public Action ReloadPressed;
+        public Action PingPressed;
 
         private InputAction _move;
         private InputAction _sprint;
@@ -52,8 +53,6 @@ namespace Modules.PlayerModule.ViewsMediators
 
         private void OnDestroy() => Unhook();
 
-        private void Update() =>
-            _isPointerOverUi = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
 
         private void Hook()
         {
@@ -101,5 +100,18 @@ namespace Modules.PlayerModule.ViewsMediators
 
         private void OnFireCanceled(InputAction.CallbackContext context) => FireChanged?.Invoke(false, false);
         private void OnReload(InputAction.CallbackContext context) => ReloadPressed?.Invoke();
+
+        // G, or the middle mouse button, pings where the player aims.
+        private void Update()
+        {
+            _isPointerOverUi = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+            if (_move == null)
+                return;
+
+            bool key = UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.gKey.wasPressedThisFrame;
+            bool button = UnityEngine.InputSystem.Mouse.current != null && UnityEngine.InputSystem.Mouse.current.middleButton.wasPressedThisFrame;
+            if (key || button)
+                PingPressed?.Invoke();
+        }
     }
 }

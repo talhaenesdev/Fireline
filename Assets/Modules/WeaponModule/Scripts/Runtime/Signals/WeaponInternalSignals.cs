@@ -9,6 +9,9 @@ namespace Modules.WeaponModule.Signals
         public Signal Tick = new(hideCommandLog: true);
 
         public Signal<IWeapon> WeaponSpawned = new();
+
+        /// <summary>A weapon was swapped for another of the set.</summary>
+        public Signal<IWeapon> WeaponChanged = new();
         public Signal<IWeapon> WeaponDespawned = new();
 
         public Signal Reload = new();

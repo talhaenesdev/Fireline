@@ -44,7 +44,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8629dc61195dbe4087a37272a866c08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Modules.Enemy::Modules.EnemyModule.RootsContexts.EnemySystemRoot
-  SubContextTypes: []
+  SubContextTypes:
+  - ContextScript: {fileID: 11500000, guid: bf1723558fa67e648a7466d21f2ae441, type: 3}
+    ContextFullName: FlowIoC.PoolModule.RootsContexts.PoolSubContext
+    ContextName: PoolSubContext
+    AutoSetup: 1
+    IsTest: 0
+    Settings:
+      rid: 7133000000000000001
   initializeOrder: 4
   AutoBindInjections: 1
   AutoBindMediations: 1
@@ -54,4 +61,15 @@ MonoBehaviour:
   IsTest: 0
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 7133000000000000001
+      type: {class: PoolSubContextSettingsCVO, ns: FlowIoC.PoolModule.Data.ValueObjects, asm: FlowIoC}
+      data:
+        Groups:
+          m_Keys:
+          - enemy
+          m_Values:
+          - Group: {fileID: 11400000, guid: f6a9c3d4e5b74c8d0e1f2a3b4c5d6e31, type: 2}
+            AutoInitialize: 1
+            GroupSpecificPools: 0
+        UnregisterWhenRootDestroyed: 1

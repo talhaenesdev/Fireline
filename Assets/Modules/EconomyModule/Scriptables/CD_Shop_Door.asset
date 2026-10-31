@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4af5d820988945e0945eaabeffbcc32a, type: 3}
+  m_Name: CD_Shop_Door
+  m_EditorClassIdentifier: Modules.Economy::Modules.EconomyModule.Data.UnityObjects.CD_Shop
+  _items:
+  - Name: "Kap\u0131y\u0131 A\xE7"
+    Price: 300
+    Type: 9
+    Amount: 0
+    Index: 0

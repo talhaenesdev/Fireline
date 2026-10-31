@@ -23,6 +23,7 @@ namespace Modules.PlayerModule.ViewsMediators
             _view.SprintChanged += OnSprintChanged;
             _view.FireChanged += OnFireChanged;
             _view.ReloadPressed += OnReloadPressed;
+            _view.PingPressed += OnPingPressed;
         }
 
         public void OnRemove()
@@ -31,11 +32,13 @@ namespace Modules.PlayerModule.ViewsMediators
             _view.SprintChanged -= OnSprintChanged;
             _view.FireChanged -= OnFireChanged;
             _view.ReloadPressed -= OnReloadPressed;
+            _view.PingPressed -= OnPingPressed;
         }
 
         private void OnMoveChanged(Vector2 move) => _internalSignals.MoveInput.Dispatch(move);
         private void OnSprintChanged(bool sprint) => _internalSignals.SprintInput.Dispatch(sprint);
         private void OnFireChanged(bool held, bool pressed) => _signals.Outgoing.FireInput.Dispatch(held, pressed);
         private void OnReloadPressed() => _signals.Outgoing.ReloadInput.Dispatch();
+        private void OnPingPressed() => _internalSignals.PingPressed.Dispatch();
     }
 }

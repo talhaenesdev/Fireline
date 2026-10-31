@@ -12,8 +12,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 657c6038f297401aa16cdfd3ac7d9ee3, type: 3}
   m_Name: CD_Turret
   m_EditorClassIdentifier: Modules.Enemy::Modules.EnemyModule.Data.UnityObjects.CD_Turret
-  _range: 12
-  _fireInterval: 0.45
-  _damage: 10
-  _health: 150
+  _levels:
+  - Range: 12
+    FireInterval: 0.45
+    Damage: 10
+    Health: 150
+  - Range: 14
+    FireInterval: 0.35
+    Damage: 14
+    Health: 220
+  - Range: 16
+    FireInterval: 0.25
+    Damage: 20
+    Health: 320
   _maxPlaceDistance: 8
+  _levelColors:
+  - {r: 0.35, g: 0.55, b: 0.85, a: 1}
+  - {r: 0.35, g: 0.85, b: 0.45, a: 1}
+  - {r: 0.95, g: 0.75, b: 0.2, a: 1}

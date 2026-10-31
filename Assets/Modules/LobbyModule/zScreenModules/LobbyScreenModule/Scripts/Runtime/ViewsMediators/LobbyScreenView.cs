@@ -2,6 +2,7 @@ using System;
 using FlowIoC.BaseModule.Injectable.Components;
 using FlowIoC.ScreenModule.ViewsMediators.Screen;
 using Modules.LobbyModule.Shared.Data.ValueObjects;
+using Modules.LobbyModule.Shared.Enums;
 using Modules.MatchModule.Shared.Enums;
 using TMPro;
 using UnityEngine;
@@ -36,12 +37,23 @@ namespace Modules.LobbyModule.LobbyScreenModule.ViewsMediators
         public Action ReadyClicked;
         public Action StartClicked;
         public Action ModeClicked;
+        public Action DifficultyClicked;
+        public Action MapClicked;
 
         // Built at runtime on the panel's right edge, so the prefab needs no new objects.
         private Button _modeButton;
         private TMP_Text _modeText;
+        private Button _difficultyButton;
+        private TMP_Text _difficultyText;
+        private Button _mapButton;
+        private TMP_Text _mapText;
 
-        private void Awake() => BuildModeButton();
+        private void Awake()
+        {
+            BuildModeButton();
+            _difficultyButton = BuildSideButton("DifficultyButton", -54f, out _difficultyText);
+            _mapButton = BuildSideButton("MapButton", -108f, out _mapText);
+        }
 
         private void OnEnable()
         {
@@ -51,6 +63,8 @@ namespace Modules.LobbyModule.LobbyScreenModule.ViewsMediators
             _readyButton.onClick.AddListener(OnReadyClicked);
             _startGameButton.onClick.AddListener(OnStartClicked);
             _modeButton.onClick.AddListener(OnModeClicked);
+            _difficultyButton.onClick.AddListener(OnDifficultyClicked);
+            _mapButton.onClick.AddListener(OnMapClicked);
         }
 
         private void OnDisable()
@@ -61,6 +75,8 @@ namespace Modules.LobbyModule.LobbyScreenModule.ViewsMediators
             _readyButton.onClick.RemoveListener(OnReadyClicked);
             _startGameButton.onClick.RemoveListener(OnStartClicked);
             _modeButton.onClick.RemoveListener(OnModeClicked);
+            _difficultyButton.onClick.RemoveListener(OnDifficultyClicked);
+            _mapButton.onClick.RemoveListener(OnMapClicked);
         }
 
         public void ShowPlayerName(string playerName) => _playerNameInput.text = playerName;
@@ -86,6 +102,20 @@ namespace Modules.LobbyModule.LobbyScreenModule.ViewsMediators
             // Chosen freely before a lobby exists; inside one, only the host changes it.
             _modeButton.interactable = !state.IsBusy && (!state.HasSession || state.IsHost);
 
+            // Difficulty only means something against zombies.
+            _difficultyButton.gameObject.SetActive(state.Mode == GameMode.Zombie);
+            _difficultyButton.interactable = _modeButton.interactable;
+            _difficultyText.text = state.Difficulty switch
+            {
+                Difficulty.Easy => "ZORLUK: KOLAY",
+                Difficulty.Nightmare => "ZORLUK: KABUS",
+                _ => "ZORLUK: NORMAL"
+            };
+
+            _mapButton.gameObject.SetActive(state.Mode == GameMode.Zombie);
+            _mapButton.interactable = _modeButton.interactable;
+            _mapText.text = state.Map == ZombieMap.Base ? "HARİTA: ÜS" : "HARİTA: ARENA";
+
             if (_readyMark != null)
                 _readyMark.SetActive(state.IsLocalReady);
 
@@ -101,6 +131,34 @@ namespace Modules.LobbyModule.LobbyScreenModule.ViewsMediators
         private void OnReadyClicked() => ReadyClicked?.Invoke();
         private void OnStartClicked() => StartClicked?.Invoke();
         private void OnModeClicked() => ModeClicked?.Invoke();
+        private void OnDifficultyClicked() => DifficultyClicked?.Invoke();
+        private void OnMapClicked() => MapClicked?.Invoke();
+
+        private Button BuildSideButton(string name, float y, out TMP_Text text)
+        {
+            var panel = (RectTransform) transform.GetChild(0);
+            var go = new GameObject(name, typeof(RectTransform));
+            var rect = (RectTransform) go.transform;
+            rect.SetParent(panel, false);
+            rect.anchorMin = rect.anchorMax = new Vector2(1f, 0.5f);
+            rect.pivot = new Vector2(1f, 0.5f);
+            rect.anchoredPosition = new Vector2(-20f, y);
+            rect.sizeDelta = new Vector2(240f, 44f);
+            go.AddComponent<Image>().color = new Color(0.15f, 0.15f, 0.18f, 0.9f);
+            var button = go.AddComponent<Button>();
+
+            var label = new GameObject("Label", typeof(RectTransform));
+            var labelRect = (RectTransform) label.transform;
+            labelRect.SetParent(rect, false);
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.sizeDelta = Vector2.zero;
+            text = label.AddComponent<TextMeshProUGUI>();
+            text.fontSize = 22f;
+            text.alignment = TextAlignmentOptions.Center;
+            text.raycastTarget = false;
+            return button;
+        }
 
         private void BuildModeButton()
         {

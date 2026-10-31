@@ -10,6 +10,12 @@ namespace Modules.WeaponModule.Entities
         bool IsOwner { get; }
         bool IsServer { get; }
         CD_Weapon Config { get; }
+
+        /// <summary>Which weapon of the set it is.</summary>
+        int WeaponIndex { get; }
+
+        /// <summary>Server only: the player now carries this weapon of the set.</summary>
+        void SetWeaponServer(int index);
         Transform Owner { get; }
         Vector3 MuzzlePosition { get; }
 

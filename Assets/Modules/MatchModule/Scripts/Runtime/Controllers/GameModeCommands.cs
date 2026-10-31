@@ -15,10 +15,16 @@ namespace Modules.MatchModule.Controllers
         [Inject] private IMatchModel _model { get; set; }
         [Inject] private INetworkSessionService _session { get; set; }
 
-        public override void Execute() =>
+        public override void Execute()
+        {
             _model.Mode = Enum.TryParse(_session.GetSessionProperty(MatchConstants.GAME_MODE_PROPERTY), out GameMode mode)
                 ? mode
                 : GameMode.Deathmatch;
+
+            _model.Difficulty = Enum.TryParse(_session.GetSessionProperty(MatchConstants.DIFFICULTY_PROPERTY), out Difficulty difficulty)
+                ? difficulty
+                : Difficulty.Normal;
+        }
     }
 
     /// <summary>
@@ -35,8 +41,11 @@ namespace Modules.MatchModule.Controllers
             bool isZombie = _model.Mode == GameMode.Zombie;
             _signals.Outgoing.FriendlyFireChanged.Dispatch(!isZombie);
 
-            if (isZombie)
-                _signals.Outgoing.ZombieWavesStarted.Dispatch();
+            if (!isZombie)
+                return;
+
+            _signals.Outgoing.ZombieDifficultyChosen.Dispatch((int) _model.Difficulty);
+            _signals.Outgoing.ZombieWavesStarted.Dispatch();
         }
     }
 }

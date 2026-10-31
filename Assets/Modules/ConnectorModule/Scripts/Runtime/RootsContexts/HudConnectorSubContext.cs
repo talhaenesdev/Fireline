@@ -29,6 +29,9 @@ namespace Modules.ConnectorModule.RootsContexts
         private void IncomingSignals()
         {
             _playerSignals.Outgoing.LocalHealthChanged.Connect(_hudScreenSignals.Incoming.ApplyHealth, GROUP);
+            _playerSignals.Outgoing.LocalHurt.Connect(_hudScreenSignals.Incoming.ApplyHurt, GROUP);
+            _playerSignals.Outgoing.MarkersChanged.Connect(_hudScreenSignals.Incoming.ApplyMarkers, GROUP);
+            _weaponSignals.Outgoing.LocalWeaponChanged.Connect(_hudScreenSignals.Incoming.ApplyWeaponName, GROUP);
             _playerSignals.Outgoing.LocalShieldChanged.Connect(_hudScreenSignals.Incoming.ApplyShield, GROUP);
             _playerSignals.Outgoing.ReviveStateChanged.Connect(_hudScreenSignals.Incoming.ApplyRevive, GROUP);
         }
@@ -40,6 +43,7 @@ namespace Modules.ConnectorModule.RootsContexts
             _hudScreenSignals.Outgoing.TouchFire.Connect(_weaponSignals.Incoming.FireInput, GROUP);
             _hudScreenSignals.Outgoing.TouchReload.Connect(_weaponSignals.Incoming.ReloadInput, GROUP);
             _hudScreenSignals.Outgoing.ReviveClicked.Connect(_playerSignals.Incoming.StartRevive, GROUP);
+            _hudScreenSignals.Outgoing.PingClicked.Connect(_playerSignals.Incoming.Ping, GROUP);
         }
 
         public override void DestroyContext()

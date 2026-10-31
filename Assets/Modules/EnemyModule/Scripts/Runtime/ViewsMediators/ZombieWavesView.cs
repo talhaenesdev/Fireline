@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using FlowIoC.BaseModule.Injectable.Components;
 using FlowIoC.BaseModule.ViewsMediators.View;
+using FlowIoC.PoolModule.Services;
 using Modules.EnemyModule.Data.UnityObjects;
 using Modules.EnemyModule.Entities;
+using Modules.EnemyModule.Enums;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -17,6 +19,8 @@ namespace Modules.EnemyModule.ViewsMediators
     public struct NetworkTurret : INetworkSerializable, IEquatable<NetworkTurret>
     {
         public int Id;
+        public int Kind;
+        public int Level;
         public Vector3 Position;
         public float Yaw;
         public int Health;
@@ -24,12 +28,14 @@ namespace Modules.EnemyModule.ViewsMediators
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
             serializer.SerializeValue(ref Id);
+            serializer.SerializeValue(ref Kind);
+            serializer.SerializeValue(ref Level);
             serializer.SerializeValue(ref Position);
             serializer.SerializeValue(ref Yaw);
             serializer.SerializeValue(ref Health);
         }
 
-        public bool Equals(NetworkTurret other) => Id == other.Id && Yaw.Equals(other.Yaw) && Health == other.Health;
+        public bool Equals(NetworkTurret other) => Id == other.Id && Level == other.Level && Yaw.Equals(other.Yaw) && Health == other.Health;
     }
 
     [RequireComponent(typeof(ViewInjector))]
@@ -38,18 +44,31 @@ namespace Modules.EnemyModule.ViewsMediators
         [SerializeField] private CD_ZombieWaves _config;
         [SerializeField] private Transform _spawnPointRoot;
         [SerializeField] private CD_Turret _turret;
+        [SerializeField] private CD_Barricade _barricade;
+        [SerializeField] private CD_Wall _wall;
+        [SerializeField] private CD_Barracks _barracks;
+        [Tooltip("Every child is a wall the base starts with, facing the child's forward. Empty on a map with no base.")]
+        [SerializeField] private Transform _baseWallRoot;
+        [SerializeField] private CD_Objective _objective;
+        [Tooltip("Every child is a point the defend objective may appear at.")]
+        [SerializeField] private Transform _objectivePointRoot;
+
+        [Tooltip("The pool key the turrets are drawn from; the group is filed on EnemySystemRoot.")]
+        [SerializeField] private string _turretPoolKey = "Turret";
+        [SerializeField] private string _barricadePoolKey = "Barricade";
+        [SerializeField] private string _wallPoolKey = "Wall";
+        [SerializeField] private string _barracksPoolKey = "Barracks";
+        [SerializeField] private string _damageNumberPoolKey = "DamageNumber";
+        [SerializeField] private string _corpsePoolKey = "ZombieCorpse";
+        [SerializeField] private string _blastPoolKey = "Blast";
+        [SerializeField] private string _spitPoolKey = "Spit";
+        [SerializeField] private string _objectivePoolKey = "ObjectiveZone";
+        [Tooltip("A hit at least this strong shows as a heavy hit.")]
+        [SerializeField] private int _heavyHitDamage = 25;
 
         private NetworkList<NetworkTurret> _turrets;
-        private readonly Dictionary<int, TurretVisual> _turretVisuals = new();
-
-        private class TurretVisual
-        {
-            public Transform Root;
-            public Transform Head;
-            public Transform HealthFill;
-            public LineRenderer Tracer;
-            public float TracerUntil;
-        }
+        private readonly Dictionary<int, IStructureVisual> _turretVisuals = new();
+        private IPoolService _pool;
 
         private readonly NetworkVariable<int> _wave = new(0,
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -65,18 +84,60 @@ namespace Modules.EnemyModule.ViewsMediators
 
         /// <summary>The wave, the seconds until it starts (zero once it is on), and the zombies left.</summary>
         public Action<int, float, int> StateChanged;
-        public Action TurretGranted;
-        public Action<ulong, Vector3> TurretPlaceRequested;
+        public Action<int> StructureGranted;
+        public Action<ulong, Vector3, int> StructurePlaceRequested;
+        public Action<int> WaveCleared;
 
-        private Transform _preview;
-        private Renderer[] _previewRenderers;
+        /// <summary>The boss's name, health and most health; an empty name when there is none.</summary>
+        public Action<string, int, int> BossChanged;
+
+        /// <summary>The objective's title, whether it is on, and how far it is held, 0 to 1.</summary>
+        public Action<string, bool, float> ObjectiveChanged;
+
+        /// <summary>The objective ended: held or not, and what it paid.</summary>
+        public Action<bool, int> ObjectiveEnded;
+
+        private readonly NetworkVariable<bool> _objectiveActive = new();
+        private readonly NetworkVariable<Vector3> _objectivePosition = new();
+        private readonly NetworkVariable<float> _objectiveProgress = new();
+        private ObjectiveZone _objectiveZone;
+
+        private readonly NetworkVariable<Unity.Collections.FixedString64Bytes> _bossName = new();
+        private readonly NetworkVariable<int> _bossHealth = new();
+        private readonly NetworkVariable<int> _bossMaxHealth = new();
+
+        private const float CARRY_HEIGHT = 2.3f;
+        private const float CARRY_SCALE = 0.6f;
+
+        private IStructureVisual _carried;
+        private int _carriedKind = -1;
 
         public CD_ZombieWaves Config => _config;
         public CD_Turret TurretConfig => _turret;
+        public CD_Barricade BarricadeConfig => _barricade;
+        public CD_Wall WallConfig => _wall;
+        public CD_Barracks BarracksConfig => _barracks;
+        public int BaseWallCount => _baseWallRoot != null ? _baseWallRoot.childCount : 0;
+        public Vector3 GetBaseWallPoint(int index) => _baseWallRoot.GetChild(index).position;
+        public float GetBaseWallYaw(int index) => _baseWallRoot.GetChild(index).eulerAngles.y;
+        public CD_Objective ObjectiveConfig => _objective;
+        public int ObjectivePointCount => _objectivePointRoot != null ? _objectivePointRoot.childCount : 0;
+        public Vector3 GetObjectivePoint(int index) => _objectivePointRoot.GetChild(index).position;
         public int SpawnPointCount => _spawnPointRoot != null ? _spawnPointRoot.childCount : 0;
         public Vector3 GetSpawnPoint(int index) => _spawnPointRoot.GetChild(index).position;
 
         private void Awake() => _turrets = new NetworkList<NetworkTurret>();
+
+        /// <summary>The pool the turrets are drawn from, handed over by the Mediator.</summary>
+        public void Configure(IPoolService pool)
+        {
+            _pool = pool;
+            if (!IsSpawned)
+                return;
+
+            DrawTurrets();
+            DrawObjective();
+        }
 
         public override void OnNetworkSpawn()
         {
@@ -86,7 +147,14 @@ namespace Modules.EnemyModule.ViewsMediators
             _wave.OnValueChanged += OnIntChanged;
             _zombiesLeft.OnValueChanged += OnIntChanged;
             _nextWaveTime.OnValueChanged += OnTimeChanged;
+            _bossName.OnValueChanged += OnBossNameChanged;
+            _bossHealth.OnValueChanged += OnBossValueChanged;
+            _bossMaxHealth.OnValueChanged += OnBossValueChanged;
+            _objectiveActive.OnValueChanged += OnObjectiveActiveChanged;
+            _objectiveProgress.OnValueChanged += OnObjectiveProgressChanged;
+            DrawObjective();
             Publish();
+            PublishBoss();
         }
 
         public override void OnNetworkDespawn()
@@ -95,6 +163,19 @@ namespace Modules.EnemyModule.ViewsMediators
             _wave.OnValueChanged -= OnIntChanged;
             _zombiesLeft.OnValueChanged -= OnIntChanged;
             _nextWaveTime.OnValueChanged -= OnTimeChanged;
+            _bossName.OnValueChanged -= OnBossNameChanged;
+            _bossHealth.OnValueChanged -= OnBossValueChanged;
+            _bossMaxHealth.OnValueChanged -= OnBossValueChanged;
+            _objectiveActive.OnValueChanged -= OnObjectiveActiveChanged;
+            _objectiveProgress.OnValueChanged -= OnObjectiveProgressChanged;
+            _objectiveZone?.Dismiss();
+            _objectiveZone = null;
+
+            foreach (IStructureVisual visual in _turretVisuals.Values)
+                visual.Dismiss();
+            _turretVisuals.Clear();
+            ShowCarried(-1);
+
             base.OnNetworkDespawn();
         }
 
@@ -118,12 +199,12 @@ namespace Modules.EnemyModule.ViewsMediators
             _nextWaveTime.Value = 0d;
         }
 
-        public void SetTurretServer(int id, Vector3 position, float yaw, int health)
+        public void SetStructureServer(int id, int kind, int level, Vector3 position, float yaw, int health)
         {
             if (!IsServer)
                 return;
 
-            var turret = new NetworkTurret { Id = id, Position = position, Yaw = yaw, Health = health };
+            var turret = new NetworkTurret { Id = id, Kind = kind, Level = level, Position = position, Yaw = yaw, Health = health };
             for (int i = 0; i < _turrets.Count; i++)
             {
                 if (_turrets[i].Id != id)
@@ -137,7 +218,7 @@ namespace Modules.EnemyModule.ViewsMediators
             _turrets.Add(turret);
         }
 
-        public void RemoveTurretServer(int id)
+        public void RemoveStructureServer(int id)
         {
             if (!IsServer)
                 return;
@@ -158,90 +239,218 @@ namespace Modules.EnemyModule.ViewsMediators
                 TurretShotClientRpc(id, target);
         }
 
-        public void GrantTurretServer(ulong clientId)
+        public void GrantStructureServer(ulong clientId, int kind)
         {
             if (!IsServer)
                 return;
 
             var target = new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { clientId } } };
-            TurretGrantedClientRpc(target);
+            StructureGrantedClientRpc(kind, target);
         }
 
-        public void RequestPlaceTurret(Vector3 position) => PlaceTurretServerRpc(position);
+        public void RequestPlaceStructure(Vector3 position, int kind) => PlaceStructureServerRpc(position, kind);
 
-        public void ShowPlacementPreview(bool isShown, Vector3 position, bool isValid)
+        public void ShowCarried(int kind)
         {
-            if (!isShown)
-            {
-                if (_preview != null)
-                    _preview.gameObject.SetActive(false);
+            if (kind == _carriedKind)
                 return;
-            }
 
-            if (_preview == null)
-            {
-                _preview = CreateTurret(new NetworkTurret { Id = -1, Position = position }).Root;
-                _preview.name = "TurretPreview";
-                _previewRenderers = _preview.GetComponentsInChildren<Renderer>(true);
-                foreach (LineRenderer line in _preview.GetComponentsInChildren<LineRenderer>(true))
-                    line.enabled = false;
-            }
+            _carried?.Dismiss();
+            _carried = null;
+            _carriedKind = kind;
 
-            _preview.gameObject.SetActive(true);
-            _preview.position = position;
+            if (kind < 0 || _pool == null)
+                return;
 
-            Color tint = isValid ? new Color(0.3f, 1f, 0.4f, 1f) : new Color(1f, 0.3f, 0.25f, 1f);
-            foreach (Renderer part in _previewRenderers)
-            {
-                if (part is not LineRenderer)
-                    part.material.color = tint;
-            }
+            _carried = Get(kind);
+            _carried?.Place(transform.position, CARRY_SCALE, false);
+        }
+
+        private IStructureVisual Get(int kind) => (StructureKind) kind switch
+        {
+            StructureKind.Barricade => _pool.Get<BarricadeVisual>(_barricadePoolKey, transform),
+            StructureKind.Wall => _pool.Get<BarricadeVisual>(_wallPoolKey, transform),
+            StructureKind.Barracks => _pool.Get<BarricadeVisual>(_barracksPoolKey, transform),
+            _ => _pool.Get<TurretVisual>(_turretPoolKey, transform)
+        };
+
+        private int MaxHealth(NetworkTurret structure) => (StructureKind) structure.Kind switch
+        {
+            StructureKind.Barricade => _barricade != null ? _barricade.Health : 1,
+            StructureKind.Wall => _wall != null ? _wall.Health : 1,
+            StructureKind.Barracks => _barracks != null ? _barracks.Health : 1,
+            _ => _turret != null ? _turret.Level(structure.Level).Health : 1
+        };
+
+        public void ShowZombieHitServer(Vector3 position, int damage)
+        {
+            if (IsServer)
+                ZombieHitClientRpc(position, damage);
+        }
+
+        public void ShowZombieDeathServer(Vector3 position, float yaw, Color tint, float scale)
+        {
+            if (IsServer)
+                ZombieDeathClientRpc(position, yaw, tint, scale);
+        }
+
+        public void ShowBlastServer(Vector3 position, float radius, Color color)
+        {
+            if (IsServer)
+                BlastClientRpc(position, radius, color);
+        }
+
+        public void ShowSpitServer(Vector3 position, Vector3 velocity, float lifetime)
+        {
+            if (IsServer)
+                SpitClientRpc(position, velocity, lifetime);
+        }
+
+        public void SetBossServer(string name, int health, int maxHealth)
+        {
+            if (!IsServer)
+                return;
+
+            _bossName.Value = name;
+            _bossMaxHealth.Value = maxHealth;
+            _bossHealth.Value = health;
         }
 
         [ClientRpc]
-        private void TurretGrantedClientRpc(ClientRpcParams rpcParams = default) => TurretGranted?.Invoke();
+        private void BlastClientRpc(Vector3 position, float radius, Color color)
+        {
+            if (_pool != null)
+                _pool.Get<BlastRing>(_blastPoolKey, transform)?.Show(position, radius, color);
+        }
+
+        [ClientRpc]
+        private void SpitClientRpc(Vector3 position, Vector3 velocity, float lifetime)
+        {
+            if (_pool != null)
+                _pool.Get<SpitProjectile>(_spitPoolKey, transform)?.Launch(position, velocity, lifetime);
+        }
+
+        private void OnBossNameChanged(Unity.Collections.FixedString64Bytes previous, Unity.Collections.FixedString64Bytes current) => PublishBoss();
+
+        private void OnBossValueChanged(int previous, int current) => PublishBoss();
+
+        private void PublishBoss() => BossChanged?.Invoke(_bossName.Value.ToString(), _bossHealth.Value, _bossMaxHealth.Value);
+
+        public void SetObjectiveServer(bool isActive, Vector3 position, float progress)
+        {
+            if (!IsServer)
+                return;
+
+            _objectivePosition.Value = position;
+            _objectiveProgress.Value = progress;
+            _objectiveActive.Value = isActive;
+        }
+
+        public void AnnounceObjectiveServer(bool isHeld, int reward)
+        {
+            if (IsServer)
+                ObjectiveEndedClientRpc(isHeld, reward);
+        }
+
+        [ClientRpc]
+        private void ObjectiveEndedClientRpc(bool isHeld, int reward) => ObjectiveEnded?.Invoke(isHeld, reward);
+
+        private void OnObjectiveActiveChanged(bool previous, bool current) => DrawObjective();
+
+        private void OnObjectiveProgressChanged(float previous, float current) => DrawObjective();
+
+        // The point shows while the objective is on; the HUD hears its title and progress.
+        private void DrawObjective()
+        {
+            bool isActive = _objectiveActive.Value && _objective != null;
+            if (isActive && _objectiveZone == null && _pool != null)
+                _objectiveZone = _pool.Get<ObjectiveZone>(_objectivePoolKey, transform);
+
+            if (!isActive && _objectiveZone != null)
+            {
+                _objectiveZone.Dismiss();
+                _objectiveZone = null;
+            }
+
+            _objectiveZone?.Show(_objectivePosition.Value, _objective.Radius, _objectiveProgress.Value);
+            ObjectiveChanged?.Invoke(_objective != null ? _objective.Title : string.Empty, isActive, _objectiveProgress.Value);
+        }
+
+        public void AnnounceWaveClearedServer(int wave)
+        {
+            if (IsServer)
+                WaveClearedClientRpc(wave);
+        }
+
+        [ClientRpc]
+        private void ZombieHitClientRpc(Vector3 position, int damage)
+        {
+            if (_pool != null)
+                _pool.Get<DamageNumber>(_damageNumberPoolKey, transform)?.Show(position, damage, damage >= _heavyHitDamage);
+        }
+
+        [ClientRpc]
+        private void ZombieDeathClientRpc(Vector3 position, float yaw, Color tint, float scale)
+        {
+            if (_pool != null)
+                _pool.Get<ZombieCorpse>(_corpsePoolKey, transform)?.Show(position, yaw, tint, scale);
+        }
+
+        [ClientRpc]
+        private void WaveClearedClientRpc(int wave) => WaveCleared?.Invoke(wave);
+
+        [ClientRpc]
+        private void StructureGrantedClientRpc(int kind, ClientRpcParams rpcParams = default) => StructureGranted?.Invoke(kind);
 
         [ServerRpc(RequireOwnership = false)]
-        private void PlaceTurretServerRpc(Vector3 position, ServerRpcParams rpcParams = default) =>
-            TurretPlaceRequested?.Invoke(rpcParams.Receive.SenderClientId, position);
+        private void PlaceStructureServerRpc(Vector3 position, int kind, ServerRpcParams rpcParams = default) =>
+            StructurePlaceRequested?.Invoke(rpcParams.Receive.SenderClientId, position, kind);
 
         [ClientRpc]
         private void TurretShotClientRpc(int id, Vector3 target)
         {
-            if (!_turretVisuals.TryGetValue(id, out TurretVisual visual))
+            if (!_turretVisuals.TryGetValue(id, out IStructureVisual visual))
                 return;
 
-            visual.Tracer.SetPosition(0, visual.Head.position + visual.Head.forward * 0.6f);
-            visual.Tracer.SetPosition(1, target + Vector3.up);
-            visual.Tracer.enabled = true;
-            visual.TracerUntil = Time.time + 0.06f;
+            visual.ShowShot(target);
         }
 
         private void Update()
         {
-            foreach (TurretVisual visual in _turretVisuals.Values)
-            {
-                if (visual.Tracer.enabled && Time.time > visual.TracerUntil)
-                    visual.Tracer.enabled = false;
-            }
+            // The carried turret rides over the local player's head wherever they walk.
+            if (_carried == null)
+                return;
+
+            NetworkObject player = NetworkManager != null ? NetworkManager.LocalClient?.PlayerObject : null;
+            if (player != null)
+                _carried.transform.position = player.transform.position + Vector3.up * CARRY_HEIGHT;
         }
 
         private void OnTurretsChanged(NetworkListEvent<NetworkTurret> change) => DrawTurrets();
 
-        // The turrets each client draws: a base, a head that turns to what it fires at, and a health bar.
+        // The turrets each client draws, each one taken from the pool and returned when it is gone.
         private void DrawTurrets()
         {
+            if (_pool == null)
+                return;
+
             var present = new HashSet<int>();
             foreach (NetworkTurret turret in _turrets)
             {
                 present.Add(turret.Id);
-                if (!_turretVisuals.TryGetValue(turret.Id, out TurretVisual visual))
-                    _turretVisuals[turret.Id] = visual = CreateTurret(turret);
+                if (!_turretVisuals.TryGetValue(turret.Id, out IStructureVisual visual))
+                {
+                    visual = Get(turret.Kind);
+                    if (visual == null)
+                        continue;
 
-                visual.Head.rotation = Quaternion.Euler(0f, turret.Yaw, 0f);
-                float share = _turret != null && _turret.Health > 0 ? Mathf.Clamp01((float) turret.Health / _turret.Health) : 1f;
-                visual.HealthFill.localScale = new Vector3(share, 1f, 1f);
-                visual.HealthFill.localPosition = new Vector3((share - 1f) * 0.5f, 0f, 0f);
+                    visual.Place(turret.Position, 1f, true);
+                    _turretVisuals[turret.Id] = visual;
+                }
+
+                int maxHealth = MaxHealth(turret);
+                Color color = _turret != null ? _turret.LevelColor(turret.Level) : Color.white;
+                visual.SetState(turret.Yaw, Mathf.Clamp01((float) turret.Health / Mathf.Max(1, maxHealth)), color);
             }
 
             var gone = new List<int>();
@@ -253,54 +462,9 @@ namespace Modules.EnemyModule.ViewsMediators
 
             foreach (int id in gone)
             {
-                Destroy(_turretVisuals[id].Root.gameObject);
+                _turretVisuals[id].Dismiss();
                 _turretVisuals.Remove(id);
             }
-        }
-
-        private TurretVisual CreateTurret(NetworkTurret turret)
-        {
-            var root = new GameObject($"Turret_{turret.Id}").transform;
-            root.SetParent(transform, false);
-            root.position = turret.Position;
-
-            Part(PrimitiveType.Cylinder, root, new Vector3(0f, 0.35f, 0f), new Vector3(0.9f, 0.35f, 0.9f), new Color(0.25f, 0.27f, 0.3f));
-
-            var head = new GameObject("Head").transform;
-            head.SetParent(root, false);
-            head.localPosition = new Vector3(0f, 0.95f, 0f);
-            Part(PrimitiveType.Cube, head, Vector3.zero, new Vector3(0.6f, 0.4f, 0.6f), new Color(0.35f, 0.55f, 0.85f));
-            Part(PrimitiveType.Cube, head, new Vector3(0f, 0f, 0.45f), new Vector3(0.15f, 0.15f, 0.6f), new Color(0.15f, 0.15f, 0.18f));
-
-            var bar = new GameObject("HealthBar").transform;
-            bar.SetParent(root, false);
-            bar.localPosition = new Vector3(0f, 1.6f, 0f);
-            bar.localScale = new Vector3(1f, 0.08f, 0.08f);
-            Part(PrimitiveType.Cube, bar, Vector3.zero, Vector3.one, new Color(0.1f, 0.1f, 0.1f));
-            Transform fill = Part(PrimitiveType.Cube, bar, Vector3.zero, new Vector3(1f, 1.2f, 1.2f), new Color(0.3f, 0.9f, 0.4f));
-            var fillAnchor = new GameObject("Fill").transform;
-            fillAnchor.SetParent(bar, false);
-            fill.SetParent(fillAnchor, false);
-
-            var tracer = new GameObject("Tracer").AddComponent<LineRenderer>();
-            tracer.transform.SetParent(root, false);
-            tracer.positionCount = 2;
-            tracer.startWidth = tracer.endWidth = 0.05f;
-            tracer.material = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { color = new Color(1f, 0.85f, 0.4f) };
-            tracer.enabled = false;
-
-            return new TurretVisual { Root = root, Head = head, HealthFill = fillAnchor, Tracer = tracer };
-        }
-
-        private static Transform Part(PrimitiveType type, Transform parent, Vector3 position, Vector3 scale, Color color)
-        {
-            GameObject part = GameObject.CreatePrimitive(type);
-            Destroy(part.GetComponent<Collider>());
-            part.transform.SetParent(parent, false);
-            part.transform.localPosition = position;
-            part.transform.localScale = scale;
-            part.GetComponent<Renderer>().material.color = color;
-            return part.transform;
         }
 
         private void OnIntChanged(int previous, int current) => Publish();
@@ -324,6 +488,13 @@ namespace Modules.EnemyModule.ViewsMediators
             Gizmos.color = new Color(0.4f, 0.9f, 0.3f, 0.8f);
             foreach (Transform point in _spawnPointRoot)
                 Gizmos.DrawWireSphere(point.position, 0.75f);
+
+            if (_baseWallRoot == null)
+                return;
+
+            Gizmos.color = new Color(0.9f, 0.7f, 0.3f, 0.8f);
+            foreach (Transform point in _baseWallRoot)
+                Gizmos.DrawWireCube(point.position + Vector3.up, new Vector3(2f, 2f, 2f));
         }
     }
 }

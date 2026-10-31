@@ -52,6 +52,13 @@ MonoBehaviour:
     IsTest: 0
     Settings:
       rid: -2
+  - ContextScript: {fileID: 11500000, guid: bf1723558fa67e648a7466d21f2ae441, type: 3}
+    ContextFullName: FlowIoC.PoolModule.RootsContexts.PoolSubContext
+    ContextName: PoolSubContext
+    AutoSetup: 1
+    IsTest: 0
+    Settings:
+      rid: 7133000000000000002
   initializeOrder: 0
   AutoBindInjections: 1
   AutoBindMediations: 1
@@ -64,3 +71,14 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
+    - rid: 7133000000000000002
+      type: {class: PoolSubContextSettingsCVO, ns: FlowIoC.PoolModule.Data.ValueObjects, asm: FlowIoC}
+      data:
+        Groups:
+          m_Keys:
+          - economy
+          m_Values:
+          - Group: {fileID: 11400000, guid: f6a9c3d4e5b74c8d0e1f2a3b4c5d6e32, type: 2}
+            AutoInitialize: 1
+            GroupSpecificPools: 0
+        UnregisterWhenRootDestroyed: 1

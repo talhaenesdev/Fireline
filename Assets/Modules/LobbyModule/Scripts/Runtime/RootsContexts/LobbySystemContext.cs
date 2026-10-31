@@ -66,6 +66,16 @@ namespace Modules.LobbyModule.RootsContexts
                 .ToSequence<CycleGameModeCommand>()
                 .ToSequence<FinishLobbyCommand>((string) null);
 
+            CommandBinder.Bind(_signals.Incoming.CycleDifficulty)
+                .ToSequence<ClaimLobbyCommand>((string) null)
+                .ToSequence<CycleDifficultyCommand>()
+                .ToSequence<FinishLobbyCommand>((string) null);
+
+            CommandBinder.Bind(_signals.Incoming.CycleMap)
+                .ToSequence<ClaimLobbyCommand>((string) null)
+                .ToSequence<CycleMapCommand>()
+                .ToSequence<FinishLobbyCommand>((string) null);
+
             CommandBinder.Bind(_signals.Incoming.SessionChanged)
                 .ToSequence<ReadGameModeCommand>()
                 .ToSequence<StoreSessionCommand>();

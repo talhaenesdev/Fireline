@@ -17,12 +17,16 @@ namespace Modules.WeaponModule.Controllers
         {
             CD_Weapon config = _model.LocalWeapon.Config;
 
-            PredictedBullet bullet = _poolService.Get<PredictedBullet>(config.PredictedBulletPoolKey);
-            if (bullet == null)
-                return;
+            var spread = new WeaponSpreadFunction();
+            for (int i = 0; i < config.Pellets; i++)
+            {
+                PredictedBullet bullet = _poolService.Get<PredictedBullet>(config.PredictedBulletPoolKey);
+                if (bullet == null)
+                    return;
 
-            bullet.Launch(_model.ShotPosition, _model.ShotDirection, config.BulletSpeed, config.BulletLifetime,
-                _model.LocalWeapon.Owner);
+                bullet.Launch(_model.ShotPosition, spread.Execute(_model.ShotDirection, config.SpreadAngle), config.BulletSpeed,
+                    config.BulletLifetime, _model.LocalWeapon.Owner);
+            }
         }
     }
 }

@@ -17,15 +17,54 @@ MonoBehaviour:
     Price: 40
     Type: 0
     Amount: 50
+    Index: 0
   - Name: Kalkan
     Price: 70
     Type: 1
     Amount: 50
+    Index: 0
   - Name: "H\u0131zl\u0131 Tetik"
     Price: 150
     Type: 2
     Amount: 0.15
+    Index: 0
   - Name: Taret
     Price: 200
     Type: 3
     Amount: 0
+    Index: 0
+  - Name: Barikat
+    Price: 60
+    Type: 6
+    Amount: 0
+    Index: 0
+  - Name: Duvar
+    Price: 90
+    Type: 10
+    Amount: 0
+    Index: 0
+  - Name: "K\u0131\u015Fla"
+    Price: 350
+    Type: 11
+    Amount: 0
+    Index: 0
+  - Name: "Taret Y\xFCkseltme"
+    Price: 150
+    Type: 5
+    Amount: 0
+    Index: 0
+  - Name: "Pompal\u0131"
+    Price: 180
+    Type: 4
+    Amount: 0
+    Index: 1
+  - Name: Makineli
+    Price: 260
+    Type: 4
+    Amount: 0
+    Index: 2
+  - Name: "Keskin Ni\u015Fanc\u0131"
+    Price: 320
+    Type: 4
+    Amount: 0
+    Index: 3

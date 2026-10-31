@@ -10,6 +10,12 @@ namespace Modules.LobbyModule.Shared.Constants
         /// <summary>The flat arena a zombie match is played on.</summary>
         public const string ZOMBIE_SCENE = "ZombieArena";
 
+        /// <summary>The zombie map with a base in the middle.</summary>
+        public const string BASE_SCENE = "BaseDefense";
+
+        /// <summary>The session property the host writes the zombie map on.</summary>
+        public const string MAP_PROPERTY = "Map";
+
         public const string STATUS_IDLE = "Ready to create or join a lobby.";
         public const string STATUS_CREATING = "Creating lobby...";
         public const string STATUS_CREATED = "Lobby created successfully!";

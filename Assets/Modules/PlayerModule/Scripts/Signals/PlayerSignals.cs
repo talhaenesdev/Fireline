@@ -30,6 +30,12 @@ namespace Modules.PlayerModule.Signals
         /// <summary>Client id, points of shield added. Server only.</summary>
         public Signal<ulong, float> AddShield = new();
 
+        /// <summary>A player bought a perk: client id, which perk, how strong. Server only.</summary>
+        public Signal<ulong, int, float> ApplyPerk = new();
+
+        /// <summary>The local player pressed ping, from the HUD.</summary>
+        public Signal Ping = new();
+
         /// <summary>The local player pressed revive on the downed teammate next to it.</summary>
         public Signal StartRevive = new();
 
@@ -68,6 +74,12 @@ namespace Modules.PlayerModule.Signals
 
         /// <summary>Current and maximum health of the local player.</summary>
         public Signal<float, float> LocalHealthChanged = new();
+
+        /// <summary>What the HUD may point at off the screen: zombies, downed teammates and pings, a few times a second.</summary>
+        public Signal<Shared.Data.ValueObjects.MarkerVO[]> MarkersChanged = new(hideCommandLog: true);
+
+        /// <summary>The local player lost this much health.</summary>
+        public Signal<float> LocalHurt = new();
 
         /// <summary>Victim, then killer. Server only.</summary>
         public Signal<ulong, ulong> PlayerDied = new();

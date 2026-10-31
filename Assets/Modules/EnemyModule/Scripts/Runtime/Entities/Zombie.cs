@@ -21,6 +21,10 @@ namespace Modules.EnemyModule.Entities
         [SerializeField] private Color _flashColor = new(1f, 0.15f, 0.15f, 1f);
         [SerializeField] private float _flashDuration = 0.12f;
 
+        // The kind's look, set by the server before the zombie spawns and carried to every client.
+        private readonly NetworkVariable<Color> _tint = new(Color.white);
+        private readonly NetworkVariable<float> _scale = new(1f);
+
         private Renderer[] _renderers;
         private MaterialPropertyBlock _block;
         private Coroutine _flash;
@@ -36,6 +40,37 @@ namespace Modules.EnemyModule.Entities
             SetTint(_skinTint);
         }
 
+        /// <summary>Server, before spawning: the colour and size of this zombie's kind.</summary>
+        public void SetLookServer(Color tint, float scale)
+        {
+            _tint.Value = tint;
+            _scale.Value = scale;
+        }
+
+        // Out of the pool, a zombie takes its kind's look whenever the server sets it.
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+            _tint.OnValueChanged += OnTintChanged;
+            _scale.OnValueChanged += OnScaleChanged;
+            transform.localScale = Vector3.one * _scale.Value;
+            SetTint(_tint.Value);
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            _tint.OnValueChanged -= OnTintChanged;
+            _scale.OnValueChanged -= OnScaleChanged;
+            if (_flash != null)
+                StopCoroutine(_flash);
+            _flash = null;
+            base.OnNetworkDespawn();
+        }
+
+        private void OnTintChanged(Color previous, Color current) => SetTint(current);
+
+        private void OnScaleChanged(float previous, float current) => transform.localScale = Vector3.one * current;
+
         public void StepTowards(Vector3 target, float distance)
         {
             Vector3 direction = target - transform.position;
@@ -46,6 +81,14 @@ namespace Modules.EnemyModule.Entities
 
             transform.rotation = Quaternion.LookRotation(direction);
             transform.position += direction.normalized * Mathf.Min(distance, direction.magnitude);
+        }
+
+        public void Face(Vector3 target)
+        {
+            Vector3 direction = target - transform.position;
+            direction.y = 0f;
+            if (direction.sqrMagnitude > 0.0001f)
+                transform.rotation = Quaternion.LookRotation(direction);
         }
 
         /// <summary>Server only: pushes the zombie back along the round's path and shows the hit to everyone.</summary>
@@ -84,7 +127,7 @@ namespace Modules.EnemyModule.Entities
         {
             SetTint(_flashColor);
             yield return new WaitForSeconds(_flashDuration);
-            SetTint(_skinTint);
+            SetTint(_tint.Value);
             _flash = null;
         }
 

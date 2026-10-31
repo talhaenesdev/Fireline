@@ -15,11 +15,17 @@ namespace Modules.EconomyModule.Signals
         /// <summary>A wallet changed on the replicated board.</summary>
         public Signal WalletsChanged = new();
 
-        /// <summary>Server: a client asked to buy: client id, item.</summary>
-        public Signal<ulong, int> BuyRequested = new();
+        /// <summary>Server: a client asked to buy: client id, zone, item.</summary>
+        public Signal<ulong, int, int> BuyRequested = new();
 
-        /// <summary>Buyer's process: the server sold it this item.</summary>
-        public Signal<int> Purchased = new();
+        /// <summary>Buyer's process: the server sold it this item of this zone.</summary>
+        public Signal<int, int> Purchased = new();
+
+        /// <summary>A door was bought open.</summary>
+        public Signal DoorsChanged = new();
+
+        /// <summary>Server: a client said what level it is: client id, level.</summary>
+        public Signal<ulong, int> LevelReported = new();
 
         /// <summary>The economy's frame: pick up, sell, and the shop zone.</summary>
         public Signal Tick = new(hideCommandLog: true);

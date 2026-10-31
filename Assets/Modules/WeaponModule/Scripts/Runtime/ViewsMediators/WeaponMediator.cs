@@ -18,6 +18,7 @@ namespace Modules.WeaponModule.ViewsMediators
             _view.Despawned += OnDespawned;
             _view.ServerFireRequested += OnServerFireRequested;
             _view.RemoteFired += OnRemoteFired;
+            _view.WeaponChanged += OnWeaponChanged;
 
             // Netcode spawns the player before the injector's Start registers this view.
             if (_view.IsSpawned)
@@ -30,6 +31,7 @@ namespace Modules.WeaponModule.ViewsMediators
             _view.Despawned -= OnDespawned;
             _view.ServerFireRequested -= OnServerFireRequested;
             _view.RemoteFired -= OnRemoteFired;
+            _view.WeaponChanged -= OnWeaponChanged;
             _internalSignals.ShowLocalFire.RemoveListener(_view.ShowFire);
 
             OnDespawned();
@@ -59,6 +61,8 @@ namespace Modules.WeaponModule.ViewsMediators
 
         private void OnServerFireRequested(Vector3 position, Vector3 direction) =>
             _internalSignals.ServerFireRequested.Dispatch(_view, position, direction);
+
+        private void OnWeaponChanged() => _internalSignals.WeaponChanged.Dispatch(_view);
 
         private void OnRemoteFired(Vector3 position)
         {

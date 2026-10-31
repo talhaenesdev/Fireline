@@ -54,7 +54,9 @@ namespace Modules.PlayerModule.RootsContexts
 
             CommandBinder.Bind(_internalSignals.NameRequested).ToSequence<ApplyPlayerNameCommand>();
             CommandBinder.Bind(_internalSignals.NameChanged).ToSequence<PublishPlayerNameCommand>();
-            CommandBinder.Bind(_internalSignals.HealthChanged).ToSequence<PublishLocalHealthCommand>();
+            CommandBinder.Bind(_internalSignals.HealthChanged)
+                .ToSequence<PublishLocalHealthCommand>()
+                .ToSequence<DetectLocalHurtCommand>();
             CommandBinder.Bind(_internalSignals.DeathChanged).ToSequence<ApplyLocalDeathCommand>();
             CommandBinder.Bind(_internalSignals.ShieldChanged).ToSequence<PublishLocalShieldCommand>();
             CommandBinder.Bind(_internalSignals.ReviveRequested).ToSequence<BeginServerReviveCommand>();
@@ -66,7 +68,15 @@ namespace Modules.PlayerModule.RootsContexts
                 .ToSequence<MoveLocalAvatarCommand>()
                 .ToSequence<AutoAimCommand>()
                 .ToSequence<TrackReviveCommand>()
-                .ToSequence<ResolveRevivesCommand>();
+                .ToSequence<ResolveRevivesCommand>()
+                .ToSequence<CollectMarkersCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.ApplyPerk).ToSequence<ApplyPerkCommand>();
+            CommandBinder.Bind(_signals.Incoming.Ping).ToSequence<RequestPingCommand>();
+            CommandBinder.Bind(_internalSignals.PingPressed).ToSequence<RequestPingCommand>();
+            CommandBinder.Bind(_internalSignals.AimPointChanged).ToSequence<StoreAimPointCommand>();
+            CommandBinder.Bind(_internalSignals.PingRequested).ToSequence<BroadcastPingCommand>();
+            CommandBinder.Bind(_internalSignals.PingShown).ToSequence<ShowPingCommand>();
 
             CommandBinder.Bind(_signals.Incoming.ApplyDamage).ToSequence<ApplyDamageCommand>();
             CommandBinder.Bind(_signals.Incoming.Heal).ToSequence<HealCommand>();

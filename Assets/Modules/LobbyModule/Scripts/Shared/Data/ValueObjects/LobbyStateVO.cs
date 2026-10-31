@@ -1,3 +1,4 @@
+using Modules.LobbyModule.Shared.Enums;
 using Modules.MatchModule.Shared.Enums;
 
 namespace Modules.LobbyModule.Shared.Data.ValueObjects
@@ -15,9 +16,11 @@ namespace Modules.LobbyModule.Shared.Data.ValueObjects
         public readonly bool IsBusy;
         public readonly string Status;
         public readonly GameMode Mode;
+        public readonly Difficulty Difficulty;
+        public readonly ZombieMap Map;
 
         public LobbyStateVO(bool hasSession, bool isHost, string joinCode, int playerCount, int maxPlayers,
-            bool isLocalReady, bool areAllReady, bool isBusy, string status, GameMode mode)
+            bool isLocalReady, bool areAllReady, bool isBusy, string status, GameMode mode, Difficulty difficulty, ZombieMap map)
         {
             HasSession = hasSession;
             IsHost = isHost;
@@ -29,6 +32,8 @@ namespace Modules.LobbyModule.Shared.Data.ValueObjects
             IsBusy = isBusy;
             Status = status;
             Mode = mode;
+            Difficulty = difficulty;
+            Map = map;
         }
 
         public bool CanStart => HasSession && IsHost && AreAllReady && !IsBusy;

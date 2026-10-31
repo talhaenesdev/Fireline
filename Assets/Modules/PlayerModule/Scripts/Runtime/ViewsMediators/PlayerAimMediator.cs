@@ -34,6 +34,10 @@ namespace Modules.PlayerModule.ViewsMediators
                 _view.Face(direction);
         }
 
-        private void OnAimChanged(Vector3 point) => _signals.Outgoing.AimChanged.Dispatch(point);
+        private void OnAimChanged(Vector3 point)
+        {
+            _internalSignals.AimPointChanged.Dispatch(point);
+            _signals.Outgoing.AimChanged.Dispatch(point);
+        }
     }
 }

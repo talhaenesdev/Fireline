@@ -18,6 +18,7 @@ namespace Modules.MatchModule.Models
         bool IsLaunched { get; set; }
 
         GameMode Mode { get; set; }
+        Difficulty Difficulty { get; set; }
 
         /// <summary>Players down for good in a zombie match.</summary>
         HashSet<ulong> DownedClients { get; }
@@ -35,6 +36,7 @@ namespace Modules.MatchModule.Models
         public IScoreboard Scoreboard { get; set; }
         public bool IsLaunched { get; set; }
         public GameMode Mode { get; set; }
+        public Difficulty Difficulty { get; set; } = Difficulty.Normal;
         public HashSet<ulong> DownedClients { get; } = new();
 
         public ScoreEntryVO GetScore(ulong clientId) =>

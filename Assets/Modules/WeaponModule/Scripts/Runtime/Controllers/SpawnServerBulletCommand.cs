@@ -34,12 +34,15 @@ namespace Modules.WeaponModule.Controllers
                 return;
             }
 
-            Vector3 direction = _direction.normalized;
-            GameObject instance = Object.Instantiate(config.NetworkBulletPrefab, _position, Quaternion.LookRotation(direction));
-
-            instance.GetComponent<NetworkObject>().SpawnWithOwnership(_shooter.OwnerClientId);
-            instance.GetComponent<INetworkBullet>().Launch(direction, config.BulletSpeed, config.BulletLifetime,
-                config.Damage, _shooter.OwnerClientId);
+            var spread = new WeaponSpreadFunction();
+            for (int i = 0; i < config.Pellets; i++)
+            {
+                Vector3 direction = spread.Execute(_direction.normalized, config.SpreadAngle);
+                NetworkObject round = config.NetworkBulletPrefab.GetComponent<NetworkObject>()
+                    .InstantiateAndSpawn(NetworkManager.Singleton, _shooter.OwnerClientId, position: _position, rotation: Quaternion.LookRotation(direction));
+                round.GetComponent<INetworkBullet>().Launch(direction, config.BulletSpeed, config.BulletLifetime,
+                    config.Damage, _shooter.OwnerClientId);
+            }
         }
     }
 }

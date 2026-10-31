@@ -98,7 +98,20 @@ namespace Modules.EconomyModule.ShopScreenModule.ViewsMediators
             ShopItemType.Heal => $"+{item.Amount:0} can",
             ShopItemType.Shield => $"+{item.Amount:0} kalkan",
             ShopItemType.FireRate => $"%{item.Amount * 100f:0} daha hızlı ateş",
-            ShopItemType.Turret => "istediğin yere kur, zombilere ateş eder",
+            ShopItemType.Turret => "taşı, durduğun yere kur; zombilere ateş eder",
+            ShopItemType.Weapon => "elindeki silahın yerine geçer",
+            ShopItemType.TurretUpgrade => "kurduğun her taret bir seviye güçlenir",
+            ShopItemType.Barricade => "taşı, durduğun yere kur; zombileri durdurur",
+            ShopItemType.Wall => "sağlam duvar; taşı, durduğun yere kur",
+            ShopItemType.Barracks => "kışla kur; sana savaşan askerler yetiştirir",
+            ShopItemType.Perk => item.Index switch
+            {
+                0 => $"en yüksek can %{item.Amount * 100f:0} artar - bir kez",
+                1 => $"canlandırman %{item.Amount * 100f:0} kısalır - bir kez",
+                _ => $"%{item.Amount * 100f:0} daha hızlı koşarsın - bir kez"
+            },
+            ShopItemType.Door => "kapıyı herkes için açar",
+            ShopItemType.ReloadPerk => $"şarjör %{item.Amount * 100f:0} daha hızlı dolar - bir kez",
             _ => string.Empty
         };
 

@@ -22,7 +22,7 @@ namespace Modules.PlayerModule.Controllers
             // A dead player stands still and its legs stop.
             Vector2 input = _model.IsLocalAlive ? _model.MoveInput : Vector2.zero;
             bool isSprinting = _model.IsLocalAlive && _model.IsSprinting;
-            float speed = isSprinting ? avatar.SprintSpeed : avatar.MoveSpeed;
+            float speed = (isSprinting ? avatar.SprintSpeed : avatar.MoveSpeed) * avatar.SpeedScale;
 
             Vector3 step = new Vector3(input.x, 0f, input.y) * (speed * Time.deltaTime);
             _internalSignals.MoveLocalAvatar.Dispatch(step, input, isSprinting);

@@ -2,6 +2,7 @@ using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using Modules.LobbyModule.Models;
 using Modules.LobbyModule.Shared.Constants;
+using Modules.LobbyModule.Shared.Enums;
 using Modules.LobbyModule.Signals;
 using Modules.MatchModule.Shared.Enums;
 using Modules.NetworkSessionModule.Services;
@@ -17,7 +18,9 @@ namespace Modules.LobbyModule.Controllers
 
         public override void Execute()
         {
-            string scene = _model.Mode == GameMode.Zombie ? LobbyConstants.ZOMBIE_SCENE : LobbyConstants.GAME_SCENE;
+            string scene = _model.Mode != GameMode.Zombie ? LobbyConstants.GAME_SCENE
+                : _model.Map == ZombieMap.Base ? LobbyConstants.BASE_SCENE
+                : LobbyConstants.ZOMBIE_SCENE;
 
             if (_session.LoadNetworkScene(scene))
                 return;

@@ -14,6 +14,18 @@ namespace Modules.PlayerModule.Models
         IPlayerAvatar LocalAvatar { get; }
 
         bool IsLocalAlive { get; set; }
+
+        /// <summary>Pings shown on this process, and until when.</summary>
+        System.Collections.Generic.List<(UnityEngine.Vector3 point, float until)> Pings { get; }
+
+        /// <summary>When the HUD's markers are next gathered.</summary>
+        float NextMarkersTime { get; set; }
+
+        /// <summary>The point the local player aims at, for a ping.</summary>
+        UnityEngine.Vector3 AimPoint { get; set; }
+
+        /// <summary>The local player's health as last published; below zero before the first.</summary>
+        float LastLocalHealth { get; set; }
         Vector2 MoveInput { get; set; }
         bool IsSprinting { get; set; }
 

@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62126395d4264ee4bd7a4767c7d7ccfb, type: 3}
+  m_Name: CD_WeaponSet
+  m_EditorClassIdentifier: Modules.Weapon::Modules.WeaponModule.Data.UnityObjects.CD_WeaponSet
+  _weapons:
+  - {fileID: 11400000, guid: 66ed50e3127b61b4db6b4bf518a10b37, type: 2}
+  - {fileID: 11400000, guid: e426ce61099b9ec4c94f2e5921a261c8, type: 2}
+  - {fileID: 11400000, guid: e427615727fafe34e85d9cddd4511705, type: 2}
+  - {fileID: 11400000, guid: 66bacdee2f6889b44ab978079671da85, type: 2}

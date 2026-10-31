@@ -48,6 +48,18 @@ namespace Modules.WeaponModule.Controllers
             _model.FireRateMultiplier = Mathf.Max(FASTEST, _model.FireRateMultiplier * (1f - _amount));
     }
 
+    internal class ImproveReloadCommand : Command
+    {
+        private const float FASTEST = 0.25f;
+
+        [Inject] private IWeaponModel _model { get; set; }
+
+        [SignalParam] private float _amount { get; set; }
+
+        public override void Execute() =>
+            _model.ReloadMultiplier = Mathf.Max(FASTEST, _model.ReloadMultiplier * (1f - _amount));
+    }
+
     internal class StoreArmedCommand : Command
     {
         [Inject] private IWeaponModel _model { get; set; }

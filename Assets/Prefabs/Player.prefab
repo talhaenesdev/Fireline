@@ -976,6 +976,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Modules.Player::Modules.PlayerModule.ViewsMediators.PlayerInputView
   _playerInput: {fileID: 6958581961677697610}
+  _moveAction: Move
+  _sprintAction: Sprint
+  _fireAction: Attack
+  _reloadAction: Reload
 --- !u!114 &4618399304754188994
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1071,6 +1075,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Modules.Weapon::Modules.WeaponModule.ViewsMediators.WeaponView
   ShowTopMostFoldoutHeaderGroup: 1
   _config: {fileID: 11400000, guid: 66ed50e3127b61b4db6b4bf518a10b37, type: 2}
+  _weaponSet: {fileID: 11400000, guid: befd2efe14f796a4093961cba14502ee, type: 2}
   _muzzlePoint: {fileID: 8587788849489917253}
   _muzzleFlash: {fileID: 698681430937003452}
   _animator: {fileID: 7847318833953607452}

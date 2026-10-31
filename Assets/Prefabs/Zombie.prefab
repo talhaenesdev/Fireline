@@ -127,6 +127,7 @@ GameObject:
   - component: {fileID: 290718136542269817}
   - component: {fileID: 8100042942532999756}
   - component: {fileID: 3308031582606518191}
+  - component: {fileID: 4145688016459435217}
   m_Layer: 0
   m_Name: Zombie
   m_TagString: Untagged
@@ -265,8 +266,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Modules.Enemy::Modules.EnemyModule.Entities.Zombie
   ShowTopMostFoldoutHeaderGroup: 1
   _hitEffect: {fileID: 7817606061049458282}
+  _skinTint: {r: 0.45, g: 0.85, b: 0.3, a: 1}
   _flashColor: {r: 1, g: 0.15, b: 0.15, a: 1}
   _flashDuration: 0.12
+--- !u!114 &4145688016459435217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3385746352847260345}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c6b5aabed554349856514b7a9fcf9ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Modules.Enemy::Modules.EnemyModule.Entities.PooledNetworkObject
 --- !u!1001 &2426497053650501315
 PrefabInstance:
   m_ObjectHideFlags: 0

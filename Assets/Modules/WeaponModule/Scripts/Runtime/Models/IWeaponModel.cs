@@ -8,6 +8,12 @@ namespace Modules.WeaponModule.Models
     {
         IWeapon LocalWeapon { get; set; }
 
+        /// <summary>The round prefabs Netcode spawns from the pool on this process.</summary>
+        System.Collections.Generic.HashSet<GameObject> PooledBulletPrefabs { get; }
+
+        /// <summary>Server: every player's weapon, by owner.</summary>
+        System.Collections.Generic.Dictionary<ulong, IWeapon> ServerWeapons { get; }
+
         bool IsArmed { get; set; }
         int Ammo { get; set; }
         bool IsReloading { get; set; }
@@ -22,6 +28,9 @@ namespace Modules.WeaponModule.Models
         /// <summary>Multiplies the weapon's time between shots; bought upgrades bring it down.</summary>
         float FireRateMultiplier { get; set; }
 
+        /// <summary>Multiplies the weapon's reload time; a perk brings it down.</summary>
+        float ReloadMultiplier { get; set; }
+
         /// <summary>Where and which way the round just fired went, for the steps after the shot.</summary>
         Vector3 ShotPosition { get; set; }
         Vector3 ShotDirection { get; set; }
@@ -33,6 +42,8 @@ namespace Modules.WeaponModule.Models
     internal class WeaponModel : IWeaponModel
     {
         public IWeapon LocalWeapon { get; set; }
+        public System.Collections.Generic.Dictionary<ulong, IWeapon> ServerWeapons { get; } = new();
+        public System.Collections.Generic.HashSet<GameObject> PooledBulletPrefabs { get; } = new();
         public bool IsArmed { get; set; }
         public int Ammo { get; set; }
         public bool IsReloading { get; set; }
@@ -42,6 +53,7 @@ namespace Modules.WeaponModule.Models
         public Vector3 AimPoint { get; set; }
         public bool HasAim { get; set; }
         public float FireRateMultiplier { get; set; } = 1f;
+        public float ReloadMultiplier { get; set; } = 1f;
         public Vector3 ShotPosition { get; set; }
         public Vector3 ShotDirection { get; set; }
         public bool IsTicking { get; set; }

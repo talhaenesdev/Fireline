@@ -31,11 +31,10 @@ namespace Modules.WeaponModule.ViewsMediators
         {
             base.OnNetworkSpawn();
 
-            if (!IsOwner)
-                return;
-
+            // The shooter sees its own predicted round instead. Decided on every spawn: a round from
+            // the pool may have been somebody else's last time.
             foreach (Renderer bulletRenderer in GetComponentsInChildren<Renderer>(true))
-                bulletRenderer.enabled = false;
+                bulletRenderer.enabled = !IsOwner;
         }
 
         public void Launch(Vector3 direction, float speed, float lifetime, int damage, ulong shooterClientId)

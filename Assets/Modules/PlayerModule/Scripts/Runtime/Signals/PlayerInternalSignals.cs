@@ -31,6 +31,18 @@ namespace Modules.PlayerModule.Signals
         /// <summary>Server: reviver, then the downed player it wants to bring back.</summary>
         public Signal<ulong, ulong> ReviveRequested = new();
 
+        /// <summary>Server: a player pinged a point: client id, point.</summary>
+        public Signal<ulong, Vector3> PingRequested = new();
+
+        /// <summary>Every client: a ping to show at this point.</summary>
+        public Signal<Vector3> PingShown = new();
+
+        /// <summary>The point the local player's mouse aims at.</summary>
+        public Signal<Vector3> AimPointChanged = new(hideCommandLog: true);
+
+        /// <summary>The local player pressed ping.</summary>
+        public Signal PingPressed = new();
+
         public Signal<Vector2> MoveInput = new();
         public Signal<bool> SprintInput = new();
 

@@ -14,5 +14,8 @@ namespace Modules.EconomyModule.Shared.Data.ValueObjects
 
         [Tooltip("Heal and Shield: points. FireRate: how much shorter the time between shots gets, 0.15 is 15%.")]
         public float Amount;
+
+        [Tooltip("Weapon: which weapon of the weapon set it gives. Perk: 0 more health, 1 faster revives, 2 faster feet.")]
+        public int Index;
     }
 }

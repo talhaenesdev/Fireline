@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using FlowIoC.BaseModule.Injectable.Components;
 using FlowIoC.BaseModule.ViewsMediators.View;
+using FlowIoC.PoolModule.Services;
 using Modules.EconomyModule.Data.UnityObjects;
 using Modules.EconomyModule.Entities;
 using Unity.Netcode;
@@ -43,38 +44,56 @@ namespace Modules.EconomyModule.ViewsMediators
 
     /// <summary>
     /// The zombie match's economy, replicated: every wallet and every piece of loot on the ground.
-    /// Each client draws the loot it is told about as a small spinning box in the loot's colour.
+    /// Each client draws the loot it is told about with a box from the Loot pool, in the loot's colour.
     /// </summary>
     [RequireComponent(typeof(ViewInjector))]
     public class EconomyNetworkView : NetworkBehaviour, IView, IEconomyBoard
     {
-        private const float LOOT_SIZE = 0.45f;
-        private const float LOOT_SPIN = 90f;
-        private const float LOOT_BOB = 0.15f;
-
         [SerializeField] private CD_Loot _loot;
         [SerializeField] private CD_Shop _shop;
+        [SerializeField] private CD_Progression _progression;
+
+        [Tooltip("The pool key the loot boxes are drawn from; the group is filed on EconomySystemRoot.")]
+        [SerializeField] private string _lootPoolKey = "Loot";
 
         private NetworkList<NetworkWallet> _wallets;
         private NetworkList<NetworkLoot> _lootOnGround;
 
-        private readonly Dictionary<int, Transform> _lootVisuals = new();
+        // Each player's experience this match, and the doors bought open.
+        private NetworkList<NetworkWallet> _experience;
+        private NetworkList<int> _openDoors;
+
+        private readonly Dictionary<int, LootVisual> _lootVisuals = new();
+        private IPoolService _pool;
 
         public bool IsRegistered { get; set; }
 
         public Action Spawned;
         public Action WalletsChanged;
-        public Action<ulong, int> BuyRequested;
-        public Action<int> Purchased;
+        public Action<ulong, int, int> BuyRequested;
+        public Action<int, int> Purchased;
+        public Action DoorsChanged;
+        public Action<ulong, int> LevelReported;
 
         public CD_Loot Loot => _loot;
         public CD_Shop Shop => _shop;
+        public CD_Progression Progression => _progression;
         public int LootCount => _lootOnGround.Count;
 
         private void Awake()
         {
             _wallets = new NetworkList<NetworkWallet>();
             _lootOnGround = new NetworkList<NetworkLoot>();
+            _experience = new NetworkList<NetworkWallet>();
+            _openDoors = new NetworkList<int>();
+        }
+
+        /// <summary>The pool the loot boxes are drawn from, handed over by the Mediator.</summary>
+        public void Configure(IPoolService pool)
+        {
+            _pool = pool;
+            if (IsSpawned)
+                DrawAllLoot();
         }
 
         public override void OnNetworkSpawn()
@@ -82,7 +101,10 @@ namespace Modules.EconomyModule.ViewsMediators
             base.OnNetworkSpawn();
             _wallets.OnListChanged += OnWalletsChanged;
             _lootOnGround.OnListChanged += OnLootChanged;
+            _experience.OnListChanged += OnWalletsChanged;
+            _openDoors.OnListChanged += OnDoorsChanged;
             DrawAllLoot();
+            DoorsChanged?.Invoke();
             Spawned?.Invoke();
             WalletsChanged?.Invoke();
         }
@@ -91,19 +113,14 @@ namespace Modules.EconomyModule.ViewsMediators
         {
             _wallets.OnListChanged -= OnWalletsChanged;
             _lootOnGround.OnListChanged -= OnLootChanged;
-            base.OnNetworkDespawn();
-        }
+            _experience.OnListChanged -= OnWalletsChanged;
+            _openDoors.OnListChanged -= OnDoorsChanged;
 
-        private void Update()
-        {
-            float bob = Mathf.Sin(Time.time * 3f) * LOOT_BOB;
-            foreach (Transform visual in _lootVisuals.Values)
-            {
-                visual.Rotate(0f, LOOT_SPIN * Time.deltaTime, 0f, Space.World);
-                Vector3 position = visual.position;
-                position.y = visual.parent.position.y + 0.5f + bob;
-                visual.position = position;
-            }
+            foreach (LootVisual visual in _lootVisuals.Values)
+                visual.Dismiss();
+            _lootVisuals.Clear();
+
+            base.OnNetworkDespawn();
         }
 
         public void GetLoot(int index, out int id, out int item, out Vector3 position)
@@ -170,23 +187,72 @@ namespace Modules.EconomyModule.ViewsMediators
             _wallets.Add(wallet);
         }
 
-        public void RequestBuy(int item) => BuyServerRpc(item);
+        public bool TryGetXp(ulong clientId, out int xp)
+        {
+            foreach (NetworkWallet entry in _experience)
+            {
+                if (entry.ClientId != clientId)
+                    continue;
 
-        public void ConfirmPurchaseServer(ulong clientId, int item)
+                xp = entry.Money;
+                return true;
+            }
+
+            xp = 0;
+            return false;
+        }
+
+        public void SetXpServer(ulong clientId, int xp)
+        {
+            if (!IsServer)
+                return;
+
+            var entry = new NetworkWallet { ClientId = clientId, Money = xp };
+            for (int i = 0; i < _experience.Count; i++)
+            {
+                if (_experience[i].ClientId != clientId)
+                    continue;
+
+                _experience[i] = entry;
+                return;
+            }
+
+            _experience.Add(entry);
+        }
+
+        public bool IsDoorOpen(int zone) => _openDoors.Contains(zone);
+
+        public void OpenDoorServer(int zone)
+        {
+            if (IsServer && !_openDoors.Contains(zone))
+                _openDoors.Add(zone);
+        }
+
+        public void ReportLevel(int level) => ReportLevelServerRpc(level);
+
+        [ServerRpc(RequireOwnership = false)]
+        private void ReportLevelServerRpc(int level, ServerRpcParams rpcParams = default) =>
+            LevelReported?.Invoke(rpcParams.Receive.SenderClientId, level);
+
+        private void OnDoorsChanged(NetworkListEvent<int> change) => DoorsChanged?.Invoke();
+
+        public void RequestBuy(int zone, int item) => BuyServerRpc(zone, item);
+
+        public void ConfirmPurchaseServer(ulong clientId, int zone, int item)
         {
             if (!IsServer)
                 return;
 
             var target = new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { clientId } } };
-            PurchasedClientRpc(item, target);
+            PurchasedClientRpc(zone, item, target);
         }
 
         [ServerRpc(RequireOwnership = false)]
-        private void BuyServerRpc(int item, ServerRpcParams rpcParams = default) =>
-            BuyRequested?.Invoke(rpcParams.Receive.SenderClientId, item);
+        private void BuyServerRpc(int zone, int item, ServerRpcParams rpcParams = default) =>
+            BuyRequested?.Invoke(rpcParams.Receive.SenderClientId, zone, item);
 
         [ClientRpc]
-        private void PurchasedClientRpc(int item, ClientRpcParams rpcParams = default) => Purchased?.Invoke(item);
+        private void PurchasedClientRpc(int zone, int item, ClientRpcParams rpcParams = default) => Purchased?.Invoke(zone, item);
 
         private void OnWalletsChanged(NetworkListEvent<NetworkWallet> change) => WalletsChanged?.Invoke();
 
@@ -195,12 +261,23 @@ namespace Modules.EconomyModule.ViewsMediators
         // The list is small; redrawing what changed against what is shown keeps the boxes and the list in step.
         private void DrawAllLoot()
         {
+            if (_pool == null)
+                return;
+
             var present = new HashSet<int>();
             foreach (NetworkLoot loot in _lootOnGround)
             {
                 present.Add(loot.Id);
-                if (!_lootVisuals.ContainsKey(loot.Id))
-                    _lootVisuals[loot.Id] = CreateVisual(loot);
+                if (_lootVisuals.ContainsKey(loot.Id))
+                    continue;
+
+                var visual = _pool.Get<LootVisual>(_lootPoolKey, transform);
+                if (visual == null)
+                    continue;
+
+                Color color = _loot != null && loot.Item >= 0 && loot.Item < _loot.Items.Count ? _loot.Items[loot.Item].Color : Color.white;
+                visual.Place(loot.Position, color);
+                _lootVisuals[loot.Id] = visual;
             }
 
             var gone = new List<int>();
@@ -212,29 +289,9 @@ namespace Modules.EconomyModule.ViewsMediators
 
             foreach (int id in gone)
             {
-                if (_lootVisuals[id] != null)
-                    Destroy(_lootVisuals[id].parent.gameObject);
-
+                _lootVisuals[id].Dismiss();
                 _lootVisuals.Remove(id);
             }
-        }
-
-        private Transform CreateVisual(NetworkLoot loot)
-        {
-            var anchor = new GameObject($"Loot_{loot.Id}").transform;
-            anchor.SetParent(transform, false);
-            anchor.position = loot.Position;
-
-            GameObject box = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            Destroy(box.GetComponent<Collider>());
-            box.transform.SetParent(anchor, false);
-            box.transform.localScale = Vector3.one * LOOT_SIZE;
-            box.transform.localPosition = Vector3.up * 0.5f;
-
-            if (_loot != null && loot.Item >= 0 && loot.Item < _loot.Items.Count)
-                box.GetComponent<Renderer>().material.color = _loot.Items[loot.Item].Color;
-
-            return box.transform;
         }
     }
 }

@@ -35,6 +35,9 @@ namespace Modules.MatchModule.Signals
 
         public Signal<ScoreEntryVO[]> ScoresChanged = new();
 
+        /// <summary>How hard the zombie match is, before its waves begin. Server only.</summary>
+        public Signal<int> ZombieDifficultyChosen = new();
+
         /// <summary>The match is a zombie match: the waves begin. Server only.</summary>
         public Signal ZombieWavesStarted = new();
 

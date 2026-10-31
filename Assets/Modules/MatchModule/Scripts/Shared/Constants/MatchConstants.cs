@@ -10,6 +10,9 @@ namespace Modules.MatchModule.Shared.Constants
         /// <summary>The session property the host writes the chosen GameMode into.</summary>
         public const string GAME_MODE_PROPERTY = "GameMode";
 
+        /// <summary>The session property the host writes the chosen Difficulty into.</summary>
+        public const string DIFFICULTY_PROPERTY = "Difficulty";
+
         /// <summary>The attacker id a zombie hits with: no client has it, so it scores for nobody.</summary>
         public const ulong ZOMBIE_ATTACKER_ID = ulong.MaxValue;
     }

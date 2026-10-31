@@ -39,6 +39,8 @@ namespace Modules.ConnectorModule.RootsContexts
             _lobbyScreenSignals.Outgoing.ReadyClicked.Connect(_lobbySignals.Incoming.ToggleReady, GROUP);
             _lobbyScreenSignals.Outgoing.StartClicked.Connect(_lobbySignals.Incoming.StartGame, GROUP);
             _lobbyScreenSignals.Outgoing.ModeClicked.Connect(_lobbySignals.Incoming.CycleGameMode, GROUP);
+            _lobbyScreenSignals.Outgoing.DifficultyClicked.Connect(_lobbySignals.Incoming.CycleDifficulty, GROUP);
+            _lobbyScreenSignals.Outgoing.MapClicked.Connect(_lobbySignals.Incoming.CycleMap, GROUP);
 
             _networkSessionSignals.Outgoing.SessionChanged.Connect(_lobbySignals.Incoming.SessionChanged, GROUP);
         }

@@ -1,5 +1,6 @@
 using Modules.LobbyModule.Shared.Constants;
 using Modules.LobbyModule.Shared.Data.ValueObjects;
+using Modules.LobbyModule.Shared.Enums;
 using Modules.MatchModule.Shared.Enums;
 using Modules.NetworkSessionModule.Shared.Data.ValueObjects;
 
@@ -11,6 +12,8 @@ namespace Modules.LobbyModule.Models
         public string Status { get; private set; } = LobbyConstants.STATUS_IDLE;
         public SessionStateVO Session { get; private set; } = SessionStateVO.None;
         public GameMode Mode { get; set; } = GameMode.Deathmatch;
+        public Difficulty Difficulty { get; set; } = Difficulty.Normal;
+        public ZombieMap Map { get; set; } = ZombieMap.Arena;
 
         public bool TryClaim(string status)
         {
@@ -36,6 +39,6 @@ namespace Modules.LobbyModule.Models
         public void SetSession(SessionStateVO session) => Session = session;
 
         public LobbyStateVO ToStateVO() => new(Session.HasSession, Session.IsHost, Session.JoinCode,
-            Session.PlayerCount, Session.MaxPlayers, Session.IsLocalReady, Session.AreAllReady, IsBusy, Status, Mode);
+            Session.PlayerCount, Session.MaxPlayers, Session.IsLocalReady, Session.AreAllReady, IsBusy, Status, Mode, Difficulty, Map);
     }
 }

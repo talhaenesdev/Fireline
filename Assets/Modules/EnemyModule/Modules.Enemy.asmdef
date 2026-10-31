@@ -4,7 +4,9 @@
     "FlowIoC",
     "Modules.Enemy.Signals",
     "Unity.Netcode.Runtime",
-    "Modules.Match.Shared"
+    "Modules.Match.Shared",
+    "Unity.TextMeshPro",
+    "Unity.Collections"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc14ccc6c98c1004c986b13e8f546b50, type: 3}
   m_Name: CD_Weapon
   m_EditorClassIdentifier: Modules.Weapon::Modules.WeaponModule.Data.UnityObjects.CD_Weapon
+  _displayName: Tabanca
   _fireRate: 0.1
   _automatic: 0
   _magazineSize: 7
@@ -19,6 +20,8 @@ MonoBehaviour:
   _damage: 10
   _bulletSpeed: 20
   _bulletLifetime: 3
+  _pellets: 1
+  _spreadAngle: 0
   _networkBulletPrefab: {fileID: 1563889568419805077, guid: 6c965efd92a9dbd4f9879677a7c0bdeb, type: 3}
   _predictedBulletPoolKey: PredictedBullet
   _impactPoolKey: WallImpact

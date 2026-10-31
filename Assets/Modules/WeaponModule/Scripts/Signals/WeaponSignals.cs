@@ -22,6 +22,12 @@ namespace Modules.WeaponModule.Signals
         /// <summary>The local weapon fires faster: each shot's wait gets this much shorter, 0.15 is 15%.</summary>
         public Signal<float> ImproveFireRate = new();
 
+        /// <summary>The local weapon reloads faster: the share of the time taken off, 0.4 is 40%.</summary>
+        public Signal<float> ImproveReload = new();
+
+        /// <summary>Server: this player now carries this weapon of the set: client id, index.</summary>
+        public Signal<ulong, int> EquipWeapon = new();
+
         /// <summary>Whether the local player may fire at all: alive and spawned.</summary>
         public Signal<bool> SetArmed = new();
     }
@@ -30,6 +36,9 @@ namespace Modules.WeaponModule.Signals
     {
         /// <summary>Rounds left, then the magazine's size, of the local weapon.</summary>
         public Signal<int, int> AmmoChanged = new();
+
+        /// <summary>The local player carries a new weapon: its name.</summary>
+        public Signal<string> LocalWeaponChanged = new();
 
         /// <summary>The local weapon fired a round.</summary>
         public Signal LocalFired = new();

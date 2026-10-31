@@ -36,11 +36,15 @@ namespace Modules.EnemyModule.RootsContexts
         {
             base.CommandBindings();
 
-            CommandBinder.Bind(_internalSignals.BoardRegistered).ToSequence<StoreBoardCommand>();
+            CommandBinder.Bind(_internalSignals.BoardRegistered)
+                .ToSequence<StoreBoardCommand>()
+                .ToSequence<PoolZombiesCommand>()
+                .ToSequence<PoolAlliesCommand>();
 
             CommandBinder.Bind(_signals.Incoming.StartWaves)
                 .ToSequence<RequireServerCommand>()
                 .ToSequence<BeginWavesCommand>()
+                .ToSequence<RaiseBaseWallsCommand>()
                 .ToSequence<StartFrameTickCommand>()
                 .ToSequence<SignalDispatchCommand>(_internalSignals.NextWave);
 
@@ -48,24 +52,48 @@ namespace Modules.EnemyModule.RootsContexts
             CommandBinder.Bind(_internalSignals.NextWave)
                 .ToSequence<WaitWaveDelayCommand>()
                 .ToSequence<SpawnWaveCommand>()
+                .ToSequence<StartObjectiveCommand>()
                 .ToSequence<WaitWaveClearedCommand>()
+                .ToSequence<EndObjectiveCommand>()
+                .ToSequence<AnnounceWaveClearedCommand>()
                 .ToSequence<SignalDispatchCommand>(_internalSignals.NextWave);
 
             CommandBinder.Bind(_internalSignals.Tick)
                 .ToSequence<ChaseAndAttackCommand>()
-                .ToSequence<TurretsFireCommand>();
+                .ToSequence<MoveSpitCommand>()
+                .ToSequence<HoldObjectiveCommand>()
+                .ToSequence<TurretsFireCommand>()
+                .ToSequence<TrainAlliesCommand>()
+                .ToSequence<AlliesFightCommand>();
 
             CommandBinder.Bind(_signals.Incoming.GrantTurret)
                 .ToSequence<RequireServerCommand>()
                 .ToSequence<GrantTurretCommand>();
 
-            CommandBinder.Bind(_internalSignals.TurretPlaceRequested)
+            CommandBinder.Bind(_signals.Incoming.GrantBarricade)
                 .ToSequence<RequireServerCommand>()
-                .ToSequence<PlaceTurretCommand>();
+                .ToSequence<GrantBarricadeCommand>();
 
-            CommandBinder.Bind(_internalSignals.TurretGranted).ToSequence<BeginTurretPlacementCommand>();
-            CommandBinder.Bind(_signals.Incoming.AimAt).ToSequence<MoveTurretPreviewCommand>();
-            CommandBinder.Bind(_signals.Incoming.ConfirmTurretPlacement).ToSequence<ConfirmTurretPlacementCommand>();
+            CommandBinder.Bind(_signals.Incoming.GrantWall)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<GrantWallCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.GrantBarracks)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<GrantBarracksCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.UpgradeTurrets)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<UpgradeTurretsCommand>();
+
+            CommandBinder.Bind(_internalSignals.StructurePlaceRequested)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<PlaceStructureCommand>();
+
+            CommandBinder.Bind(_internalSignals.StructureGranted).ToSequence<BeginStructurePlacementCommand>();
+            CommandBinder.Bind(_signals.Incoming.ConfirmTurretPlacement).ToSequence<ConfirmStructurePlacementCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.SetDifficulty).ToSequence<StoreDifficultyCommand>();
 
             CommandBinder.Bind(_signals.Incoming.StopWaves)
                 .ToSequence<RequireServerCommand>()
@@ -91,6 +119,13 @@ namespace Modules.EnemyModule.RootsContexts
             {
                 _model.IsRunning = false;
                 _model.IsTicking = false;
+
+                // The handler hands out this scene's pool; the next scene registers its own.
+                if (_model.PooledZombiePrefab != null && Unity.Netcode.NetworkManager.Singleton != null)
+                    Unity.Netcode.NetworkManager.Singleton.PrefabHandler.RemoveHandler(_model.PooledZombiePrefab);
+
+                if (_model.PooledAllyPrefab != null && Unity.Netcode.NetworkManager.Singleton != null)
+                    Unity.Netcode.NetworkManager.Singleton.PrefabHandler.RemoveHandler(_model.PooledAllyPrefab);
             }
 
             base.DestroyContext();

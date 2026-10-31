@@ -39,15 +39,28 @@ namespace Modules.WeaponModule.RootsContexts
             base.CommandBindings();
 
             CommandBinder.Bind(_internalSignals.WeaponSpawned)
+                .ToSequence<PoolBulletsCommand>()
+                .ToSequence<TrackServerWeaponCommand>()
                 .ToSequence<RegisterLocalWeaponCommand>()
                 .ToSequence<StartFrameTickCommand>()
+                .ToSequence<PublishLocalWeaponCommand>()
                 .ToSequence<PublishAmmoCommand>();
 
-            CommandBinder.Bind(_internalSignals.WeaponDespawned).ToSequence<UnregisterLocalWeaponCommand>();
+            CommandBinder.Bind(_internalSignals.WeaponDespawned)
+                .ToSequence<UntrackServerWeaponCommand>()
+                .ToSequence<UnregisterLocalWeaponCommand>();
+
+            CommandBinder.Bind(_internalSignals.WeaponChanged)
+                .ToSequence<ApplyLocalWeaponChangeCommand>()
+                .ToSequence<PublishLocalWeaponCommand>()
+                .ToSequence<PublishAmmoCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.EquipWeapon).ToSequence<EquipWeaponCommand>();
 
             CommandBinder.Bind(_signals.Incoming.FireInput).ToSequence<StoreTriggerCommand>();
             CommandBinder.Bind(_signals.Incoming.AimChanged).ToSequence<StoreAimCommand>();
             CommandBinder.Bind(_signals.Incoming.ImproveFireRate).ToSequence<ImproveFireRateCommand>();
+            CommandBinder.Bind(_signals.Incoming.ImproveReload).ToSequence<ImproveReloadCommand>();
             CommandBinder.Bind(_signals.Incoming.SetArmed).ToSequence<StoreArmedCommand>();
             CommandBinder.Bind(_signals.Incoming.ReloadInput).ToSequence<SignalDispatchCommand>(_internalSignals.Reload);
 
@@ -86,7 +99,18 @@ namespace Modules.WeaponModule.RootsContexts
         {
             // The update loop outlives the scene; the flag lets its callback take itself off.
             if (_model != null)
+            {
                 _model.IsTicking = false;
+
+                // The handler hands out this scene's pool; the next scene registers its own.
+                if (Unity.Netcode.NetworkManager.Singleton != null)
+                {
+                    foreach (UnityEngine.GameObject prefab in _model.PooledBulletPrefabs)
+                        Unity.Netcode.NetworkManager.Singleton.PrefabHandler.RemoveHandler(prefab);
+                }
+
+                _model.PooledBulletPrefabs.Clear();
+            }
 
             base.DestroyContext();
         }

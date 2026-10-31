@@ -1,4 +1,5 @@
 using Modules.LobbyModule.Shared.Data.ValueObjects;
+using Modules.LobbyModule.Shared.Enums;
 using Modules.MatchModule.Shared.Enums;
 using Modules.NetworkSessionModule.Shared.Data.ValueObjects;
 
@@ -10,6 +11,8 @@ namespace Modules.LobbyModule.Models
         string Status { get; }
         SessionStateVO Session { get; }
         GameMode Mode { get; set; }
+        Difficulty Difficulty { get; set; }
+        ZombieMap Map { get; set; }
 
         /// <summary>Takes the lobby for one operation. False when another one still holds it.</summary>
         bool TryClaim(string status);

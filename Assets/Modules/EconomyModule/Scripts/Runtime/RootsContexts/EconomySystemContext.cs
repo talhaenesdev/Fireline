@@ -39,7 +39,23 @@ namespace Modules.EconomyModule.RootsContexts
             CommandBinder.Bind(_internalSignals.Started).ToSequence<StartFrameTickCommand>();
             CommandBinder.Bind(_internalSignals.BoardRegistered).ToSequence<StoreBoardCommand>();
             CommandBinder.Bind(_internalSignals.ZoneRegistered).ToSequence<StoreZoneCommand>();
-            CommandBinder.Bind(_internalSignals.WalletsChanged).ToSequence<PublishLocalWalletCommand>();
+            CommandBinder.Bind(_internalSignals.WalletsChanged)
+                .ToSequence<PublishLocalWalletCommand>()
+                .ToSequence<SaveLocalXpCommand>();
+
+            CommandBinder.Bind(_internalSignals.DoorsChanged).ToSequence<ApplyDoorsCommand>();
+
+            CommandBinder.Bind(_internalSignals.LevelReported)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<PayForLevelCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.CreditKill)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<CreditKillCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.PayEveryone)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<PayEveryoneCommand>();
             CommandBinder.Bind(_internalSignals.Purchased).ToSequence<ApplyPurchaseCommand>();
 
             CommandBinder.Bind(_internalSignals.BuyRequested)
@@ -51,6 +67,12 @@ namespace Modules.EconomyModule.RootsContexts
                 .ToSequence<DropLootCommand>();
 
             CommandBinder.Bind(_signals.Incoming.Buy).ToSequence<RequestBuyCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.WaveCleared)
+                .ToSequence<AnnounceWaveRewardCommand>()
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<GrantWaveRewardCommand>()
+                .ToSequence<CreditWaveCommand>();
 
             // Every process watches its own player against the shop; the server also hands out loot and money.
             CommandBinder.Bind(_internalSignals.Tick)

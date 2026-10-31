@@ -16,6 +16,30 @@ namespace Modules.PlayerModule.HudScreenModule.Signals
         /// <summary>Current and maximum health.</summary>
         public Signal<float, float> ApplyHealth = new();
 
+        /// <summary>What to point at when it is off the screen.</summary>
+        public Signal<Modules.PlayerModule.Shared.Data.ValueObjects.MarkerVO[]> ApplyMarkers = new(hideCommandLog: true);
+
+        /// <summary>The local player's level, the experience into it, and how much the level takes.</summary>
+        public Signal<int, int, int> ApplyProgress = new();
+
+        /// <summary>The defend objective: title, whether it is on, how far it is held.</summary>
+        public Signal<string, bool, float> ApplyObjective = new(hideCommandLog: true);
+
+        /// <summary>The objective ended: held or not, and what it paid.</summary>
+        public Signal<bool, int> ApplyObjectiveEnded = new();
+
+        /// <summary>The name of the weapon the local player carries.</summary>
+        public Signal<string> ApplyWeaponName = new();
+
+        /// <summary>The local player was hurt this much: the screen's edges flash red.</summary>
+        public Signal<float> ApplyHurt = new();
+
+        /// <summary>The boss's name, health and most health; an empty name hides the bar.</summary>
+        public Signal<string, int, int> ApplyBoss = new();
+
+        /// <summary>A wave was cleared: its number, then what it paid.</summary>
+        public Signal<int, int> ApplyWaveCleared = new();
+
         /// <summary>Rounds left, then the magazine's size.</summary>
         public Signal<int, int> ApplyAmmo = new();
 
@@ -47,6 +71,9 @@ namespace Modules.PlayerModule.HudScreenModule.Signals
 
         /// <summary>The revive button over a downed teammate was pressed.</summary>
         public Signal ReviveClicked = new();
+
+        /// <summary>The ping button was pressed.</summary>
+        public Signal PingClicked = new();
 
         /// <summary>The place-turret button was pressed.</summary>
         public Signal PlaceTurretClicked = new();

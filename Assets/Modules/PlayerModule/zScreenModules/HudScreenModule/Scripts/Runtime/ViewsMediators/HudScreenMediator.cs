@@ -28,6 +28,15 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
             _signals.Incoming.ApplyHealth.AddListener(_view.ShowHealth);
             _signals.Incoming.ApplyAmmo.AddListener(_view.ShowAmmo);
             _signals.Incoming.ApplyWave.AddListener(_view.ShowWave);
+            _signals.Incoming.ApplyHurt.AddListener(_view.ShowHurt);
+            _signals.Incoming.ApplyWaveCleared.AddListener(_view.ShowWaveCleared);
+            _signals.Incoming.ApplyBoss.AddListener(_view.ShowBoss);
+            _signals.Incoming.ApplyWeaponName.AddListener(_view.ShowWeaponName);
+            _signals.Incoming.ApplyMarkers.AddListener(_view.ShowMarkers);
+            _signals.Incoming.ApplyProgress.AddListener(_view.ShowProgress);
+            _signals.Incoming.ApplyObjective.AddListener(_view.ShowObjective);
+            _signals.Incoming.ApplyObjectiveEnded.AddListener(_view.ShowObjectiveEnded);
+            _view.PingClicked += OnPingClicked;
             _signals.Incoming.ApplyShield.AddListener(_view.ShowShield);
             _signals.Incoming.ApplyWallet.AddListener(_view.ShowWallet);
             _signals.Incoming.ApplyRevive.AddListener(_view.ShowRevive);
@@ -44,6 +53,15 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
             _signals.Incoming.ApplyHealth.RemoveListener(_view.ShowHealth);
             _signals.Incoming.ApplyAmmo.RemoveListener(_view.ShowAmmo);
             _signals.Incoming.ApplyWave.RemoveListener(_view.ShowWave);
+            _signals.Incoming.ApplyHurt.RemoveListener(_view.ShowHurt);
+            _signals.Incoming.ApplyWaveCleared.RemoveListener(_view.ShowWaveCleared);
+            _signals.Incoming.ApplyBoss.RemoveListener(_view.ShowBoss);
+            _signals.Incoming.ApplyWeaponName.RemoveListener(_view.ShowWeaponName);
+            _signals.Incoming.ApplyMarkers.RemoveListener(_view.ShowMarkers);
+            _signals.Incoming.ApplyProgress.RemoveListener(_view.ShowProgress);
+            _signals.Incoming.ApplyObjective.RemoveListener(_view.ShowObjective);
+            _signals.Incoming.ApplyObjectiveEnded.RemoveListener(_view.ShowObjectiveEnded);
+            _view.PingClicked -= OnPingClicked;
             _signals.Incoming.ApplyShield.RemoveListener(_view.ShowShield);
             _signals.Incoming.ApplyWallet.RemoveListener(_view.ShowWallet);
             _signals.Incoming.ApplyRevive.RemoveListener(_view.ShowRevive);
@@ -60,5 +78,6 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         private void OnTouchReloadPressed() => _signals.Outgoing.TouchReload.Dispatch();
         private void OnReviveClicked() => _signals.Outgoing.ReviveClicked.Dispatch();
         private void OnPlaceTurretClicked() => _signals.Outgoing.PlaceTurretClicked.Dispatch();
+        private void OnPingClicked() => _signals.Outgoing.PingClicked.Dispatch();
     }
 }

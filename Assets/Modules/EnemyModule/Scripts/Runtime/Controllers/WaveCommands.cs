@@ -6,6 +6,7 @@ using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.BaseModule.Provider.Coroutine;
 using FlowIoC.ConsoleModule;
 using Modules.EnemyModule.Data.UnityObjects;
+using Modules.EnemyModule.Data.ValueObjects;
 using Modules.EnemyModule.Entities;
 using Modules.EnemyModule.Models;
 using Unity.Netcode;
@@ -21,6 +22,25 @@ namespace Modules.EnemyModule.Controllers
         [SignalParam] private IZombieWaveBoard _board { get; set; }
 
         public override void Execute() => _model.Board = _board;
+    }
+
+    /// <summary>Every process lets Netcode take its zombies from the pool and give them back there.</summary>
+    internal class PoolZombiesCommand : Command
+    {
+        private const string ZOMBIE_POOL_KEY = "Zombie";
+
+        [Inject] private IEnemyModel _model { get; set; }
+        [Inject] private FlowIoC.PoolModule.Services.IPoolService _poolService { get; set; }
+
+        public override void Execute()
+        {
+            GameObject prefab = _model.Board?.Config != null ? _model.Board.Config.ZombiePrefab : null;
+            if (prefab == null || NetworkManager.Singleton == null || _model.PooledZombiePrefab == prefab)
+                return;
+
+            NetworkManager.Singleton.PrefabHandler.AddHandler(prefab, new NetworkPoolHandler(_poolService, ZOMBIE_POOL_KEY));
+            _model.PooledZombiePrefab = prefab;
+        }
     }
 
     /// <summary>Zombies live on the server; on a client the flow ends here.</summary>
@@ -43,9 +63,9 @@ namespace Modules.EnemyModule.Controllers
 
         public override void Execute()
         {
-            if (_model.Config == null || _model.Config.ZombiePrefab == null)
+            if (_model.Config == null || _model.Config.ZombiePrefab == null || _model.Config.Waves.Count == 0)
             {
-                FlowLogger.LogError("BeginWavesCommand - the ZombieWaves object under EnemySystemRoot has no CD_ZombieWaves with a zombie prefab.");
+                FlowLogger.LogError("BeginWavesCommand - the ZombieWaves object under EnemySystemRoot has no CD_ZombieWaves with a zombie prefab and at least one wave.");
                 Retain();
                 Stop();
                 return;
@@ -53,8 +73,18 @@ namespace Modules.EnemyModule.Controllers
 
             _model.IsRunning = true;
             _model.Wave = 0;
+            _model.Spits.Clear();
             _model.DownedClients.Clear();
         }
+    }
+
+    internal class StoreDifficultyCommand : Command
+    {
+        [Inject] private IEnemyModel _model { get; set; }
+
+        [SignalParam] private int _difficulty { get; set; }
+
+        public override void Execute() => _model.Difficulty = _difficulty;
     }
 
     /// <summary>The match is over: the waves stop where they are and the zombies stand still.</summary>
@@ -120,7 +150,7 @@ namespace Modules.EnemyModule.Controllers
     }
 
     /// <summary>
-    /// The next wave, larger than the last, comes in at the scene's spawn points - those far enough
+    /// The next wave, as the wave table lists it, comes in at the scene's spawn points - those far enough
     /// from every player - or, in a scene with none, on a ring around the players.
     /// </summary>
     internal class SpawnWaveCommand : Command
@@ -137,10 +167,10 @@ namespace Modules.EnemyModule.Controllers
 
             _model.Wave++;
             CD_ZombieWaves config = _model.Config;
-            int count = config.CountForWave(_model.Wave);
+            List<ZombieTypeCVO> wave = new ComposeWaveFunction().Execute(config, _model.Wave, _model.Difficulty);
             List<Vector3> points = FarPoints(players, config.SpawnRadiusMin);
 
-            for (int i = 0; i < count; i++)
+            foreach (ZombieTypeCVO type in wave)
             {
                 Vector3 position;
                 if (points.Count > 0)
@@ -155,19 +185,26 @@ namespace Modules.EnemyModule.Controllers
                     position = anchor.position + new Vector3(ring.x, 0f, ring.y);
                 }
 
-                GameObject instance = UnityEngine.Object.Instantiate(config.ZombiePrefab, position, Quaternion.identity);
-                var networkObject = instance.GetComponent<NetworkObject>();
-                networkObject.Spawn(true);
+                // Taken from the pool through Netcode's handler, on the server and on every client.
+                NetworkObject networkObject = config.ZombiePrefab.GetComponent<NetworkObject>()
+                    .InstantiateAndSpawn(NetworkManager.Singleton, destroyWithScene: true, position: position, rotation: Quaternion.identity);
+                var zombie = networkObject.GetComponent<Zombie>();
+                zombie.SetLookServer(type.Tint, type.Scale);
 
                 _model.Zombies[networkObject.NetworkObjectId] = new ZombieRVO
                 {
-                    Zombie = instance.GetComponent<Zombie>(),
-                    Health = config.Health
+                    Zombie = zombie,
+                    Type = type,
+                    Health = type.Health,
+                    NextAreaTime = Time.time + type.AreaCooldown * 0.5f
                 };
+
+                if (type.IsBoss)
+                    _model.Board.SetBossServer(type.Name, type.Health, type.Health);
             }
 
             _model.Board.SetWaveServer(_model.Wave, _model.Zombies.Count);
-            FlowLogger.Log($"SpawnWaveCommand - wave {_model.Wave}: {count} zombies.");
+            FlowLogger.Log($"SpawnWaveCommand - wave {_model.Wave}: {wave.Count} zombies.");
         }
 
         // Points a player stands right next to are skipped; when every point is close, all of them are used.
@@ -218,6 +255,18 @@ namespace Modules.EnemyModule.Controllers
                 else
                     Stop();
             });
+        }
+    }
+
+    /// <summary>Every client hears that the wave was cleared; the economy pays for it.</summary>
+    internal class AnnounceWaveClearedCommand : Command
+    {
+        [Inject] private IEnemyModel _model { get; set; }
+
+        public override void Execute()
+        {
+            if (_model.IsRunning)
+                _model.Board.AnnounceWaveClearedServer(_model.Wave);
         }
     }
 

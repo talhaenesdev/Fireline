@@ -36,6 +36,14 @@ namespace Modules.PlayerModule.ViewsMediators
         private readonly NetworkVariable<float> _shield = new(0f,
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        // Perks: more health on top of the prefab's, and how much faster revives and feet are.
+        private readonly NetworkVariable<float> _bonusMaxHealth = new(0f,
+            NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private readonly NetworkVariable<float> _reviveScale = new(1f,
+            NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private readonly NetworkVariable<float> _speedScale = new(1f,
+            NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         private Collider[] _colliders;
         private AudioListener _audioListener;
 
@@ -52,13 +60,19 @@ namespace Modules.PlayerModule.ViewsMediators
         /// <summary>Server: this avatar's owner asked to revive the player with this client id.</summary>
         public Action<ulong> ReviveRequested;
 
+        /// <summary>Server: this player pinged a point. Every client: a ping to show.</summary>
+        public Action<Vector3> PingRequested;
+        public Action<Vector3> PingShown;
+
         public ulong ClientId => OwnerClientId;
         public Transform Transform => transform;
         public string PlayerName => _playerName.Value.ToString();
         public float MoveSpeed => _moveSpeed;
         public float SprintSpeed => _sprintSpeed;
         public float Health => _health.Value;
-        public float MaxHealth => _maxHealth;
+        public float MaxHealth => _maxHealth + _bonusMaxHealth.Value;
+        public float ReviveScale => _reviveScale.Value;
+        public float SpeedScale => _speedScale.Value;
         public bool IsDead => _isDead.Value;
         public float Shield => _shield.Value;
 
@@ -79,7 +93,7 @@ namespace Modules.PlayerModule.ViewsMediators
 
             if (IsServer)
             {
-                _health.Value = _maxHealth;
+                _health.Value = MaxHealth;
                 _isDead.Value = false;
                 _shield.Value = 0f;
             }
@@ -132,6 +146,46 @@ namespace Modules.PlayerModule.ViewsMediators
             if (IsServer)
                 _shield.Value = shield;
         }
+
+        public void RaiseMaxHealthServer(float share)
+        {
+            if (!IsServer)
+                return;
+
+            float bonus = _maxHealth * share;
+            _bonusMaxHealth.Value += bonus;
+            _health.Value = Mathf.Min(MaxHealth, _health.Value + bonus);
+        }
+
+        public void ScaleReviveServer(float share)
+        {
+            if (IsServer)
+                _reviveScale.Value = Mathf.Max(0.2f, _reviveScale.Value * (1f - share));
+        }
+
+        public void ScaleSpeedServer(float share)
+        {
+            if (IsServer)
+                _speedScale.Value *= 1f + share;
+        }
+
+        public void RequestPing(Vector3 point)
+        {
+            if (IsOwner)
+                RequestPingServerRpc(point);
+        }
+
+        public void ShowPingServer(Vector3 point)
+        {
+            if (IsServer)
+                ShowPingClientRpc(point);
+        }
+
+        [ServerRpc]
+        private void RequestPingServerRpc(Vector3 point) => PingRequested?.Invoke(point);
+
+        [ClientRpc]
+        private void ShowPingClientRpc(Vector3 point) => PingShown?.Invoke(point);
 
         public void RequestRevive(ulong targetClientId)
         {
@@ -186,7 +240,7 @@ namespace Modules.PlayerModule.ViewsMediators
         private void OnNameChanged(FixedString64Bytes previous, FixedString64Bytes current) =>
             NameChanged?.Invoke(current.ToString());
 
-        private void OnHealthChanged(float previous, float current) => HealthChanged?.Invoke(current, _maxHealth);
+        private void OnHealthChanged(float previous, float current) => HealthChanged?.Invoke(current, MaxHealth);
 
         private void OnDeathChanged(bool previous, bool current) => DeathChanged?.Invoke(current);
 

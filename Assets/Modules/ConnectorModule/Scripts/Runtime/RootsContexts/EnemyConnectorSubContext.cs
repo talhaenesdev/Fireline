@@ -38,12 +38,12 @@ namespace Modules.ConnectorModule.RootsContexts
 
         private void IncomingSignals()
         {
+            _matchSignals.Outgoing.ZombieDifficultyChosen.Connect(_enemySignals.Incoming.SetDifficulty, GROUP);
             _matchSignals.Outgoing.ZombieWavesStarted.Connect(_enemySignals.Incoming.StartWaves, GROUP);
             _matchSignals.Outgoing.GameOver.Connect(_enemySignals.Incoming.StopWaves, GROUP);
             _weaponSignals.Outgoing.ObjectHit.Connect(_enemySignals.Incoming.DamageZombie, GROUP);
             _playerSignals.Outgoing.PlayerDied.Connect(_enemySignals.Incoming.PlayerDied, GROUP);
             _playerSignals.Outgoing.PlayerRevived.Connect(_enemySignals.Incoming.PlayerRevived, GROUP);
-            _playerSignals.Outgoing.AimChanged.Connect(_enemySignals.Incoming.AimAt, GROUP);
             _hudScreenSignals.Outgoing.PlaceTurretClicked.Connect(_enemySignals.Incoming.ConfirmTurretPlacement, GROUP);
         }
 
@@ -52,6 +52,9 @@ namespace Modules.ConnectorModule.RootsContexts
             _enemySignals.Outgoing.PlayerAttacked.Connect(_playerSignals.Incoming.ApplyDamage, GROUP);
             _enemySignals.Outgoing.ZombieKilled.Connect(_matchSignals.Incoming.ZombieKilled, GROUP);
             _enemySignals.Outgoing.WaveStateChanged.Connect(_hudScreenSignals.Incoming.ApplyWave, GROUP);
+            _enemySignals.Outgoing.BossStateChanged.Connect(_hudScreenSignals.Incoming.ApplyBoss, GROUP);
+            _enemySignals.Outgoing.ObjectiveChanged.Connect(_hudScreenSignals.Incoming.ApplyObjective, GROUP);
+            _enemySignals.Outgoing.ObjectiveEnded.Connect(_hudScreenSignals.Incoming.ApplyObjectiveEnded, GROUP);
             _enemySignals.Outgoing.TurretPlacementChanged.Connect(_hudScreenSignals.Incoming.ApplyTurretPlacement, GROUP);
         }
 
