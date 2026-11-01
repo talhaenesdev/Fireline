@@ -45,7 +45,7 @@ namespace Modules.EnemyModule.Controllers
                 if (barracks.Kind != StructureKind.Barracks || Time.time < barracks.NextTrainTime)
                     continue;
 
-                barracks.NextTrainTime = Time.time + config.TrainInterval;
+                barracks.NextTrainTime = Time.time + config.TrainIntervalAt(barracks.Level);
 
                 int count = 0;
                 foreach (AllyRVO ally in _model.Allies.Values)
@@ -54,25 +54,30 @@ namespace Modules.EnemyModule.Controllers
                         count++;
                 }
 
-                if (count >= config.MaxAllies)
+                int most = config.MaxAlliesAt(barracks.Level);
+                if (count >= most)
                     continue;
 
                 // Posts are spread evenly round the barracks, one for each soldier it keeps.
-                float angle = (count + 0.5f) / Mathf.Max(1, config.MaxAllies) * Mathf.PI * 2f;
-                Vector3 post = barracks.Position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * config.PostRadius;
+                float angle = (count + 0.5f) / Mathf.Max(1, most) * Mathf.PI * 2f;
+                var around = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+                Vector3 post = barracks.Position + around * config.PostRadius;
+                Data.ValueObjects.AllyKindCVO kind = config.Kind(barracks.Trained++);
 
                 NetworkObject networkObject = config.AllyPrefab.GetComponent<NetworkObject>()
                     .InstantiateAndSpawn(NetworkManager.Singleton, destroyWithScene: true, position: barracks.Position, rotation: Quaternion.identity);
                 var soldier = networkObject.GetComponent<Ally>();
-                soldier.SetLookServer(config.AllyTint);
+                soldier.SetLookServer(kind.Tint);
 
                 _model.Allies[networkObject.NetworkObjectId] = new AllyRVO
                 {
                     Ally = soldier,
                     BarracksId = barracks.Id,
                     OwnerClientId = barracks.OwnerClientId,
+                    Kind = kind,
                     Post = post,
-                    Health = config.AllyHealth
+                    FollowOffset = around * config.FollowDistance,
+                    Health = kind.Health
                 };
             }
         }
@@ -95,15 +100,21 @@ namespace Modules.EnemyModule.Controllers
 
             var shots = new List<(AllyRVO ally, ulong target)>();
             float guardSqr = config.GuardRadius * config.GuardRadius;
-            float rangeSqr = config.AllyRange * config.AllyRange;
-            float step = config.AllyMoveSpeed * Time.deltaTime;
 
             foreach (AllyRVO ally in _model.Allies.Values)
             {
                 if (ally.Ally == null)
                     continue;
 
+                float rangeSqr = ally.Kind.Range * ally.Kind.Range;
+                float step = ally.Kind.MoveSpeed * Time.deltaTime;
                 Vector3 from = ally.Ally.Position;
+
+                // A following soldier's post goes where its player goes.
+                Vector3 post = ally.Post;
+                if (_model.FollowingClients.Contains(ally.OwnerClientId)
+                    && NetworkManager.Singleton.ConnectedClients.TryGetValue(ally.OwnerClientId, out NetworkClient owner) && owner.PlayerObject != null)
+                    post = owner.PlayerObject.transform.position + ally.FollowOffset;
                 ulong targetId = 0;
                 Vector3 target = Vector3.zero;
                 float best = float.MaxValue;
@@ -114,7 +125,7 @@ namespace Modules.EnemyModule.Controllers
                         continue;
 
                     Vector3 position = pair.Value.Zombie.Position;
-                    if (Flat(position - ally.Post).sqrMagnitude > guardSqr)
+                    if (Flat(position - post).sqrMagnitude > guardSqr)
                         continue;
 
                     float distance = Flat(position - from).sqrMagnitude;
@@ -128,13 +139,13 @@ namespace Modules.EnemyModule.Controllers
 
                 if (best == float.MaxValue)
                 {
-                    ally.Ally.StepTowards(ally.Post, step);
+                    ally.Ally.StepTowards(Paths.Waypoint(_model, ally.Path, from, post), step);
                     continue;
                 }
 
                 if (best > rangeSqr)
                 {
-                    ally.Ally.StepTowards(target, step);
+                    ally.Ally.StepTowards(Paths.Waypoint(_model, ally.Path, from, target), step);
                     continue;
                 }
 
@@ -142,17 +153,70 @@ namespace Modules.EnemyModule.Controllers
                 if (Time.time < ally.NextFireTime)
                     continue;
 
-                ally.NextFireTime = Time.time + config.AllyFireInterval;
+                ally.NextFireTime = Time.time + ally.Kind.FireInterval;
                 ally.Ally.ShowShotServer(target);
                 shots.Add((ally, targetId));
             }
 
             // Applied after the search: a shot that fells a zombie takes it out of the list being searched.
             foreach (var shot in shots)
-                ZombieDamage.Apply(_model, _signals, shot.target, config.AllyDamage, shot.ally.OwnerClientId, shot.ally.Ally.Position);
+                ZombieDamage.Apply(_model, _signals, shot.target, shot.ally.Kind.Damage, shot.ally.OwnerClientId, shot.ally.Ally.Position);
         }
 
         private static Vector3 Flat(Vector3 v) => new(v.x, 0f, v.z);
+    }
+
+    /// <summary>Server: every barracks of the buyer goes up a level: more soldiers, trained faster.</summary>
+    internal class UpgradeBarracksCommand : Command
+    {
+        [Inject] private IEnemyModel _model { get; set; }
+
+        [SignalParam] private ulong _clientId { get; set; }
+
+        public override void Execute()
+        {
+            CD_Barracks config = _model.Board?.BarracksConfig;
+            if (config == null)
+                return;
+
+            foreach (TurretRVO barracks in _model.Turrets.Values)
+            {
+                if (barracks.Kind == StructureKind.Barracks && barracks.OwnerClientId == _clientId && barracks.Level < config.MaxLevel)
+                {
+                    barracks.Level++;
+                    Structures.Publish(_model, barracks);
+                }
+            }
+        }
+    }
+
+    /// <summary>The local player asks the server to switch their soldiers between guarding and following.</summary>
+    internal class RequestAllyOrderCommand : Command
+    {
+        [Inject] private IEnemyModel _model { get; set; }
+
+        public override void Execute()
+        {
+            if (_model.Board != null && _model.Board.BarracksConfig != null)
+                _model.Board.RequestAllyOrder();
+        }
+    }
+
+    /// <summary>Server: the player's soldiers switch between guarding their barracks and following them; the player is told.</summary>
+    internal class ToggleAllyOrderCommand : Command
+    {
+        [Inject] private IEnemyModel _model { get; set; }
+
+        [SignalParam] private ulong _clientId { get; set; }
+
+        public override void Execute()
+        {
+            bool isFollowing = _model.FollowingClients.Add(_clientId);
+            if (!isFollowing)
+                _model.FollowingClients.Remove(_clientId);
+
+            _model.Board.AnnounceAllyOrderServer(_clientId, isFollowing);
+        }
     }
 
     /// <summary>What zombies do to soldiers: find the nearest, hurt one, and take a fallen one off the field.</summary>

@@ -24,6 +24,24 @@ namespace Modules.EconomyModule.Shared.Enums
         Wall = 10,
 
         /// <summary>A barracks the buyer puts down; it trains soldiers who fight for them.</summary>
-        Barracks = 11
+        Barracks = 11,
+
+        /// <summary>A gate the buyer puts down: zombies have to break it, players walk through.</summary>
+        Gate = 12,
+
+        /// <summary>A station that slowly mends the structures around it.</summary>
+        RepairStation = 13,
+
+        /// <summary>Every wall goes up a tier: wood, stone, metal.</summary>
+        WallUpgrade = 14,
+
+        /// <summary>Razor wire the buyer lays down.</summary>
+        SpikeTrap = 15,
+
+        /// <summary>A mine the buyer lays down.</summary>
+        Mine = 16,
+
+        /// <summary>Every barracks of the buyer goes up a level.</summary>
+        BarracksUpgrade = 17
     }
 }

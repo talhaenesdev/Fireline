@@ -40,6 +40,9 @@ namespace Modules.PlayerModule.HudScreenModule.Signals
         /// <summary>A wave was cleared: its number, then what it paid.</summary>
         public Signal<int, int> ApplyWaveCleared = new();
 
+        /// <summary>The local player's soldiers now follow them (true) or guard.</summary>
+        public Signal<bool> ApplyAllyOrder = new();
+
         /// <summary>Rounds left, then the magazine's size.</summary>
         public Signal<int, int> ApplyAmmo = new();
 
@@ -50,7 +53,7 @@ namespace Modules.PlayerModule.HudScreenModule.Signals
         public Signal<float> ApplyShield = new();
 
         /// <summary>Money, then how many pieces of loot are carried.</summary>
-        public Signal<int, int> ApplyWallet = new();
+        public Signal<int, int, int> ApplyWallet = new();
 
         /// <summary>A downed teammate in reach, where it lies, and the revive's progress (below zero: none).</summary>
         public Signal<bool, Vector3, float> ApplyRevive = new(hideCommandLog: true);
@@ -74,6 +77,12 @@ namespace Modules.PlayerModule.HudScreenModule.Signals
 
         /// <summary>The ping button was pressed.</summary>
         public Signal PingClicked = new();
+
+        /// <summary>The repair button was pressed.</summary>
+        public Signal RepairClicked = new();
+
+        /// <summary>The soldiers' order button was pressed.</summary>
+        public Signal OrderClicked = new();
 
         /// <summary>The place-turret button was pressed.</summary>
         public Signal PlaceTurretClicked = new();

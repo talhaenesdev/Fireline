@@ -85,20 +85,9 @@ namespace Modules.EnemyModule.Controllers
                 bool hasPlayer = PlayerTargets.TryNearest(from, players, out Transform player);
                 TurretRVO turret = NearestTurret(from, fallen);
 
-                // A barricade in the way is broken before anything else.
-                TurretRVO blocking = BlockingBarricade(from, fallen);
-                if (blocking != null)
-                {
-                    hasPlayer = false;
-                    turret = blocking;
-                }
-
                 float playerDistance = hasPlayer ? Flat(player.position - from).sqrMagnitude : float.MaxValue;
                 float turretDistance = turret != null ? Flat(turret.Position - from).sqrMagnitude : float.MaxValue;
-                float allyDistance = float.MaxValue;
-                ulong? ally = null;
-                if (blocking == null)
-                    ally = Allies.Nearest(_model, from, fallenAllies, out allyDistance);
+                ulong? ally = Allies.Nearest(_model, from, fallenAllies, out float allyDistance);
 
                 if (!hasPlayer && turret == null && ally == null)
                     continue;
@@ -107,18 +96,32 @@ namespace Modules.EnemyModule.Controllers
                 bool goesForTurret = !goesForAlly && turretDistance < playerDistance;
                 Vector3 target = goesForAlly ? _model.Allies[ally.Value].Ally.Position : goesForTurret ? turret.Position : player.position;
                 float distance = Mathf.Sqrt(Mathf.Min(playerDistance, Mathf.Min(turretDistance, allyDistance)));
-                float step = type.MoveSpeed * Time.deltaTime;
+
+                // It walks the NavMesh towards its target; a barricade, wall or gate right ahead of it is broken first.
+                Vector3 waypoint = Paths.Waypoint(_model, zombie.Path, from, target);
+                TurretRVO blocking = BlockingBarricade(from, waypoint - from, fallen);
+                if (blocking != null && blocking != turret)
+                {
+                    goesForAlly = false;
+                    goesForTurret = true;
+                    turret = blocking;
+                    target = blocking.Position;
+                    waypoint = target;
+                    distance = Flat(target - from).magnitude;
+                }
+                float slow = Time.time < zombie.SlowUntil ? zombie.SlowFactor : 1f;
+                float step = type.MoveSpeed * slow * Time.deltaTime;
 
                 switch (type.Behaviour)
                 {
                     case ZombieBehaviour.Spitter:
-                        Spit(zombie, target, distance, step);
+                        Spit(zombie, target, waypoint, distance, step);
                         continue;
 
                     case ZombieBehaviour.Exploder:
                         if (distance > type.AttackRange)
                         {
-                            zombie.Zombie.StepTowards(target, step);
+                            zombie.Zombie.StepTowards(waypoint, step);
                             continue;
                         }
 
@@ -134,7 +137,7 @@ namespace Modules.EnemyModule.Controllers
 
                 if (distance > type.AttackRange)
                 {
-                    zombie.Zombie.StepTowards(target, step);
+                    zombie.Zombie.StepTowards(waypoint, step);
                     continue;
                 }
 
@@ -161,6 +164,9 @@ namespace Modules.EnemyModule.Controllers
 
             foreach (int id in fallen)
             {
+                if (_model.Turrets.TryGetValue(id, out TurretRVO structure) && structure.Kind == StructureKind.Headquarters)
+                    _signals.Outgoing.HeadquartersDestroyed.Dispatch();
+
                 _model.Turrets.Remove(id);
                 _model.Board.RemoveStructureServer(id);
             }
@@ -173,11 +179,11 @@ namespace Modules.EnemyModule.Controllers
         }
 
         // A spitter closes in to its range, then stands and spits, backing off when crowded.
-        private void Spit(ZombieRVO zombie, Vector3 target, float distance, float step)
+        private void Spit(ZombieRVO zombie, Vector3 target, Vector3 waypoint, float distance, float step)
         {
             ZombieTypeCVO type = zombie.Type;
             if (distance > type.PreferredRange)
-                zombie.Zombie.StepTowards(target, step);
+                zombie.Zombie.StepTowards(waypoint, step);
             else if (distance < type.PreferredRange * 0.5f)
                 zombie.Zombie.StepTowards(zombie.Zombie.Position * 2f - target, step * 0.6f);
             else
@@ -198,11 +204,16 @@ namespace Modules.EnemyModule.Controllers
             _model.Board.ShowSpitServer(origin, velocity, lifetime);
         }
 
-        // Barricades and walls stand in the way; each blocks as far as its own config says.
-        private TurretRVO BlockingBarricade(Vector3 from, List<int> fallen)
+        // Barricades, walls and gates stand in the way; each blocks as far as its own config says, and only
+        // one ahead of the zombie does - walking along a wall to a gate is not walking into it.
+        private TurretRVO BlockingBarricade(Vector3 from, Vector3 heading, List<int> fallen)
         {
+            heading.y = 0f;
+            heading = heading.sqrMagnitude > 0.0001f ? heading.normalized : Vector3.zero;
+
             CD_Barricade barricade = _model.Board.BarricadeConfig;
             CD_Wall wall = _model.Board.WallConfig;
+            CD_Gate gate = _model.Board.GateConfig;
 
             foreach (TurretRVO structure in _model.Turrets.Values)
             {
@@ -210,10 +221,15 @@ namespace Modules.EnemyModule.Controllers
                 {
                     StructureKind.Barricade when barricade != null => barricade.BlockRadius,
                     StructureKind.Wall when wall != null => wall.BlockRadius,
+                    StructureKind.Gate when gate != null => gate.BlockRadius,
                     _ => 0f
                 };
 
-                if (radius > 0f && !fallen.Contains(structure.Id) && Flat(structure.Position - from).sqrMagnitude <= radius * radius)
+                Vector3 offset = Flat(structure.Position - from);
+                if (radius <= 0f || fallen.Contains(structure.Id) || offset.sqrMagnitude > radius * radius)
+                    continue;
+
+                if (heading == Vector3.zero || offset.sqrMagnitude < 0.01f || Vector3.Dot(offset.normalized, heading) > 0.2f)
                     return structure;
             }
 
@@ -226,7 +242,8 @@ namespace Modules.EnemyModule.Controllers
             float best = float.MaxValue;
             foreach (TurretRVO turret in _model.Turrets.Values)
             {
-                if (fallen.Contains(turret.Id))
+                // Traps lie on the ground; zombies walk over them rather than at them.
+                if (fallen.Contains(turret.Id) || turret.Kind == StructureKind.SpikeTrap || turret.Kind == StructureKind.Mine)
                     continue;
 
                 float distance = Flat(turret.Position - from).sqrMagnitude;

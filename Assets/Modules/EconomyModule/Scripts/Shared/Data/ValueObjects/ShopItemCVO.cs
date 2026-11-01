@@ -10,6 +10,9 @@ namespace Modules.EconomyModule.Shared.Data.ValueObjects
     {
         public string Name;
         public int Price;
+
+        [Tooltip("Materials it takes besides the money; zero for none.")]
+        public int MaterialCost;
         public ShopItemType Type;
 
         [Tooltip("Heal and Shield: points. FireRate: how much shorter the time between shots gets, 0.15 is 15%.")]

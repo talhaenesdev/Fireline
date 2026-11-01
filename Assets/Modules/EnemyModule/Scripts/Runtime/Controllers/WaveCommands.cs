@@ -73,6 +73,7 @@ namespace Modules.EnemyModule.Controllers
 
             _model.IsRunning = true;
             _model.Wave = 0;
+            _model.HasNavMesh = UnityEngine.AI.NavMesh.CalculateTriangulation().indices.Length > 0;
             _model.Spits.Clear();
             _model.DownedClients.Clear();
         }
@@ -135,7 +136,9 @@ namespace Modules.EnemyModule.Controllers
                 return;
             }
 
-            float delay = _model.Wave == 0 ? _model.Config.FirstWaveDelay : _model.Config.TimeBetweenWaves;
+            float between = _model.Board.DayNightConfig != null ? _model.Board.DayNightConfig.DayDuration : _model.Config.TimeBetweenWaves;
+            float delay = _model.Wave == 0 ? _model.Config.FirstWaveDelay : between;
+            _model.Board.SetBloodMoonServer(false);
             _model.Board.SetCountdownServer(_model.Wave + 1, delay);
 
             IEnemyModel model = _model;
@@ -168,6 +171,17 @@ namespace Modules.EnemyModule.Controllers
             _model.Wave++;
             CD_ZombieWaves config = _model.Config;
             List<ZombieTypeCVO> wave = new ComposeWaveFunction().Execute(config, _model.Wave, _model.Difficulty);
+
+            // A blood moon brings more of the same wave.
+            CD_DayNight dayNight = _model.Board.DayNightConfig;
+            bool isBloodMoon = dayNight != null && dayNight.IsBloodMoon(_model.Wave);
+            _model.Board.SetBloodMoonServer(isBloodMoon);
+            if (isBloodMoon)
+            {
+                int extra = Mathf.RoundToInt(wave.Count * (dayNight.BloodMoonZombies - 1f));
+                for (int i = 0; i < extra; i++)
+                    wave.Add(wave[Random.Range(0, wave.Count)]);
+            }
             List<Vector3> points = FarPoints(players, config.SpawnRadiusMin);
 
             foreach (ZombieTypeCVO type in wave)

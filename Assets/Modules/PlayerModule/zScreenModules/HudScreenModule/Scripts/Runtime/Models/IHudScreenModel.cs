@@ -17,6 +17,7 @@ namespace Modules.PlayerModule.HudScreenModule.Models
         float Shield { get; set; }
         int Money { get; set; }
         int Carried { get; set; }
+        int Materials { get; set; }
         bool HasWallet { get; set; }
     }
 
@@ -32,6 +33,7 @@ namespace Modules.PlayerModule.HudScreenModule.Models
         public float Shield { get; set; }
         public int Money { get; set; }
         public int Carried { get; set; }
+        public int Materials { get; set; }
         public bool HasWallet { get; set; }
     }
 }

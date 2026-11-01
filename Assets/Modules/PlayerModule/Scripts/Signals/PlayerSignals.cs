@@ -48,6 +48,12 @@ namespace Modules.PlayerModule.Signals
         /// <summary>Held, and pressed this frame. Local player only.</summary>
         public Signal<bool, bool> FireInput = new();
 
+        /// <summary>The local player pressed repair.</summary>
+        public Signal RepairInput = new();
+
+        /// <summary>The local player pressed the soldiers' order key.</summary>
+        public Signal AllyOrderInput = new();
+
         public Signal ReloadInput = new();
 
         /// <summary>

@@ -26,6 +26,9 @@ namespace Modules.MatchModule.Signals
 
         /// <summary>A player killed a zombie. Server only.</summary>
         public Signal<ulong> ZombieKilled = new();
+
+        /// <summary>The zombie match is lost whatever the players' state, as when the headquarters falls. Server only.</summary>
+        public Signal LoseZombieMatch = new();
     }
 
     public class MatchSignalsOutgoing

@@ -1,6 +1,5 @@
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.BaseModule.ViewsMediators.Mediator;
-using FlowIoC.PoolModule.Services;
 using Modules.EconomyModule.Signals;
 
 namespace Modules.EconomyModule.ViewsMediators
@@ -8,7 +7,6 @@ namespace Modules.EconomyModule.ViewsMediators
     public class EconomyNetworkMediator : IMediator
     {
         [Inject] private EconomyNetworkView _view { get; set; }
-        [Inject] private IPoolService _poolService { get; set; }
         [InjectSignal] private EconomyInternalSignals _internalSignals { get; set; }
 
         public void OnRegister()
@@ -19,7 +17,7 @@ namespace Modules.EconomyModule.ViewsMediators
             _view.Purchased += OnPurchased;
             _view.DoorsChanged += OnDoorsChanged;
             _view.LevelReported += OnLevelReported;
-            _view.Configure(_poolService);
+            _internalSignals.PoolRequested.Dispatch(_view);
 
             if (_view.IsSpawned)
             {

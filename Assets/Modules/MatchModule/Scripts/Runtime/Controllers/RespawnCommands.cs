@@ -57,6 +57,18 @@ namespace Modules.MatchModule.Controllers
         public override void Execute() => _model.DownedClients.Remove(_clientId);
     }
 
+    /// <summary>Server: the zombie match is lost outright.</summary>
+    internal class LoseZombieMatchCommand : Command
+    {
+        [Inject] private IMatchModel _model { get; set; }
+
+        public override void Execute()
+        {
+            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
+                _model.Scoreboard?.SetGameOverServer();
+        }
+    }
+
     internal static class ZombieGameOver
     {
         public static void EndIfEveryoneIsDown(IMatchModel model)

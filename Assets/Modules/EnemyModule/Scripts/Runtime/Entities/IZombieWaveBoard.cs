@@ -9,11 +9,42 @@ namespace Modules.EnemyModule.Entities
     /// </summary>
     internal interface IZombieWaveBoard
     {
+        /// <summary>The pool the board draws what it shows from, handed over once it registers.</summary>
+        void Configure(FlowIoC.PoolModule.Services.IPoolService pool);
+
         CD_ZombieWaves Config { get; }
         CD_Turret TurretConfig { get; }
         CD_Barricade BarricadeConfig { get; }
         CD_Wall WallConfig { get; }
         CD_Barracks BarracksConfig { get; }
+
+        CD_Repair RepairConfig { get; }
+
+        /// <summary>Day between waves and night during them; none keeps the wave table's pause and the scene's light.</summary>
+        CD_DayNight DayNightConfig { get; }
+
+        /// <summary>Server only: the wave now on is a blood moon.</summary>
+        void SetBloodMoonServer(bool isBloodMoon);
+        CD_Gate GateConfig { get; }
+        CD_SpikeTrap SpikeTrapConfig { get; }
+        CD_Mine MineConfig { get; }
+        CD_RepairStation RepairStationConfig { get; }
+
+        /// <summary>The headquarters the base starts with at its centre; none on a map without one.</summary>
+        CD_Headquarters HeadquartersConfig { get; }
+
+        /// <summary>The base's shape, laid out round BaseCenter; with none, the base walls are the points below.</summary>
+        CD_BaseLayout BaseLayout { get; }
+        Vector3 BaseCenter { get; }
+
+        /// <summary>Client: asks the server to switch the local player's soldiers between guarding and following.</summary>
+        void RequestAllyOrder();
+
+        /// <summary>Server: tells the player whether their soldiers now follow them.</summary>
+        void AnnounceAllyOrderServer(ulong clientId, bool isFollowing);
+
+        /// <summary>Client: asks the server to mend the structure the local player stands by.</summary>
+        void RequestRepair();
 
         /// <summary>The walls the base starts with: where each stands and which way it faces.</summary>
         int BaseWallCount { get; }

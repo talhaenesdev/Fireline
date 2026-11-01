@@ -1,6 +1,5 @@
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.BaseModule.ViewsMediators.Mediator;
-using FlowIoC.PoolModule.Services;
 using Modules.EnemyModule.Signals;
 
 namespace Modules.EnemyModule.ViewsMediators
@@ -8,7 +7,6 @@ namespace Modules.EnemyModule.ViewsMediators
     public class ZombieWavesMediator : IMediator
     {
         [Inject] private ZombieWavesView _view { get; set; }
-        [Inject] private IPoolService _poolService { get; set; }
         [InjectSignal] private EnemySignals _signals { get; set; }
         [InjectSignal] private EnemyInternalSignals _internalSignals { get; set; }
 
@@ -17,11 +15,14 @@ namespace Modules.EnemyModule.ViewsMediators
             _view.StateChanged += OnStateChanged;
             _view.StructureGranted += OnStructureGranted;
             _view.StructurePlaceRequested += OnStructurePlaceRequested;
+            _view.RepairRequested += OnRepairRequested;
+            _view.AllyOrderRequested += OnAllyOrderRequested;
+            _view.AllyOrderAnnounced += OnAllyOrderAnnounced;
             _view.WaveCleared += OnWaveCleared;
             _view.BossChanged += OnBossChanged;
             _view.ObjectiveChanged += OnObjectiveChanged;
             _view.ObjectiveEnded += OnObjectiveEnded;
-            _view.Configure(_poolService);
+            _internalSignals.PoolRequested.Dispatch(_view);
             _internalSignals.BoardRegistered.Dispatch(_view);
         }
 
@@ -30,6 +31,9 @@ namespace Modules.EnemyModule.ViewsMediators
             _view.StateChanged -= OnStateChanged;
             _view.StructureGranted -= OnStructureGranted;
             _view.StructurePlaceRequested -= OnStructurePlaceRequested;
+            _view.RepairRequested -= OnRepairRequested;
+            _view.AllyOrderRequested -= OnAllyOrderRequested;
+            _view.AllyOrderAnnounced -= OnAllyOrderAnnounced;
             _view.WaveCleared -= OnWaveCleared;
             _view.BossChanged -= OnBossChanged;
             _view.ObjectiveChanged -= OnObjectiveChanged;
@@ -45,6 +49,12 @@ namespace Modules.EnemyModule.ViewsMediators
             _signals.Outgoing.BossStateChanged.Dispatch(name, health, maxHealth);
 
         private void OnWaveCleared(int wave) => _signals.Outgoing.WaveCleared.Dispatch(wave);
+
+        private void OnAllyOrderRequested(ulong clientId) => _internalSignals.AllyOrderRequested.Dispatch(clientId);
+
+        private void OnAllyOrderAnnounced(bool isFollowing) => _signals.Outgoing.AllyOrderChanged.Dispatch(isFollowing);
+
+        private void OnRepairRequested(ulong clientId) => _internalSignals.RepairRequested.Dispatch(clientId);
 
         private void OnStructureGranted(int kind) => _internalSignals.StructureGranted.Dispatch(kind);
 

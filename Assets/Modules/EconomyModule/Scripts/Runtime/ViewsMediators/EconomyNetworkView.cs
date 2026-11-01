@@ -15,15 +15,17 @@ namespace Modules.EconomyModule.ViewsMediators
         public ulong ClientId;
         public int Money;
         public int Carried;
+        public int Materials;
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
             serializer.SerializeValue(ref ClientId);
             serializer.SerializeValue(ref Money);
             serializer.SerializeValue(ref Carried);
+            serializer.SerializeValue(ref Materials);
         }
 
-        public bool Equals(NetworkWallet other) => ClientId == other.ClientId && Money == other.Money && Carried == other.Carried;
+        public bool Equals(NetworkWallet other) => ClientId == other.ClientId && Money == other.Money && Carried == other.Carried && Materials == other.Materials;
     }
 
     public struct NetworkLoot : INetworkSerializable, IEquatable<NetworkLoot>
@@ -52,6 +54,7 @@ namespace Modules.EconomyModule.ViewsMediators
         [SerializeField] private CD_Loot _loot;
         [SerializeField] private CD_Shop _shop;
         [SerializeField] private CD_Progression _progression;
+        [SerializeField] private CD_Resources _resources;
 
         [Tooltip("The pool key the loot boxes are drawn from; the group is filed on EconomySystemRoot.")]
         [SerializeField] private string _lootPoolKey = "Loot";
@@ -78,6 +81,7 @@ namespace Modules.EconomyModule.ViewsMediators
         public CD_Loot Loot => _loot;
         public CD_Shop Shop => _shop;
         public CD_Progression Progression => _progression;
+        public CD_Resources Resources => _resources;
         public int LootCount => _lootOnGround.Count;
 
         private void Awake()
@@ -131,7 +135,7 @@ namespace Modules.EconomyModule.ViewsMediators
             position = loot.Position;
         }
 
-        public bool TryGetWallet(ulong clientId, out int money, out int carried)
+        public bool TryGetWallet(ulong clientId, out int money, out int carried, out int materials)
         {
             foreach (NetworkWallet wallet in _wallets)
             {
@@ -140,11 +144,13 @@ namespace Modules.EconomyModule.ViewsMediators
 
                 money = wallet.Money;
                 carried = wallet.Carried;
+                materials = wallet.Materials;
                 return true;
             }
 
             money = 0;
             carried = 0;
+            materials = 0;
             return false;
         }
 
@@ -169,12 +175,12 @@ namespace Modules.EconomyModule.ViewsMediators
             }
         }
 
-        public void SetWalletServer(ulong clientId, int money, int carried)
+        public void SetWalletServer(ulong clientId, int money, int carried, int materials)
         {
             if (!IsServer)
                 return;
 
-            var wallet = new NetworkWallet { ClientId = clientId, Money = money, Carried = carried };
+            var wallet = new NetworkWallet { ClientId = clientId, Money = money, Carried = carried, Materials = materials };
             for (int i = 0; i < _wallets.Count; i++)
             {
                 if (_wallets[i].ClientId != clientId)

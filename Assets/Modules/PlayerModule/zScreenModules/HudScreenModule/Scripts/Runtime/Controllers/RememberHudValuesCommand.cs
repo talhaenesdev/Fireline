@@ -48,11 +48,13 @@ namespace Modules.PlayerModule.HudScreenModule.Controllers
 
         [SignalParam(0)] private int _money { get; set; }
         [SignalParam(1)] private int _carried { get; set; }
+        [SignalParam(2)] private int _materials { get; set; }
 
         public override void Execute()
         {
             _model.Money = _money;
             _model.Carried = _carried;
+            _model.Materials = _materials;
             _model.HasWallet = true;
         }
     }

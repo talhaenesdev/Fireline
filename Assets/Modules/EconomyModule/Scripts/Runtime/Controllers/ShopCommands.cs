@@ -53,8 +53,8 @@ namespace Modules.EconomyModule.Controllers
             if (_model.Board == null || manager == null || !manager.IsClient)
                 return;
 
-            _model.Board.TryGetWallet(manager.LocalClientId, out int money, out int carried);
-            _signals.Outgoing.LocalWalletChanged.Dispatch(money, carried);
+            _model.Board.TryGetWallet(manager.LocalClientId, out int money, out int carried, out int materials);
+            _signals.Outgoing.LocalWalletChanged.Dispatch(money, carried, materials);
         }
     }
 
@@ -101,7 +101,8 @@ namespace Modules.EconomyModule.Controllers
             if (!_model.OwnedOnce.TryGetValue(_clientId, out var owned))
                 _model.OwnedOnce[_clientId] = owned = new HashSet<(int zone, int item)>();
 
-            if (money < item.Price || (isOnce && owned.Contains((_zone, _item))))
+            int materials = EconomyWallets.MaterialsOf(_model, _clientId);
+            if (money < item.Price || materials < item.MaterialCost || (isOnce && owned.Contains((_zone, _item))))
                 return;
 
             if (item.Type == ShopItemType.Door && _model.Board.IsDoorOpen(_zone))
@@ -111,6 +112,7 @@ namespace Modules.EconomyModule.Controllers
                 owned.Add((_zone, _item));
 
             _model.Money[_clientId] = money - item.Price;
+            _model.Materials[_clientId] = materials - item.MaterialCost;
             EconomyWallets.Publish(_model, _clientId);
 
             switch (item.Type)
@@ -148,6 +150,24 @@ namespace Modules.EconomyModule.Controllers
                     break;
                 case ShopItemType.Barracks:
                     _signals.Outgoing.BarracksPurchased.Dispatch(_clientId);
+                    break;
+                case ShopItemType.Gate:
+                    _signals.Outgoing.GatePurchased.Dispatch(_clientId);
+                    break;
+                case ShopItemType.RepairStation:
+                    _signals.Outgoing.RepairStationPurchased.Dispatch(_clientId);
+                    break;
+                case ShopItemType.WallUpgrade:
+                    _signals.Outgoing.WallUpgradePurchased.Dispatch(_clientId);
+                    break;
+                case ShopItemType.SpikeTrap:
+                    _signals.Outgoing.SpikeTrapPurchased.Dispatch(_clientId);
+                    break;
+                case ShopItemType.Mine:
+                    _signals.Outgoing.MinePurchased.Dispatch(_clientId);
+                    break;
+                case ShopItemType.BarracksUpgrade:
+                    _signals.Outgoing.BarracksUpgradePurchased.Dispatch(_clientId);
                     break;
             }
         }

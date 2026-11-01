@@ -32,7 +32,7 @@ namespace Modules.PlayerModule.HudScreenModule.Controllers
                 screen.ShowAmmo(_model.Ammo, _model.MagazineSize);
                 screen.ShowShield(_model.Shield);
                 if (_model.HasWallet)
-                    screen.ShowWallet(_model.Money, _model.Carried);
+                    screen.ShowWallet(_model.Money, _model.Carried, _model.Materials);
                 screen.ShowWave(_model.Wave, Mathf.Max(0f, _model.WaveStartTime - Time.time), _model.ZombiesLeft);
                 Release();
             }

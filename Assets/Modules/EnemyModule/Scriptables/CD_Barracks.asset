@@ -26,3 +26,29 @@ MonoBehaviour:
   _allyFireInterval: 0.6
   _guardRadius: 14
   _allyTint: {r: 0.35, g: 0.6, b: 1, a: 1}
+  _kinds:
+  - Name: "T\xFCfek\xE7i"
+    Health: 120
+    MoveSpeed: 3.2
+    Damage: 12
+    Range: 9
+    FireInterval: 0.6
+    Tint: {r: 0.35, g: 0.6, b: 1, a: 1}
+  - Name: "Pompal\u0131"
+    Health: 170
+    MoveSpeed: 3
+    Damage: 30
+    Range: 5
+    FireInterval: 1.1
+    Tint: {r: 0.95, g: 0.65, b: 0.25, a: 1}
+  - Name: "Keskin Ni\u015Fanc\u0131"
+    Health: 80
+    MoveSpeed: 2.8
+    Damage: 45
+    Range: 16
+    FireInterval: 1.8
+    Tint: {r: 0.6, g: 0.9, b: 0.5, a: 1}
+  _maxLevel: 2
+  _alliesPerLevel: 2
+  _trainSpeedPerLevel: 0.25
+  _followDistance: 3

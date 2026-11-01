@@ -118,8 +118,11 @@ namespace Modules.EconomyModule.Controllers
         public static void Publish(IEconomyModel model, ulong clientId)
         {
             int carried = model.Carried.TryGetValue(clientId, out List<int> bag) ? bag.Count : 0;
-            model.Board.SetWalletServer(clientId, MoneyOf(model, clientId), carried);
+            model.Board.SetWalletServer(clientId, MoneyOf(model, clientId), carried, MaterialsOf(model, clientId));
         }
+
+        public static int MaterialsOf(IEconomyModel model, ulong clientId) =>
+            model.Materials.TryGetValue(clientId, out int materials) ? materials : 0;
     }
 
     /// <summary>Where the players stand, by their player objects.</summary>

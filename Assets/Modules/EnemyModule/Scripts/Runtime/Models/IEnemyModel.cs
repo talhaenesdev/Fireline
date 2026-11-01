@@ -39,8 +39,17 @@ namespace Modules.EnemyModule.Models
         UnityEngine.Vector3 ObjectivePosition { get; set; }
         float ObjectiveProgress { get; set; }
 
+        /// <summary>Server: the tier every wall stands at; reinforcing raises it for all of them.</summary>
+        int WallTier { get; set; }
+
+        /// <summary>Server: the map has a baked NavMesh, so zombies and soldiers walk round what is in their way.</summary>
+        bool HasNavMesh { get; set; }
+
         /// <summary>Server: spit in flight.</summary>
         List<SpitRVO> Spits { get; }
+
+        /// <summary>Server: the players whose soldiers follow them rather than guard their barracks.</summary>
+        HashSet<ulong> FollowingClients { get; }
 
         /// <summary>Server: the soldiers the barracks trained, by NetworkObjectId.</summary>
         Dictionary<ulong, AllyRVO> Allies { get; }
@@ -60,6 +69,12 @@ namespace Modules.EnemyModule.Models
         public int Health;
         public float NextAttackTime;
         public float NextAreaTime;
+
+        public PathRVO Path = new();
+
+        /// <summary>Until when it is slowed, and to what share of its speed.</summary>
+        public float SlowUntil;
+        public float SlowFactor = 1f;
     }
 
     /// <summary>A soldier's state that only the server keeps.</summary>
@@ -68,9 +83,23 @@ namespace Modules.EnemyModule.Models
         public Ally Ally;
         public int BarracksId;
         public ulong OwnerClientId;
+        public Data.ValueObjects.AllyKindCVO Kind;
         public UnityEngine.Vector3 Post;
+
+        /// <summary>Where it stands round its player while following.</summary>
+        public UnityEngine.Vector3 FollowOffset;
         public int Health;
         public float NextFireTime;
+        public PathRVO Path = new();
+    }
+
+    /// <summary>The way a walker is following over the NavMesh, and when it looks for a new one.</summary>
+    internal class PathRVO
+    {
+        public UnityEngine.Vector3[] Corners = System.Array.Empty<UnityEngine.Vector3>();
+        public int Index;
+        public UnityEngine.Vector3 Target;
+        public float NextSearchTime;
     }
 
     /// <summary>A gob of spit the server flies until it hits a player or runs out.</summary>
@@ -94,8 +123,12 @@ namespace Modules.EnemyModule.Models
         public int Health;
         public float NextFireTime;
 
-        /// <summary>A barracks: when it trains its next soldier.</summary>
+        /// <summary>A barracks: when it trains its next soldier, and how many it has trained.</summary>
         public float NextTrainTime;
+        public int Trained;
+
+        /// <summary>Health a repair station has given back that has not yet made a whole point.</summary>
+        public float MendCarry;
     }
 
     internal class EnemyModel : IEnemyModel
@@ -112,7 +145,10 @@ namespace Modules.EnemyModule.Models
         public Dictionary<ulong, List<Enums.StructureKind>> PendingStructures { get; } = new();
         public List<Enums.StructureKind> LocalStructuresToPlace { get; } = new();
         public List<SpitRVO> Spits { get; } = new();
+        public int WallTier { get; set; }
+        public bool HasNavMesh { get; set; }
         public Dictionary<ulong, AllyRVO> Allies { get; } = new();
+        public HashSet<ulong> FollowingClients { get; } = new();
         public UnityEngine.GameObject PooledAllyPrefab { get; set; }
         public UnityEngine.GameObject PooledZombiePrefab { get; set; }
         public bool IsObjectiveActive { get; set; }

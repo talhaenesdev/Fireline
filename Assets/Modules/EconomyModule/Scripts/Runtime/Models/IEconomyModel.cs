@@ -14,6 +14,10 @@ namespace Modules.EconomyModule.Models
         /// <summary>Server: each player's money.</summary>
         Dictionary<ulong, int> Money { get; }
 
+        /// <summary>Server: every player's materials, and the share of one gathered so far.</summary>
+        Dictionary<ulong, int> Materials { get; }
+        Dictionary<ulong, float> GatherCarry { get; }
+
         int NextLootId { get; set; }
 
         /// <summary>Server: each player's experience this match, and those already paid for their level.</summary>
@@ -43,6 +47,8 @@ namespace Modules.EconomyModule.Models
         public List<IEconomyZone> Zones { get; } = new();
         public Dictionary<ulong, List<int>> Carried { get; } = new();
         public Dictionary<ulong, int> Money { get; } = new();
+        public Dictionary<ulong, int> Materials { get; } = new();
+        public Dictionary<ulong, float> GatherCarry { get; } = new();
         public int NextLootId { get; set; }
         public Dictionary<ulong, int> Xp { get; } = new();
         public HashSet<ulong> PaidForLevel { get; } = new();

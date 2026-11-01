@@ -54,7 +54,7 @@ namespace Modules.ConnectorModule.RootsContexts
             _economySignals.Outgoing.WaveRewardAnnounced.Connect(_hudScreenSignals.Incoming.ApplyWaveCleared, GROUP);
             _economySignals.Outgoing.LocalProgressChanged.Connect(_hudScreenSignals.Incoming.ApplyProgress, GROUP);
             // The shop shows only the money; the bag is the HUD's.
-            _economySignals.Outgoing.LocalWalletChanged.Connect(_shopScreenSignals.Incoming.ApplyMoney, (money, carried) => money, GROUP);
+            _economySignals.Outgoing.LocalWalletChanged.Connect(_shopScreenSignals.Incoming.ApplyMoney, (money, carried, materials) => money, GROUP);
             _economySignals.Outgoing.ShopEntered.Connect(_shopScreenSignals.Incoming.Open, GROUP);
             _economySignals.Outgoing.ShopLeft.Connect(_shopScreenSignals.Incoming.Close, GROUP);
             _economySignals.Outgoing.HealPurchased.Connect(_playerSignals.Incoming.Heal, GROUP);
@@ -65,7 +65,15 @@ namespace Modules.ConnectorModule.RootsContexts
             _economySignals.Outgoing.TurretPurchased.Connect(_enemySignals.Incoming.GrantTurret, GROUP);
             _economySignals.Outgoing.BarricadePurchased.Connect(_enemySignals.Incoming.GrantBarricade, GROUP);
             _economySignals.Outgoing.WallPurchased.Connect(_enemySignals.Incoming.GrantWall, GROUP);
+            _enemySignals.Outgoing.RepairQuoted.Connect(_economySignals.Incoming.ChargeRepair, GROUP);
+            _economySignals.Outgoing.RepairPaid.Connect(_enemySignals.Incoming.RepairStructure, GROUP);
             _economySignals.Outgoing.BarracksPurchased.Connect(_enemySignals.Incoming.GrantBarracks, GROUP);
+            _economySignals.Outgoing.GatePurchased.Connect(_enemySignals.Incoming.GrantGate, GROUP);
+            _economySignals.Outgoing.WallUpgradePurchased.Connect(_enemySignals.Incoming.ReinforceWalls, GROUP);
+            _economySignals.Outgoing.SpikeTrapPurchased.Connect(_enemySignals.Incoming.GrantSpikeTrap, GROUP);
+            _economySignals.Outgoing.MinePurchased.Connect(_enemySignals.Incoming.GrantMine, GROUP);
+            _economySignals.Outgoing.BarracksUpgradePurchased.Connect(_enemySignals.Incoming.UpgradeBarracks, GROUP);
+            _economySignals.Outgoing.RepairStationPurchased.Connect(_enemySignals.Incoming.GrantRepairStation, GROUP);
             _economySignals.Outgoing.TurretUpgradePurchased.Connect(_enemySignals.Incoming.UpgradeTurrets, GROUP);
             _economySignals.Outgoing.WeaponPurchased.Connect(_weaponSignals.Incoming.EquipWeapon, GROUP);
         }

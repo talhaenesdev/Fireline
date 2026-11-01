@@ -12,6 +12,9 @@ namespace Modules.EconomyModule.Signals
 
     public class EconomySignalsIncoming
     {
+        /// <summary>A repair to pay for: client id, structure, health asked for, its full cost. Server only.</summary>
+        public Signal<ulong, int, int, int> ChargeRepair = new();
+
         /// <summary>A zombie fell here; it may leave loot. Server only.</summary>
         public Signal<Vector3> DropLoot = new();
 
@@ -31,7 +34,7 @@ namespace Modules.EconomyModule.Signals
     public class EconomySignalsOutgoing
     {
         /// <summary>The local player's money, then how many pieces of loot it carries.</summary>
-        public Signal<int, int> LocalWalletChanged = new();
+        public Signal<int, int, int> LocalWalletChanged = new();
 
         /// <summary>The local player's level, the experience into it, and how much the level takes.</summary>
         public Signal<int, int, int> LocalProgressChanged = new();
@@ -66,8 +69,29 @@ namespace Modules.EconomyModule.Signals
         /// <summary>A player bought a wall: client id. Server only.</summary>
         public Signal<ulong> WallPurchased = new();
 
+        /// <summary>A repair was paid: the structure, and the health the money bought. Server only.</summary>
+        public Signal<int, int> RepairPaid = new();
+
         /// <summary>A player bought a barracks: client id. Server only.</summary>
         public Signal<ulong> BarracksPurchased = new();
+
+        /// <summary>A player bought a gate: client id. Server only.</summary>
+        public Signal<ulong> GatePurchased = new();
+
+        /// <summary>A player bought a repair station: client id. Server only.</summary>
+        public Signal<ulong> RepairStationPurchased = new();
+
+        /// <summary>A player reinforced the walls: client id. Server only.</summary>
+        public Signal<ulong> WallUpgradePurchased = new();
+
+        /// <summary>A player bought razor wire: client id. Server only.</summary>
+        public Signal<ulong> SpikeTrapPurchased = new();
+
+        /// <summary>A player bought a mine: client id. Server only.</summary>
+        public Signal<ulong> MinePurchased = new();
+
+        /// <summary>A player upgraded their barracks: client id. Server only.</summary>
+        public Signal<ulong> BarracksUpgradePurchased = new();
 
         /// <summary>A player bought a perk: client id, which perk, how strong. Server only.</summary>
         public Signal<ulong, int, float> PerkPurchased = new();

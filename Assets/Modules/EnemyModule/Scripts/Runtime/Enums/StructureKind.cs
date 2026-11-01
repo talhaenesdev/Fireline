@@ -13,6 +13,21 @@ namespace Modules.EnemyModule.Enums
         Wall = 2,
 
         /// <summary>Trains soldiers who guard it and shoot zombies for its owner.</summary>
-        Barracks = 3
+        Barracks = 3,
+
+        /// <summary>The base's heart: the match is lost when zombies bring it down.</summary>
+        Headquarters = 4,
+
+        /// <summary>Stops zombies like a wall, but players walk through it.</summary>
+        Gate = 5,
+
+        /// <summary>Slowly mends every structure around it.</summary>
+        RepairStation = 6,
+
+        /// <summary>Razor wire on the ground: zombies on it slow down and bleed. It wears out.</summary>
+        SpikeTrap = 7,
+
+        /// <summary>Blows up under the first zombie that steps near it.</summary>
+        Mine = 8
     }
 }

@@ -113,6 +113,10 @@ namespace Modules.EconomyModule.Controllers
                 return;
 
             _model.Money[_clientId] = EconomyWallets.MoneyOf(_model, _clientId) + Mathf.Clamp(_level, 0, MAX_LEVEL) * progression.StartingMoneyPerLevel;
+
+            // The match's starting materials are handed over once, with the starting money.
+            if (_model.Board.Resources != null)
+                _model.Materials[_clientId] = EconomyWallets.MaterialsOf(_model, _clientId) + _model.Board.Resources.StartMaterials;
             EconomyWallets.Publish(_model, _clientId);
         }
     }

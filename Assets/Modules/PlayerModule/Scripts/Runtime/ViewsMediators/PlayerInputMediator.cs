@@ -24,6 +24,8 @@ namespace Modules.PlayerModule.ViewsMediators
             _view.FireChanged += OnFireChanged;
             _view.ReloadPressed += OnReloadPressed;
             _view.PingPressed += OnPingPressed;
+            _view.RepairPressed += OnRepairPressed;
+            _view.AllyOrderPressed += OnAllyOrderPressed;
         }
 
         public void OnRemove()
@@ -33,6 +35,8 @@ namespace Modules.PlayerModule.ViewsMediators
             _view.FireChanged -= OnFireChanged;
             _view.ReloadPressed -= OnReloadPressed;
             _view.PingPressed -= OnPingPressed;
+            _view.RepairPressed -= OnRepairPressed;
+            _view.AllyOrderPressed -= OnAllyOrderPressed;
         }
 
         private void OnMoveChanged(Vector2 move) => _internalSignals.MoveInput.Dispatch(move);
@@ -40,5 +44,7 @@ namespace Modules.PlayerModule.ViewsMediators
         private void OnFireChanged(bool held, bool pressed) => _signals.Outgoing.FireInput.Dispatch(held, pressed);
         private void OnReloadPressed() => _signals.Outgoing.ReloadInput.Dispatch();
         private void OnPingPressed() => _internalSignals.PingPressed.Dispatch();
+        private void OnRepairPressed() => _signals.Outgoing.RepairInput.Dispatch();
+        private void OnAllyOrderPressed() => _signals.Outgoing.AllyOrderInput.Dispatch();
     }
 }

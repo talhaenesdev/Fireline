@@ -15,56 +15,103 @@ MonoBehaviour:
   _items:
   - Name: Can Paketi
     Price: 40
+    MaterialCost: 0
     Type: 0
     Amount: 50
     Index: 0
   - Name: Kalkan
     Price: 70
+    MaterialCost: 0
     Type: 1
     Amount: 50
     Index: 0
   - Name: "H\u0131zl\u0131 Tetik"
     Price: 150
+    MaterialCost: 0
     Type: 2
     Amount: 0.15
     Index: 0
   - Name: Taret
     Price: 200
+    MaterialCost: 10
     Type: 3
     Amount: 0
     Index: 0
   - Name: Barikat
     Price: 60
+    MaterialCost: 3
     Type: 6
     Amount: 0
     Index: 0
   - Name: Duvar
     Price: 90
+    MaterialCost: 5
     Type: 10
     Amount: 0
     Index: 0
   - Name: "K\u0131\u015Fla"
     Price: 350
+    MaterialCost: 20
     Type: 11
+    Amount: 0
+    Index: 0
+  - Name: "Kap\u0131"
+    Price: 120
+    MaterialCost: 8
+    Type: 12
+    Amount: 0
+    Index: 0
+  - Name: "Onar\u0131m \u0130stasyonu"
+    Price: 400
+    MaterialCost: 15
+    Type: 13
+    Amount: 0
+    Index: 0
+  - Name: "Duvar G\xFC\xE7lendirme"
+    Price: 250
+    MaterialCost: 30
+    Type: 14
+    Amount: 0
+    Index: 0
+  - Name: Dikenli Tel
+    Price: 70
+    MaterialCost: 4
+    Type: 15
+    Amount: 0
+    Index: 0
+  - Name: "May\u0131n"
+    Price: 50
+    MaterialCost: 3
+    Type: 16
+    Amount: 0
+    Index: 0
+  - Name: "K\u0131\u015Fla Y\xFCkseltme"
+    Price: 300
+    MaterialCost: 25
+    Type: 17
     Amount: 0
     Index: 0
   - Name: "Taret Y\xFCkseltme"
     Price: 150
+    MaterialCost: 0
     Type: 5
     Amount: 0
     Index: 0
   - Name: "Pompal\u0131"
     Price: 180
+    MaterialCost: 0
     Type: 4
     Amount: 0
     Index: 1
   - Name: Makineli
     Price: 260
+    MaterialCost: 0
     Type: 4
     Amount: 0
     Index: 2
   - Name: "Keskin Ni\u015Fanc\u0131"
     Price: 320
+    MaterialCost: 0
     Type: 4
     Amount: 0
     Index: 3

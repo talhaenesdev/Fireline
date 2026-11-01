@@ -37,6 +37,7 @@ namespace Modules.EconomyModule.RootsContexts
             base.CommandBindings();
 
             CommandBinder.Bind(_internalSignals.Started).ToSequence<StartFrameTickCommand>();
+            CommandBinder.Bind(_internalSignals.PoolRequested).ToSequence<ConfigureBoardPoolCommand>();
             CommandBinder.Bind(_internalSignals.BoardRegistered).ToSequence<StoreBoardCommand>();
             CommandBinder.Bind(_internalSignals.ZoneRegistered).ToSequence<StoreZoneCommand>();
             CommandBinder.Bind(_internalSignals.WalletsChanged)
@@ -68,6 +69,10 @@ namespace Modules.EconomyModule.RootsContexts
 
             CommandBinder.Bind(_signals.Incoming.Buy).ToSequence<RequestBuyCommand>();
 
+            CommandBinder.Bind(_signals.Incoming.ChargeRepair)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<ChargeRepairCommand>();
+
             CommandBinder.Bind(_signals.Incoming.WaveCleared)
                 .ToSequence<AnnounceWaveRewardCommand>()
                 .ToSequence<RequireServerCommand>()
@@ -79,6 +84,7 @@ namespace Modules.EconomyModule.RootsContexts
                 .ToSequence<CheckShopZoneCommand>()
                 .ToSequence<RequireServerCommand>()
                 .ToSequence<CollectLootCommand>()
+                .ToSequence<GatherMaterialsCommand>()
                 .ToSequence<SellLootCommand>();
         }
 

@@ -9,6 +9,9 @@ namespace Modules.EconomyModule.Entities
     /// </summary>
     internal interface IEconomyBoard
     {
+        /// <summary>The pool the board draws what it shows from, handed over once it registers.</summary>
+        void Configure(FlowIoC.PoolModule.Services.IPoolService pool);
+
         CD_Loot Loot { get; }
         CD_Shop Shop { get; }
         CD_Progression Progression { get; }
@@ -17,11 +20,14 @@ namespace Modules.EconomyModule.Entities
         int LootCount { get; }
 
         void GetLoot(int index, out int id, out int item, out Vector3 position);
-        bool TryGetWallet(ulong clientId, out int money, out int carried);
+        bool TryGetWallet(ulong clientId, out int money, out int carried, out int materials);
 
         void AddLootServer(int id, int item, Vector3 position);
         void RemoveLootServer(int id);
-        void SetWalletServer(ulong clientId, int money, int carried);
+        void SetWalletServer(ulong clientId, int money, int carried, int materials);
+
+        /// <summary>Materials: how fast they are gathered, and what a player starts with. None on a map without them.</summary>
+        CD_Resources Resources { get; }
 
         /// <summary>A player's experience this match.</summary>
         bool TryGetXp(ulong clientId, out int xp);

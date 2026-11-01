@@ -35,8 +35,35 @@ namespace Modules.EnemyModule.Signals
         /// <summary>A player bought a wall; they now choose where it goes. Server only.</summary>
         public Signal<ulong> GrantWall = new();
 
+        /// <summary>The local player asks to mend the structure they stand by.</summary>
+        public Signal RequestRepair = new();
+
+        /// <summary>A repair was paid for: the structure and how much health it gets back. Server only.</summary>
+        public Signal<int, int> RepairStructure = new();
+
         /// <summary>A player bought a barracks; they now choose where it goes. Server only.</summary>
         public Signal<ulong> GrantBarracks = new();
+
+        /// <summary>A player bought a gate; they now choose where it goes. Server only.</summary>
+        public Signal<ulong> GrantGate = new();
+
+        /// <summary>A player bought a repair station; they now choose where it goes. Server only.</summary>
+        public Signal<ulong> GrantRepairStation = new();
+
+        /// <summary>A player bought razor wire; they now choose where it goes. Server only.</summary>
+        public Signal<ulong> GrantSpikeTrap = new();
+
+        /// <summary>A player bought a mine; they now choose where it goes. Server only.</summary>
+        public Signal<ulong> GrantMine = new();
+
+        /// <summary>A player reinforced the walls: every wall goes up a tier. Server only.</summary>
+        public Signal<ulong> ReinforceWalls = new();
+
+        /// <summary>A player upgraded their barracks. Server only.</summary>
+        public Signal<ulong> UpgradeBarracks = new();
+
+        /// <summary>The local player switches their soldiers between guarding and following.</summary>
+        public Signal ToggleAllyOrder = new();
 
         /// <summary>A player bought an upgrade: each of their turrets goes up a level. Server only.</summary>
         public Signal<ulong> UpgradeTurrets = new();
@@ -50,6 +77,15 @@ namespace Modules.EnemyModule.Signals
 
     public class EnemySignalsOutgoing
     {
+        /// <summary>A player wants a structure mended: client id, structure, health asked for, what it costs. Server only.</summary>
+        public Signal<ulong, int, int, int> RepairQuoted = new();
+
+        /// <summary>Zombies brought the headquarters down; the match is lost. Server only.</summary>
+        public Signal HeadquartersDestroyed = new();
+
+        /// <summary>The local player's soldiers now follow them (true) or guard their barracks.</summary>
+        public Signal<bool> AllyOrderChanged = new();
+
         /// <summary>A zombie reached a player: target client, damage, attacker id. Server only.</summary>
         public Signal<ulong, int, ulong> PlayerAttacked = new();
 

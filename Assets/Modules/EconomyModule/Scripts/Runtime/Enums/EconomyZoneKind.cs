@@ -9,6 +9,9 @@ namespace Modules.EconomyModule.Enums
         PerkMachine = 2,
 
         /// <summary>A locked door: its stock is the price of opening it, and once open it sells nothing.</summary>
-        Door = 3
+        Door = 3,
+
+        /// <summary>A scrap pile: a player standing in it gathers materials.</summary>
+        Resource = 4
     }
 }

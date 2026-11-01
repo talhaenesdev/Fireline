@@ -88,6 +88,174 @@ namespace Modules.EnemyModule.Controllers
         }
     }
 
+    /// <summary>Server: a bought gate is owed to its buyer, who is told to choose where it goes.</summary>
+    internal class GrantGateCommand : Command
+    {
+        [Inject] private IEnemyModel _model { get; set; }
+
+        [SignalParam] private ulong _clientId { get; set; }
+
+        public override void Execute()
+        {
+            if (_model.Board?.GateConfig == null)
+            {
+                FlowLogger.LogError("GrantGateCommand - the ZombieWaves object has no CD_Gate.");
+                return;
+            }
+
+            Structures.Grant(_model, _clientId, StructureKind.Gate);
+        }
+    }
+
+    /// <summary>Server: a bought spike trap is owed to its buyer, who is told to choose where it goes.</summary>
+    internal class GrantSpikeTrapCommand : Command
+    {
+        [Inject] private IEnemyModel _model { get; set; }
+
+        [SignalParam] private ulong _clientId { get; set; }
+
+        public override void Execute()
+        {
+            if (_model.Board?.SpikeTrapConfig == null)
+            {
+                FlowLogger.LogError("GrantSpikeTrapCommand - the ZombieWaves object has no CD_SpikeTrap.");
+                return;
+            }
+
+            Structures.Grant(_model, _clientId, StructureKind.SpikeTrap);
+        }
+    }
+
+    /// <summary>Server: a bought mine is owed to its buyer, who is told to choose where it goes.</summary>
+    internal class GrantMineCommand : Command
+    {
+        [Inject] private IEnemyModel _model { get; set; }
+
+        [SignalParam] private ulong _clientId { get; set; }
+
+        public override void Execute()
+        {
+            if (_model.Board?.MineConfig == null)
+            {
+                FlowLogger.LogError("GrantMineCommand - the ZombieWaves object has no CD_Mine.");
+                return;
+            }
+
+            Structures.Grant(_model, _clientId, StructureKind.Mine);
+        }
+    }
+
+    /// <summary>Server: every wall, the base's own too, goes up a tier and keeps the damage it had taken.</summary>
+    internal class ReinforceWallsCommand : Command
+    {
+        [Inject] private IEnemyModel _model { get; set; }
+
+        public override void Execute()
+        {
+            CD_Wall config = _model.Board?.WallConfig;
+            if (config == null || _model.WallTier >= config.TierCount - 1)
+                return;
+
+            _model.WallTier++;
+            foreach (TurretRVO wall in _model.Turrets.Values)
+            {
+                if (wall.Kind != StructureKind.Wall)
+                    continue;
+
+                int damage = config.Tier(wall.Level).Health - wall.Health;
+                wall.Level = _model.WallTier;
+                wall.Health = Mathf.Max(1, config.Tier(wall.Level).Health - damage);
+                Structures.Publish(_model, wall);
+            }
+        }
+    }
+
+    /// <summary>Server: a bought repair station is owed to its buyer, who is told to choose where it goes.</summary>
+    internal class GrantRepairStationCommand : Command
+    {
+        [Inject] private IEnemyModel _model { get; set; }
+
+        [SignalParam] private ulong _clientId { get; set; }
+
+        public override void Execute()
+        {
+            if (_model.Board?.RepairStationConfig == null)
+            {
+                FlowLogger.LogError("GrantRepairStationCommand - the ZombieWaves object has no CD_RepairStation.");
+                return;
+            }
+
+            Structures.Grant(_model, _clientId, StructureKind.RepairStation);
+        }
+    }
+
+    /// <summary>Server, as the waves begin: the headquarters goes up at the base's centre, if the map has one.</summary>
+    internal class RaiseHeadquartersCommand : Command
+    {
+        [Inject] private IEnemyModel _model { get; set; }
+
+        public override void Execute()
+        {
+            CD_Headquarters config = _model.Board.HeadquartersConfig;
+            if (config == null)
+                return;
+
+            Vector3 center = _model.Board.BaseCenter;
+            var headquarters = new TurretRVO
+            {
+                Id = _model.NextTurretId++,
+                Kind = StructureKind.Headquarters,
+                OwnerClientId = NetworkManager.ServerClientId,
+                Position = new Vector3(center.x, 0f, center.z),
+                Health = config.Health
+            };
+
+            _model.Turrets[headquarters.Id] = headquarters;
+            Structures.Publish(_model, headquarters);
+        }
+    }
+
+    /// <summary>Server, every frame: each repair station mends the damaged structures around it, for free.</summary>
+    internal class RepairStationsMendCommand : Command
+    {
+        [Inject] private IEnemyModel _model { get; set; }
+
+        public override void Execute()
+        {
+            CD_RepairStation config = _model.Board?.RepairStationConfig;
+            if (config == null)
+                return;
+
+            float radiusSqr = config.Radius * config.Radius;
+            float mend = config.HealthPerSecond * Time.deltaTime;
+
+            foreach (TurretRVO station in _model.Turrets.Values)
+            {
+                if (station.Kind != StructureKind.RepairStation)
+                    continue;
+
+                foreach (TurretRVO structure in _model.Turrets.Values)
+                {
+                    Vector3 offset = structure.Position - station.Position;
+                    offset.y = 0f;
+                    int max = Structures.MaxHealth(_model, structure.Kind, structure.Level);
+                    if (structure.Health >= max || offset.sqrMagnitude > radiusSqr)
+                        continue;
+
+                    // Whole points only; the rest is carried to the next frame, so a slow station still mends.
+                    structure.MendCarry += mend;
+                    int whole = Mathf.FloorToInt(structure.MendCarry);
+                    if (whole <= 0)
+                        continue;
+
+                    structure.MendCarry -= whole;
+                    structure.Health = Mathf.Min(max, structure.Health + whole);
+                    Structures.Publish(_model, structure);
+                }
+            }
+        }
+    }
+
     /// <summary>Server, as the waves begin: the base's own walls go up, owned by nobody.</summary>
     internal class RaiseBaseWallsCommand : Command
     {
@@ -95,19 +263,18 @@ namespace Modules.EnemyModule.Controllers
 
         public override void Execute()
         {
-            if (_model.Board.WallConfig == null || _model.Board.BaseWallCount == 0)
+            if (_model.Board.WallConfig == null)
                 return;
 
-            for (int i = 0; i < _model.Board.BaseWallCount; i++)
+            foreach ((Vector3 point, float yaw) in new LayOutBaseFunction().Execute(_model.Board))
             {
-                Vector3 point = _model.Board.GetBaseWallPoint(i);
                 var wall = new TurretRVO
                 {
                     Id = _model.NextTurretId++,
                     Kind = StructureKind.Wall,
                     OwnerClientId = NetworkManager.ServerClientId,
                     Position = new Vector3(point.x, 0f, point.z),
-                    Yaw = _model.Board.GetBaseWallYaw(i),
+                    Yaw = yaw,
                     Health = _model.Board.WallConfig.Health
                 };
 
@@ -197,11 +364,11 @@ namespace Modules.EnemyModule.Controllers
             {
                 Id = _model.NextTurretId++,
                 Kind = kind,
-                Level = 0,
+                Level = kind == StructureKind.Wall ? _model.WallTier : 0,
                 OwnerClientId = _clientId,
                 Position = new Vector3(_position.x, 0f, _position.z),
                 Yaw = player.eulerAngles.y,
-                Health = Structures.MaxHealth(_model, kind, 0),
+                Health = Structures.MaxHealth(_model, kind, kind == StructureKind.Wall ? _model.WallTier : 0),
                 NextTrainTime = Time.time
             };
 
@@ -310,8 +477,13 @@ namespace Modules.EnemyModule.Controllers
         public static int MaxHealth(IEnemyModel model, StructureKind kind, int level) => kind switch
         {
             StructureKind.Barricade => model.Board.BarricadeConfig.Health,
-            StructureKind.Wall => model.Board.WallConfig.Health,
+            StructureKind.Wall => model.Board.WallConfig.Tier(level).Health,
+            StructureKind.SpikeTrap => model.Board.SpikeTrapConfig.Health,
+            StructureKind.Mine => model.Board.MineConfig.Health,
             StructureKind.Barracks => model.Board.BarracksConfig.Health,
+            StructureKind.Gate => model.Board.GateConfig.Health,
+            StructureKind.RepairStation => model.Board.RepairStationConfig.Health,
+            StructureKind.Headquarters => model.Board.HeadquartersConfig.Health,
             _ => model.Board.TurretConfig.Level(level).Health
         };
 
@@ -320,6 +492,10 @@ namespace Modules.EnemyModule.Controllers
             StructureKind.Barricade => model.Board.BarricadeConfig.MaxPlaceDistance,
             StructureKind.Wall => model.Board.WallConfig.MaxPlaceDistance,
             StructureKind.Barracks => model.Board.BarracksConfig.MaxPlaceDistance,
+            StructureKind.Gate => model.Board.GateConfig.MaxPlaceDistance,
+            StructureKind.RepairStation => model.Board.RepairStationConfig.MaxPlaceDistance,
+            StructureKind.SpikeTrap => model.Board.SpikeTrapConfig.MaxPlaceDistance,
+            StructureKind.Mine => model.Board.MineConfig.MaxPlaceDistance,
             _ => model.Board.TurretConfig.MaxPlaceDistance
         };
 

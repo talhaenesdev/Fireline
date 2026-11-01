@@ -28,8 +28,12 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
 
         /// <summary>The ping button was pressed.</summary>
         public Action PingClicked;
+        public Action RepairClicked;
+        public Action OrderClicked;
 
         private Button _ping;
+        private Button _repair;
+        private Button _order;
         private OffscreenArrows _arrows;
 
         private Button _placeTurretButton;
@@ -54,6 +58,7 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         private TMP_Text _walletText;
         private int _money;
         private int _carried;
+        private int _materials;
         private string _progress = string.Empty;
         private string _objective = string.Empty;
 
@@ -103,6 +108,8 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
             _fire = TouchControlsBuilder.HoldButton(transform, "FireButton", new Vector2(-160f, 170f), 170f, new Color(0.9f, 0.27f, 0.2f), "ATEŞ");
             _reload = TouchControlsBuilder.TapButton(transform, "ReloadButton", new Vector2(-320f, 110f), 100f, new Color(0.95f, 0.75f, 0.25f), "R");
             _ping = TouchControlsBuilder.TapButton(transform, "PingButton", new Vector2(-110f, 330f), 90f, new Color(0.3f, 0.75f, 1f), "PİNG");
+            _repair = TouchControlsBuilder.TapButton(transform, "RepairButton", new Vector2(-230f, 330f), 90f, new Color(0.55f, 0.85f, 0.4f), "TAMİR");
+            _order = TouchControlsBuilder.TapButton(transform, "OrderButton", new Vector2(-350f, 330f), 90f, new Color(0.45f, 0.6f, 1f), "EMİR");
         }
 
         // The fill is a picture, not a filled Image: it is cut from the right, picture and rect together.
@@ -145,6 +152,8 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
             _fire.HeldChanged += OnFireHeld;
             _reload.onClick.AddListener(OnReloadClicked);
             _ping.onClick.AddListener(OnPingClicked);
+            _repair.onClick.AddListener(OnRepairClicked);
+            _order.onClick.AddListener(OnOrderClicked);
         }
 
         private void OnDisable()
@@ -159,6 +168,8 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
             _fire.HeldChanged -= OnFireHeld;
             _reload.onClick.RemoveListener(OnReloadClicked);
             _ping.onClick.RemoveListener(OnPingClicked);
+            _repair.onClick.RemoveListener(OnRepairClicked);
+            _order.onClick.RemoveListener(OnOrderClicked);
         }
 
         private void OnStickMoved(Vector2 move) => TouchMoved?.Invoke(move);
@@ -167,6 +178,11 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         private void OnReviveClicked() => ReviveClicked?.Invoke();
         private void OnPlaceTurretClicked() => PlaceTurretClicked?.Invoke();
         private void OnPingClicked() => PingClicked?.Invoke();
+        private void OnRepairClicked() => RepairClicked?.Invoke();
+        private void OnOrderClicked() => OrderClicked?.Invoke();
+
+        public void ShowAllyOrder(bool isFollowing) =>
+            ShowBanner(isFollowing ? "ASKERLER SENİ TAKİP EDİYOR" : "ASKERLER NÖBETTE");
 
         public void ShowMarkers(Modules.PlayerModule.Shared.Data.ValueObjects.MarkerVO[] markers) => _arrows.Show(markers, Camera.main);
 
@@ -206,10 +222,11 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
             _healthText.text = _shield > 0f ? $"{health}  <color=#6EC6FF>+{Mathf.CeilToInt(_shield)}</color>" : health;
         }
 
-        public void ShowWallet(int money, int carried)
+        public void ShowWallet(int money, int carried, int materials)
         {
             _money = money;
             _carried = carried;
+            _materials = materials;
             DrawWallet();
         }
 
@@ -222,7 +239,7 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         private void DrawWallet()
         {
             _walletText.gameObject.SetActive(true);
-            _walletText.text = $"<color=#FFC857>Para: {_money}</color>\n<size=80%>Çanta: {_carried}</size>{_progress}";
+            _walletText.text = $"<color=#FFC857>Para: {_money}</color>  <color=#C8B08A>Malzeme: {_materials}</color>\n<size=80%>Çanta: {_carried}</size>{_progress}";
         }
 
         public void ShowObjective(string title, bool isActive, float progress)

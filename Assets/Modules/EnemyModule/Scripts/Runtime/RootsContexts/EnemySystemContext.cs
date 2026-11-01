@@ -36,6 +36,7 @@ namespace Modules.EnemyModule.RootsContexts
         {
             base.CommandBindings();
 
+            CommandBinder.Bind(_internalSignals.PoolRequested).ToSequence<ConfigureBoardPoolCommand>();
             CommandBinder.Bind(_internalSignals.BoardRegistered)
                 .ToSequence<StoreBoardCommand>()
                 .ToSequence<PoolZombiesCommand>()
@@ -45,6 +46,7 @@ namespace Modules.EnemyModule.RootsContexts
                 .ToSequence<RequireServerCommand>()
                 .ToSequence<BeginWavesCommand>()
                 .ToSequence<RaiseBaseWallsCommand>()
+                .ToSequence<RaiseHeadquartersCommand>()
                 .ToSequence<StartFrameTickCommand>()
                 .ToSequence<SignalDispatchCommand>(_internalSignals.NextWave);
 
@@ -63,6 +65,8 @@ namespace Modules.EnemyModule.RootsContexts
                 .ToSequence<MoveSpitCommand>()
                 .ToSequence<HoldObjectiveCommand>()
                 .ToSequence<TurretsFireCommand>()
+                .ToSequence<RepairStationsMendCommand>()
+                .ToSequence<TrapsCommand>()
                 .ToSequence<TrainAlliesCommand>()
                 .ToSequence<AlliesFightCommand>();
 
@@ -81,6 +85,45 @@ namespace Modules.EnemyModule.RootsContexts
             CommandBinder.Bind(_signals.Incoming.GrantBarracks)
                 .ToSequence<RequireServerCommand>()
                 .ToSequence<GrantBarracksCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.GrantGate)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<GrantGateCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.GrantRepairStation)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<GrantRepairStationCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.GrantSpikeTrap)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<GrantSpikeTrapCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.GrantMine)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<GrantMineCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.ReinforceWalls)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<ReinforceWallsCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.RequestRepair).ToSequence<RequestRepairCommand>();
+            CommandBinder.Bind(_signals.Incoming.ToggleAllyOrder).ToSequence<RequestAllyOrderCommand>();
+
+            CommandBinder.Bind(_internalSignals.AllyOrderRequested)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<ToggleAllyOrderCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.UpgradeBarracks)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<UpgradeBarracksCommand>();
+
+            CommandBinder.Bind(_internalSignals.RepairRequested)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<QuoteRepairCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.RepairStructure)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<RepairStructureCommand>();
 
             CommandBinder.Bind(_signals.Incoming.UpgradeTurrets)
                 .ToSequence<RequireServerCommand>()

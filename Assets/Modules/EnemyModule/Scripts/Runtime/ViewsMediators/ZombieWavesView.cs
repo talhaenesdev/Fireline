@@ -47,8 +47,20 @@ namespace Modules.EnemyModule.ViewsMediators
         [SerializeField] private CD_Barricade _barricade;
         [SerializeField] private CD_Wall _wall;
         [SerializeField] private CD_Barracks _barracks;
-        [Tooltip("Every child is a wall the base starts with, facing the child's forward. Empty on a map with no base.")]
+        [SerializeField] private CD_Repair _repair;
+        [SerializeField] private CD_DayNight _dayNight;
+        [Tooltip("The sun the day and night turn; left empty, the light stays as the scene has it.")]
+        [SerializeField] private Light _sun;
+        [SerializeField] private CD_Gate _gate;
+        [SerializeField] private CD_SpikeTrap _spikeTrap;
+        [SerializeField] private CD_Mine _mine;
+        [SerializeField] private CD_RepairStation _repairStation;
+        [Tooltip("Left empty on a map with no headquarters to defend.")]
+        [SerializeField] private CD_Headquarters _headquarters;
+        [Tooltip("Every child is a wall the base starts with, facing the child's forward. With a layout, the root is only the base's centre.")]
         [SerializeField] private Transform _baseWallRoot;
+        [Tooltip("The base's shape; left empty, the base walls are the root's children.")]
+        [SerializeField] private CD_BaseLayout _baseLayout;
         [SerializeField] private CD_Objective _objective;
         [Tooltip("Every child is a point the defend objective may appear at.")]
         [SerializeField] private Transform _objectivePointRoot;
@@ -58,6 +70,11 @@ namespace Modules.EnemyModule.ViewsMediators
         [SerializeField] private string _barricadePoolKey = "Barricade";
         [SerializeField] private string _wallPoolKey = "Wall";
         [SerializeField] private string _barracksPoolKey = "Barracks";
+        [SerializeField] private string _gatePoolKey = "Gate";
+        [SerializeField] private string _spikeTrapPoolKey = "SpikeTrap";
+        [SerializeField] private string _minePoolKey = "Mine";
+        [SerializeField] private string _repairStationPoolKey = "RepairStation";
+        [SerializeField] private string _headquartersPoolKey = "Headquarters";
         [SerializeField] private string _damageNumberPoolKey = "DamageNumber";
         [SerializeField] private string _corpsePoolKey = "ZombieCorpse";
         [SerializeField] private string _blastPoolKey = "Blast";
@@ -117,6 +134,68 @@ namespace Modules.EnemyModule.ViewsMediators
         public CD_Barricade BarricadeConfig => _barricade;
         public CD_Wall WallConfig => _wall;
         public CD_Barracks BarracksConfig => _barracks;
+        public CD_Repair RepairConfig => _repair;
+        public CD_DayNight DayNightConfig => _dayNight;
+
+        private readonly NetworkVariable<bool> _bloodMoon = new();
+
+        public void SetBloodMoonServer(bool isBloodMoon)
+        {
+            if (IsServer)
+                _bloodMoon.Value = isBloodMoon;
+        }
+
+        // Night while a wave is on, day in the pause before the next; the light eases between them.
+        private void TurnLight()
+        {
+            if (_sun == null || _dayNight == null || !IsSpawned)
+                return;
+
+            bool isNight = _wave.Value > 0 && _nextWaveTime.Value <= 0d;
+            Color color = !isNight ? _dayNight.DayColor : _bloodMoon.Value ? _dayNight.BloodMoonColor : _dayNight.NightColor;
+            float intensity = !isNight ? _dayNight.DayIntensity : _bloodMoon.Value ? _dayNight.BloodMoonIntensity : _dayNight.NightIntensity;
+            float ease = Time.deltaTime / Mathf.Max(0.01f, _dayNight.Transition);
+            _sun.color = Color.Lerp(_sun.color, color, ease * 3f);
+            _sun.intensity = Mathf.Lerp(_sun.intensity, intensity, ease * 3f);
+        }
+        public CD_Gate GateConfig => _gate;
+        public CD_SpikeTrap SpikeTrapConfig => _spikeTrap;
+        public CD_Mine MineConfig => _mine;
+        public CD_RepairStation RepairStationConfig => _repairStation;
+        public CD_Headquarters HeadquartersConfig => _headquarters;
+        public CD_BaseLayout BaseLayout => _baseWallRoot != null ? _baseLayout : null;
+        public Vector3 BaseCenter => _baseWallRoot != null ? _baseWallRoot.position : transform.position;
+
+        /// <summary>A player asked to mend what they stand by: their client id.</summary>
+        public Action<ulong> RepairRequested;
+
+        public void RequestRepair() => RepairServerRpc();
+
+        /// <summary>A player asked to switch their soldiers' order: their client id.</summary>
+        public Action<ulong> AllyOrderRequested;
+
+        /// <summary>The local player's soldiers now follow them, or guard.</summary>
+        public Action<bool> AllyOrderAnnounced;
+
+        public void RequestAllyOrder() => AllyOrderServerRpc();
+
+        public void AnnounceAllyOrderServer(ulong clientId, bool isFollowing)
+        {
+            if (!IsServer)
+                return;
+
+            var target = new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { clientId } } };
+            AllyOrderClientRpc(isFollowing, target);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void AllyOrderServerRpc(ServerRpcParams rpcParams = default) => AllyOrderRequested?.Invoke(rpcParams.Receive.SenderClientId);
+
+        [ClientRpc]
+        private void AllyOrderClientRpc(bool isFollowing, ClientRpcParams rpcParams = default) => AllyOrderAnnounced?.Invoke(isFollowing);
+
+        [ServerRpc(RequireOwnership = false)]
+        private void RepairServerRpc(ServerRpcParams rpcParams = default) => RepairRequested?.Invoke(rpcParams.Receive.SenderClientId);
         public int BaseWallCount => _baseWallRoot != null ? _baseWallRoot.childCount : 0;
         public Vector3 GetBaseWallPoint(int index) => _baseWallRoot.GetChild(index).position;
         public float GetBaseWallYaw(int index) => _baseWallRoot.GetChild(index).eulerAngles.y;
@@ -271,14 +350,32 @@ namespace Modules.EnemyModule.ViewsMediators
             StructureKind.Barricade => _pool.Get<BarricadeVisual>(_barricadePoolKey, transform),
             StructureKind.Wall => _pool.Get<BarricadeVisual>(_wallPoolKey, transform),
             StructureKind.Barracks => _pool.Get<BarricadeVisual>(_barracksPoolKey, transform),
+            StructureKind.Gate => _pool.Get<BarricadeVisual>(_gatePoolKey, transform),
+            StructureKind.SpikeTrap => _pool.Get<BarricadeVisual>(_spikeTrapPoolKey, transform),
+            StructureKind.Mine => _pool.Get<BarricadeVisual>(_minePoolKey, transform),
+            StructureKind.RepairStation => _pool.Get<BarricadeVisual>(_repairStationPoolKey, transform),
+            StructureKind.Headquarters => _pool.Get<BarricadeVisual>(_headquartersPoolKey, transform),
             _ => _pool.Get<TurretVisual>(_turretPoolKey, transform)
+        };
+
+        // A turret wears its level's colour and a wall its tier's; a clear colour leaves the prefab's own.
+        private Color Tint(NetworkTurret structure) => (StructureKind) structure.Kind switch
+        {
+            StructureKind.Turret => _turret != null ? _turret.LevelColor(structure.Level) : Color.white,
+            StructureKind.Wall => _wall != null ? _wall.Tier(structure.Level).Color : Color.clear,
+            _ => Color.clear
         };
 
         private int MaxHealth(NetworkTurret structure) => (StructureKind) structure.Kind switch
         {
             StructureKind.Barricade => _barricade != null ? _barricade.Health : 1,
-            StructureKind.Wall => _wall != null ? _wall.Health : 1,
+            StructureKind.Wall => _wall != null ? _wall.Tier(structure.Level).Health : 1,
             StructureKind.Barracks => _barracks != null ? _barracks.Health : 1,
+            StructureKind.SpikeTrap => _spikeTrap != null ? _spikeTrap.Health : 1,
+            StructureKind.Mine => _mine != null ? _mine.Health : 1,
+            StructureKind.Gate => _gate != null ? _gate.Health : 1,
+            StructureKind.RepairStation => _repairStation != null ? _repairStation.Health : 1,
+            StructureKind.Headquarters => _headquarters != null ? _headquarters.Health : 1,
             _ => _turret != null ? _turret.Level(structure.Level).Health : 1
         };
 
@@ -417,6 +514,8 @@ namespace Modules.EnemyModule.ViewsMediators
 
         private void Update()
         {
+            TurnLight();
+
             // The carried turret rides over the local player's head wherever they walk.
             if (_carried == null)
                 return;
@@ -449,7 +548,7 @@ namespace Modules.EnemyModule.ViewsMediators
                 }
 
                 int maxHealth = MaxHealth(turret);
-                Color color = _turret != null ? _turret.LevelColor(turret.Level) : Color.white;
+                Color color = Tint(turret);
                 visual.SetState(turret.Yaw, Mathf.Clamp01((float) turret.Health / Mathf.Max(1, maxHealth)), color);
             }
 
@@ -493,6 +592,13 @@ namespace Modules.EnemyModule.ViewsMediators
                 return;
 
             Gizmos.color = new Color(0.9f, 0.7f, 0.3f, 0.8f);
+            if (_baseLayout != null)
+            {
+                float side = _baseLayout.HalfSize * 2f;
+                Gizmos.DrawWireCube(_baseWallRoot.position + Vector3.up, new Vector3(side, 2f, side));
+                return;
+            }
+
             foreach (Transform point in _baseWallRoot)
                 Gizmos.DrawWireCube(point.position + Vector3.up, new Vector3(2f, 2f, 2f));
         }

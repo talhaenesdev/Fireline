@@ -26,6 +26,8 @@ namespace Modules.PlayerModule.ViewsMediators
         public Action<bool, bool> FireChanged;
         public Action ReloadPressed;
         public Action PingPressed;
+        public Action RepairPressed;
+        public Action AllyOrderPressed;
 
         private InputAction _move;
         private InputAction _sprint;
@@ -101,7 +103,7 @@ namespace Modules.PlayerModule.ViewsMediators
         private void OnFireCanceled(InputAction.CallbackContext context) => FireChanged?.Invoke(false, false);
         private void OnReload(InputAction.CallbackContext context) => ReloadPressed?.Invoke();
 
-        // G, or the middle mouse button, pings where the player aims.
+        // G, or the middle mouse button, pings where the player aims; F mends what the player stands by; H switches the soldiers' order.
         private void Update()
         {
             _isPointerOverUi = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
@@ -112,6 +114,12 @@ namespace Modules.PlayerModule.ViewsMediators
             bool button = UnityEngine.InputSystem.Mouse.current != null && UnityEngine.InputSystem.Mouse.current.middleButton.wasPressedThisFrame;
             if (key || button)
                 PingPressed?.Invoke();
+
+            if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.fKey.wasPressedThisFrame)
+                RepairPressed?.Invoke();
+
+            if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.hKey.wasPressedThisFrame)
+                AllyOrderPressed?.Invoke();
         }
     }
 }

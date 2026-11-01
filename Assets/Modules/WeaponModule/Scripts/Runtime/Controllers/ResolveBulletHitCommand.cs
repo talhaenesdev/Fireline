@@ -13,6 +13,8 @@ namespace Modules.WeaponModule.Controllers
     /// </summary>
     internal class ResolveBulletHitCommand : Command
     {
+        private const string STRUCTURE_TAG = "Structure";
+
         [InjectSignal] private WeaponSignals _signals { get; set; }
 
         [SignalParam] private INetworkBullet _bullet { get; set; }
@@ -20,6 +22,10 @@ namespace Modules.WeaponModule.Controllers
 
         public override void Execute()
         {
+            // A structure's blocker keeps players out; the rounds of those behind it fly over.
+            if (_other.CompareTag(STRUCTURE_TAG))
+                return;
+
             NetworkObject target = _other.GetComponentInParent<NetworkObject>();
 
             if (target != null && target.IsPlayerObject)

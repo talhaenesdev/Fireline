@@ -24,13 +24,20 @@ namespace Modules.EnemyModule.Entities
         {
             PooledNetworkObject item = _pool.Get<PooledNetworkObject>(_key);
             item.transform.SetPositionAndRotation(position, rotation);
-            return item.GetComponent<NetworkObject>();
+
+            // The pool parents its items itself; Netcode must not treat that as a reparenting to sync.
+            var networkObject = item.GetComponent<NetworkObject>();
+            networkObject.AutoObjectParentSync = false;
+            return networkObject;
         }
 
         public void Destroy(NetworkObject networkObject)
         {
-            if (networkObject != null && networkObject.TryGetComponent(out PooledNetworkObject item))
-                item.Dismiss();
+            if (networkObject == null || !networkObject.TryGetComponent(out PooledNetworkObject item))
+                return;
+
+            networkObject.AutoObjectParentSync = false;
+            item.Dismiss();
         }
     }
 }

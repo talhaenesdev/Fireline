@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Modules.EnemyModule.Data.ValueObjects;
 using UnityEngine;
 
 namespace Modules.EnemyModule.Data.UnityObjects
@@ -35,6 +37,20 @@ namespace Modules.EnemyModule.Data.UnityObjects
         [SerializeField] private float _guardRadius = 14f;
         [SerializeField] private Color _allyTint = new(0.35f, 0.6f, 1f, 1f);
 
+        [Header("Kinds: a barracks trains them in turn; empty, every soldier is the one above")]
+        [SerializeField] private List<AllyKindCVO> _kinds = new();
+
+        [Header("Upgrades")]
+        [SerializeField] private int _maxLevel = 2;
+        [Tooltip("Each level a barracks keeps this many more soldiers.")]
+        [SerializeField] private int _alliesPerLevel = 2;
+        [Tooltip("Each level a barracks trains this share faster (0.25 = 25%).")]
+        [SerializeField] private float _trainSpeedPerLevel = 0.25f;
+
+        [Header("Following")]
+        [Tooltip("How far behind their player following soldiers keep.")]
+        [SerializeField] private float _followDistance = 3f;
+
         public int Health => _health;
         public float MaxPlaceDistance => _maxPlaceDistance;
         public GameObject AllyPrefab => _allyPrefab;
@@ -49,5 +65,20 @@ namespace Modules.EnemyModule.Data.UnityObjects
         public float AllyFireInterval => _allyFireInterval;
         public float GuardRadius => _guardRadius;
         public Color AllyTint => _allyTint;
+        public int MaxLevel => _maxLevel;
+        public float FollowDistance => _followDistance;
+
+        public int MaxAlliesAt(int level) => _maxAllies + Mathf.Max(0, level) * _alliesPerLevel;
+
+        public float TrainIntervalAt(int level) => _trainInterval / (1f + Mathf.Max(0, level) * _trainSpeedPerLevel);
+
+        /// <summary>The kind the barracks trains as its nth soldier.</summary>
+        public AllyKindCVO Kind(int trained) => _kinds.Count > 0
+            ? _kinds[Mathf.Abs(trained) % _kinds.Count]
+            : new AllyKindCVO
+            {
+                Health = _allyHealth, MoveSpeed = _allyMoveSpeed, Damage = _allyDamage,
+                Range = _allyRange, FireInterval = _allyFireInterval, Tint = _allyTint
+            };
     }
 }

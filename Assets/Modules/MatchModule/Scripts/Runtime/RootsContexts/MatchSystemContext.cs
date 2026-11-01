@@ -64,6 +64,8 @@ namespace Modules.MatchModule.RootsContexts
                 .ToSequence<RemoveScoreCommand>()
                 .ToSequence<CheckZombieGameOverCommand>();
 
+            CommandBinder.Bind(_signals.Incoming.LoseZombieMatch).ToSequence<LoseZombieMatchCommand>();
+
             CommandBinder.Bind(_signals.Incoming.PlayerNameChanged)
                 .ToSequence<RequireServerCommand>()
                 .ToSequence<UpdateScoreNameCommand>();

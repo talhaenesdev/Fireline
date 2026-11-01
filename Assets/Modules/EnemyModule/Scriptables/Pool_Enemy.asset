@@ -145,3 +145,63 @@ MonoBehaviour:
       m_SubObjectType: 
       m_SubObjectGUID: 
       m_EditorAssetChanged: 0
+  - PoolKey: Gate
+    InitialCreateCount: 8
+    IsExtendable: 1
+    LazyLoad: 0
+    IsAddressable: 0
+    Prefab: {fileID: 6375406473223120063, guid: 92c380c64d7dd1b48bc249d277435774, type: 3}
+    AddressablePrefab:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+  - PoolKey: Headquarters
+    InitialCreateCount: 1
+    IsExtendable: 1
+    LazyLoad: 0
+    IsAddressable: 0
+    Prefab: {fileID: 6375406473223120063, guid: da3b22b4f4e16164eb969b3a966a71b9, type: 3}
+    AddressablePrefab:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+  - PoolKey: RepairStation
+    InitialCreateCount: 2
+    IsExtendable: 1
+    LazyLoad: 0
+    IsAddressable: 0
+    Prefab: {fileID: 6375406473223120063, guid: c02aab830f14d88488ad2437597411b5, type: 3}
+    AddressablePrefab:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+  - PoolKey: SpikeTrap
+    InitialCreateCount: 4
+    IsExtendable: 1
+    LazyLoad: 0
+    IsAddressable: 0
+    Prefab: {fileID: 6375406473223120063, guid: 9a681393846014345bf0bca7d3f75867, type: 3}
+    AddressablePrefab:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+  - PoolKey: Mine
+    InitialCreateCount: 6
+    IsExtendable: 1
+    LazyLoad: 0
+    IsAddressable: 0
+    Prefab: {fileID: 6375406473223120063, guid: ede75f239f8537c41a23edb2f8b28941, type: 3}
+    AddressablePrefab:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0

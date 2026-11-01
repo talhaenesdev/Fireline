@@ -10,6 +10,9 @@ namespace Modules.EconomyModule.Signals
         public Signal Started = new();
 
         public Signal<IEconomyBoard> BoardRegistered = new();
+
+        /// <summary>A board registered and needs the pool before it draws anything.</summary>
+        public Signal<IEconomyBoard> PoolRequested = new();
         public Signal<IEconomyZone> ZoneRegistered = new();
 
         /// <summary>A wallet changed on the replicated board.</summary>

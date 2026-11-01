@@ -88,7 +88,7 @@ namespace Modules.EconomyModule.ShopScreenModule.ViewsMediators
             {
                 ShopItemCVO item = _items[i];
                 bool affordable = _money >= item.Price;
-                _rows[i].Label.text = $"{item.Name}  <color=#9AA4B2><size=80%>{Describe(item)}</size></color>\n<color=#FFC857>{item.Price}</color>";
+                _rows[i].Label.text = $"{item.Name}  <color=#9AA4B2><size=80%>{Describe(item)}</size></color>\n<color=#FFC857>{item.Price}</color>{(item.MaterialCost > 0 ? $"  <color=#C8B08A>+{item.MaterialCost} malzeme</color>" : string.Empty)}";
                 _rows[i].Button.interactable = affordable;
             }
         }
@@ -104,6 +104,12 @@ namespace Modules.EconomyModule.ShopScreenModule.ViewsMediators
             ShopItemType.Barricade => "taşı, durduğun yere kur; zombileri durdurur",
             ShopItemType.Wall => "sağlam duvar; taşı, durduğun yere kur",
             ShopItemType.Barracks => "kışla kur; sana savaşan askerler yetiştirir",
+            ShopItemType.Gate => "kapı; zombiler kırmak zorunda, sen geçersin",
+            ShopItemType.RepairStation => "çevresindeki yapıları yavaşça tamir eder",
+            ShopItemType.WallUpgrade => "bütün duvarlar bir kademe güçlenir: tahta, taş, metal",
+            ShopItemType.SpikeTrap => "dikenli tel; üstündeki zombiler yavaşlar ve kanar",
+            ShopItemType.Mine => "mayın; yaklaşan ilk zombide patlar",
+            ShopItemType.BarracksUpgrade => "kışlaların daha çok asker tutar, daha hızlı yetiştirir",
             ShopItemType.Perk => item.Index switch
             {
                 0 => $"en yüksek can %{item.Amount * 100f:0} artar - bir kez",

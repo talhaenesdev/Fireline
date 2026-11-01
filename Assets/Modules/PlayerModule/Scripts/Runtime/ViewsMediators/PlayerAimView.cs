@@ -16,6 +16,8 @@ namespace Modules.PlayerModule.ViewsMediators
     {
         [SerializeField] private Camera _playerCamera;
         [SerializeField] private Transform _aimTransform;
+        [Tooltip("Degrees the avatar is turned past the aim, to make up for an aiming animation that holds the body at an angle. Tune it in Play mode until the gun points at the mouse.")]
+        [SerializeField] private float _facingYawOffset;
 
         public bool IsRegistered { get; set; }
 
@@ -36,8 +38,11 @@ namespace Modules.PlayerModule.ViewsMediators
         {
             direction.y = 0f;
             if (direction.sqrMagnitude > 0.001f)
-                _aimTransform.forward = direction.normalized;
+                FaceDirection(direction);
         }
+
+        private void FaceDirection(Vector3 direction) =>
+            _aimTransform.forward = Quaternion.Euler(0f, _facingYawOffset, 0f) * direction.normalized;
 
         private void Update()
         {
@@ -63,7 +68,7 @@ namespace Modules.PlayerModule.ViewsMediators
             if (direction.sqrMagnitude < 0.001f)
                 return;
 
-            _aimTransform.forward = direction.normalized;
+            FaceDirection(direction);
             AimChanged?.Invoke(point);
         }
     }

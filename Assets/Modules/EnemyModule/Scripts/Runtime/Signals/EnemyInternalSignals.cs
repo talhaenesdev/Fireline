@@ -8,6 +8,15 @@ namespace Modules.EnemyModule.Signals
     {
         public Signal<IZombieWaveBoard> BoardRegistered = new();
 
+        /// <summary>A board registered and needs the pool before it draws anything.</summary>
+        public Signal<IZombieWaveBoard> PoolRequested = new();
+
+        /// <summary>Server: a player asked to mend the structure they stand by.</summary>
+        public Signal<ulong> RepairRequested = new();
+
+        /// <summary>Server: a player asked to switch their soldiers between guarding and following.</summary>
+        public Signal<ulong> AllyOrderRequested = new();
+
         /// <summary>Buyer's process: the server gave the local player a structure of this kind to place.</summary>
         public Signal<int> StructureGranted = new();
 
