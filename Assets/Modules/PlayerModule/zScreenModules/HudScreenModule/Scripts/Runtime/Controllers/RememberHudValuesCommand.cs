@@ -25,11 +25,13 @@ namespace Modules.PlayerModule.HudScreenModule.Controllers
 
         [SignalParam(0)] private int _ammo { get; set; }
         [SignalParam(1)] private int _magazineSize { get; set; }
+        [SignalParam(2)] private int _reserve { get; set; }
 
         public override void Execute()
         {
             _model.Ammo = _ammo;
             _model.MagazineSize = _magazineSize;
+            _model.Reserve = _reserve;
         }
     }
 

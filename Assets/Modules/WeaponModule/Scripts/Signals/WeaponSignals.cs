@@ -25,6 +25,9 @@ namespace Modules.WeaponModule.Signals
         /// <summary>The local weapon reloads faster: the share of the time taken off, 0.4 is 40%.</summary>
         public Signal<float> ImproveReload = new();
 
+        /// <summary>The local weapon gets this many magazines' worth of spare rounds, up to what it can carry - only if it is the weapon of the set named, or any below zero.</summary>
+        public Signal<float, int> RefillAmmo = new();
+
         /// <summary>Server: this player now carries this weapon of the set: client id, index.</summary>
         public Signal<ulong, int> EquipWeapon = new();
 
@@ -34,8 +37,8 @@ namespace Modules.WeaponModule.Signals
 
     public class WeaponSignalsOutgoing
     {
-        /// <summary>Rounds left, then the magazine's size, of the local weapon.</summary>
-        public Signal<int, int> AmmoChanged = new();
+        /// <summary>Rounds left, the magazine's size, and the spare rounds - below zero when they never run out - of the local weapon.</summary>
+        public Signal<int, int, int> AmmoChanged = new();
 
         /// <summary>The local player carries a new weapon: its name.</summary>
         public Signal<string> LocalWeaponChanged = new();

@@ -22,9 +22,14 @@ namespace Modules.EconomyModule.ShopScreenModule.Controllers
     {
         [Inject] private IShopScreenModel _model { get; set; }
 
-        [SignalParam] private int _money { get; set; }
+        [SignalParam(0)] private int _money { get; set; }
+        [SignalParam(2)] private int _materials { get; set; }
 
-        public override void Execute() => _model.Money = _money;
+        public override void Execute()
+        {
+            _model.Money = _money;
+            _model.Materials = _materials;
+        }
     }
 
     internal class OpenShopScreenCommand : Command
@@ -47,7 +52,7 @@ namespace Modules.EconomyModule.ShopScreenModule.Controllers
                 }
 
                 screen.ShowItems(_model.Items);
-                screen.ShowMoney(_model.Money);
+                screen.ShowWallet(_model.Money, 0, _model.Materials);
                 Release();
             }
             catch (Exception exception)

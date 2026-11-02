@@ -125,6 +125,7 @@ namespace Modules.EconomyModule.Controllers
                     break;
                 case ShopItemType.FireRate:
                 case ShopItemType.ReloadPerk:
+                case ShopItemType.Ammo:
                     _model.Board.ConfirmPurchaseServer(_clientId, _zone, _item);
                     break;
                 case ShopItemType.Door:
@@ -197,6 +198,8 @@ namespace Modules.EconomyModule.Controllers
                 _signals.Outgoing.FireRatePurchased.Dispatch(item.Amount);
             else if (item.Type == ShopItemType.ReloadPerk)
                 _signals.Outgoing.ReloadPerkPurchased.Dispatch(item.Amount);
+            else if (item.Type == ShopItemType.Ammo)
+                _signals.Outgoing.AmmoPurchased.Dispatch(item.Amount, item.Index - 1);
         }
     }
 

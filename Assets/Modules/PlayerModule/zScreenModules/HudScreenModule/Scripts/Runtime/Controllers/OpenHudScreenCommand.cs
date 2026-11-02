@@ -29,7 +29,7 @@ namespace Modules.PlayerModule.HudScreenModule.Controllers
                 }
 
                 screen.ShowHealth(_model.Health, _model.MaxHealth);
-                screen.ShowAmmo(_model.Ammo, _model.MagazineSize);
+                screen.ShowAmmo(_model.Ammo, _model.MagazineSize, _model.Reserve);
                 screen.ShowShield(_model.Shield);
                 if (_model.HasWallet)
                     screen.ShowWallet(_model.Money, _model.Carried, _model.Materials);

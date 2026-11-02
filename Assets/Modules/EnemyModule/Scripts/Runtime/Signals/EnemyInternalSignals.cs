@@ -6,6 +6,21 @@ namespace Modules.EnemyModule.Signals
 {
     internal class EnemyInternalSignals : ISignalHolder
     {
+        /// <summary>Every process: a zombie was hit here.</summary>
+        public Signal<Vector3> ZombieHitShown = new(hideCommandLog: true);
+
+        /// <summary>Every process: a zombie fell here.</summary>
+        public Signal<Vector3> ZombieDeathShown = new();
+
+        /// <summary>Every process: something blew up here.</summary>
+        public Signal<Vector3> BlastShown = new();
+
+        /// <summary>Every process: a structure came down here.</summary>
+        public Signal<Vector3> StructureFellShown = new();
+
+        /// <summary>Every process: a wave was cleared.</summary>
+        public Signal WaveClearedShown = new();
+
         public Signal<IZombieWaveBoard> BoardRegistered = new();
 
         /// <summary>A board registered and needs the pool before it draws anything.</summary>

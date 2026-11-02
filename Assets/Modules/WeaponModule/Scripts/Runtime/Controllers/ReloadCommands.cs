@@ -5,7 +5,7 @@ using Modules.WeaponModule.Models;
 
 namespace Modules.WeaponModule.Controllers
 {
-    /// <summary>A reload starts when there is a weapon, it is not already reloading and the magazine is not full.</summary>
+    /// <summary>A reload starts when there is a weapon, it is not already reloading, the magazine is not full and there are rounds to load.</summary>
     internal class StartReloadCommand : Command
     {
         [Inject] private IWeaponModel _model { get; set; }
@@ -15,7 +15,8 @@ namespace Modules.WeaponModule.Controllers
             bool canReload = _model.LocalWeapon?.Config != null
                              && _model.IsArmed
                              && !_model.IsReloading
-                             && _model.Ammo < _model.LocalWeapon.Config.MagazineSize;
+                             && _model.Ammo < _model.LocalWeapon.Config.MagazineSize
+                             && (_model.LocalWeapon.Config.InfiniteReserve || _model.Reserve > 0);
 
             if (canReload)
             {
@@ -49,8 +50,16 @@ namespace Modules.WeaponModule.Controllers
             _model.IsReloading = false;
 
             // The player may have died and respawned mid-reload; the new weapon is already full.
-            if (_model.LocalWeapon?.Config != null)
-                _model.Ammo = _model.LocalWeapon.Config.MagazineSize;
+            var config = _model.LocalWeapon?.Config;
+            if (config == null)
+                return;
+
+            // The magazine takes what it lacks from the spare rounds, as far as they go.
+            int wanted = config.MagazineSize - _model.Ammo;
+            int loaded = config.InfiniteReserve ? wanted : UnityEngine.Mathf.Min(wanted, _model.Reserve);
+            _model.Ammo += loaded;
+            if (!config.InfiniteReserve)
+                _model.Reserve -= loaded;
         }
     }
 }

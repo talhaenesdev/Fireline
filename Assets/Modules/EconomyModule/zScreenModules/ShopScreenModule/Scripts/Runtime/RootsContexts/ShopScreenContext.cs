@@ -43,7 +43,7 @@ namespace Modules.EconomyModule.ShopScreenModule.RootsContexts
                 .ToSequence<OpenShopScreenCommand>();
 
             CommandBinder.Bind(_signals.Incoming.Close).ToSequence<CloseShopScreenCommand>();
-            CommandBinder.Bind(_signals.Incoming.ApplyMoney).ToSequence<RememberMoneyCommand>();
+            CommandBinder.Bind(_signals.Incoming.ApplyWallet).ToSequence<RememberMoneyCommand>();
         }
     }
 }

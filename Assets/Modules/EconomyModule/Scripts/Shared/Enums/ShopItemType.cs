@@ -42,6 +42,9 @@ namespace Modules.EconomyModule.Shared.Enums
         Mine = 16,
 
         /// <summary>Every barracks of the buyer goes up a level.</summary>
-        BarracksUpgrade = 17
+        BarracksUpgrade = 17,
+
+        /// <summary>Spare rounds for the weapon in hand; Amount is how many magazines' worth.</summary>
+        Ammo = 18
     }
 }

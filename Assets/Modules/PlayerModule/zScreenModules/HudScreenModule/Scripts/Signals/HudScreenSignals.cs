@@ -44,7 +44,7 @@ namespace Modules.PlayerModule.HudScreenModule.Signals
         public Signal<bool> ApplyAllyOrder = new();
 
         /// <summary>Rounds left, then the magazine's size.</summary>
-        public Signal<int, int> ApplyAmmo = new();
+        public Signal<int, int, int> ApplyAmmo = new();
 
         /// <summary>The wave, the seconds until it comes in (zero once it is on), and the zombies left.</summary>
         public Signal<int, float, int> ApplyWave = new();

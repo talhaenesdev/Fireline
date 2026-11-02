@@ -13,6 +13,18 @@ MonoBehaviour:
   m_Name: CD_Shop
   m_EditorClassIdentifier: Modules.Economy::Modules.EconomyModule.Data.UnityObjects.CD_Shop
   _items:
+  - Name: Tabanca Mermisi
+    Price: 5
+    MaterialCost: 0
+    Type: 18
+    Amount: 3
+    Index: 1
+  - Name: Mermi
+    Price: 30
+    MaterialCost: 0
+    Type: 18
+    Amount: 2
+    Index: 0
   - Name: Can Paketi
     Price: 40
     MaterialCost: 0

@@ -83,6 +83,7 @@ namespace Modules.WeaponModule.Controllers
             }
 
             _model.Ammo = _weapon.Config.MagazineSize;
+            _model.Reserve = _weapon.Config.StartReserve;
             _model.IsReloading = false;
             _model.NextFireTime = 0f;
         }

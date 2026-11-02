@@ -20,6 +20,8 @@ namespace Modules.EnemyModule.Entities
         [SerializeField] private Color _skinTint = new(0.45f, 0.85f, 0.3f, 1f);
         [SerializeField] private Color _flashColor = new(1f, 0.15f, 0.15f, 1f);
         [SerializeField] private float _flashDuration = 0.12f;
+        [Tooltip("How much bigger a hit swells the zombie for a moment.")]
+        [SerializeField] private float _hitPunch = 0.18f;
 
         // The kind's look, set by the server before the zombie spawns and carried to every client.
         private readonly NetworkVariable<Color> _tint = new(Color.white);
@@ -64,6 +66,7 @@ namespace Modules.EnemyModule.Entities
             if (_flash != null)
                 StopCoroutine(_flash);
             _flash = null;
+            transform.localScale = Vector3.one * _scale.Value;
             base.OnNetworkDespawn();
         }
 
@@ -123,10 +126,24 @@ namespace Modules.EnemyModule.Entities
             _flash = StartCoroutine(Flash());
         }
 
+        // A flash of colour and a swell that springs back.
         private IEnumerator Flash()
         {
             SetTint(_flashColor);
-            yield return new WaitForSeconds(_flashDuration);
+            float elapsed = 0f;
+            float length = Mathf.Max(_flashDuration * 1.5f, 0.01f);
+            while (elapsed < length)
+            {
+                float t = elapsed / length;
+                transform.localScale = Vector3.one * (_scale.Value * (1f + _hitPunch * (1f - t) * (1f - t)));
+                if (elapsed >= _flashDuration)
+                    SetTint(_tint.Value);
+
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            transform.localScale = Vector3.one * _scale.Value;
             SetTint(_tint.Value);
             _flash = null;
         }

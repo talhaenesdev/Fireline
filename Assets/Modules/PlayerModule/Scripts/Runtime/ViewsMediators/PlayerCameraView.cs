@@ -21,6 +21,8 @@ namespace Modules.PlayerModule.ViewsMediators
         private float _shakeScale = 1f;
 
         private float _shakeTimer;
+        private float _shakeLength = 1f;
+        private float _shakeBoost = 1f;
         private Vector3 _followPosition;
         private bool _hasFollowPosition;
         private float _shakeSeed;
@@ -58,12 +60,20 @@ namespace Modules.PlayerModule.ViewsMediators
                 _cameraOffset.y = height;
         }
 
-        public void Shake()
+        public void Shake() => ShakeBy(1f);
+
+        /// <summary>A shake this many times the configured one, longer too; a weaker one never cuts a stronger short.</summary>
+        public void ShakeBy(float boost)
         {
             if (!enabled || _shake == null)
                 return;
 
-            _shakeTimer = _shake.Duration;
+            if (_shakeTimer > 0f && _shakeBoost * (_shakeTimer / _shakeLength) > boost)
+                return;
+
+            _shakeBoost = boost;
+            _shakeLength = _shake.Duration * Mathf.Max(1f, boost * 0.8f);
+            _shakeTimer = _shakeLength;
             _shakeSeed = Random.Range(0f, 1000f);
         }
 
@@ -95,7 +105,7 @@ namespace Modules.PlayerModule.ViewsMediators
 
             _shakeTimer = Mathf.Max(0f, _shakeTimer - Time.deltaTime);
 
-            float strength = _shake.Strength * _shakeScale * Mathf.Clamp01(_shakeTimer / _shake.Duration);
+            float strength = _shake.Strength * _shakeScale * _shakeBoost * Mathf.Clamp01(_shakeTimer / _shakeLength);
             float time = (Time.time + _shakeSeed) * _shake.Frequency;
             float x = Mathf.PerlinNoise(time, 0f) - 0.5f;
             float z = Mathf.PerlinNoise(0f, time) - 0.5f;

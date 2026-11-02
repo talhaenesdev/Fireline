@@ -17,6 +17,7 @@ namespace Modules.PlayerModule.ViewsMediators
 
             _view.Follow();
             _internalSignals.ShakeLocalCamera.AddListener(_view.Shake);
+            _internalSignals.ShakeLocalCameraBy.AddListener(_view.ShakeBy);
             _internalSignals.ApplyLocalCamera.AddListener(_view.Apply);
             _internalSignals.LocalCameraRegistered.Dispatch(_view.Settings);
         }
@@ -24,6 +25,7 @@ namespace Modules.PlayerModule.ViewsMediators
         public void OnRemove()
         {
             _internalSignals.ShakeLocalCamera.RemoveListener(_view.Shake);
+            _internalSignals.ShakeLocalCameraBy.RemoveListener(_view.ShakeBy);
             _internalSignals.ApplyLocalCamera.RemoveListener(_view.Apply);
         }
     }

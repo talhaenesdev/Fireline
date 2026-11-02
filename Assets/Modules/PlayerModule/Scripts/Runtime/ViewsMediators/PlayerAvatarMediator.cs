@@ -55,6 +55,10 @@ namespace Modules.PlayerModule.ViewsMediators
             _internalSignals.AvatarSpawned.Dispatch(_view);
             _internalSignals.HealthChanged.Dispatch(_view.ClientId, _view.Health, _view.MaxHealth);
             _internalSignals.ShieldChanged.Dispatch(_view.ClientId, _view.Shield);
+
+            // A name set before this Mediator listened would otherwise never reach the board.
+            if (!string.IsNullOrEmpty(_view.PlayerName))
+                _internalSignals.NameChanged.Dispatch(_view.ClientId, _view.PlayerName);
         }
 
         private void OnDespawned()

@@ -17,6 +17,9 @@ MonoBehaviour:
   _automatic: 0
   _magazineSize: 7
   _reloadDuration: 1.5
+  _infiniteReserve: 0
+  _startReserve: 35
+  _maxReserve: 105
   _damage: 10
   _bulletSpeed: 20
   _bulletLifetime: 3

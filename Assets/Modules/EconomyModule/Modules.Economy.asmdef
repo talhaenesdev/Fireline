@@ -2,6 +2,9 @@
   "name": "Modules.Economy",
   "references": [
     "Unity.Netcode.Runtime",
+    "Unity.InputSystem",
+    "Modules.Audio",
+    "Modules.Audio.Shared",
     "FlowIoC",
     "Modules.Economy.Shared",
     "Modules.Economy.Signals"

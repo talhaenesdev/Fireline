@@ -99,6 +99,9 @@ namespace Modules.EconomyModule.Signals
         /// <summary>The local player bought faster reloads: the share of the time taken off.</summary>
         public Signal<float> ReloadPerkPurchased = new();
 
+        /// <summary>The local player bought spare rounds: how many magazines' worth, and for which weapon of the set (below zero for the one in hand).</summary>
+        public Signal<float, int> AmmoPurchased = new();
+
         /// <summary>The local player bought a faster trigger: how much shorter each shot's wait gets.</summary>
         public Signal<float> FireRatePurchased = new();
     }

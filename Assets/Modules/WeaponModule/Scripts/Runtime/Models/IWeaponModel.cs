@@ -16,6 +16,9 @@ namespace Modules.WeaponModule.Models
 
         bool IsArmed { get; set; }
         int Ammo { get; set; }
+
+        /// <summary>Spare rounds besides the magazine; the weapon's config says whether they ever run out.</summary>
+        int Reserve { get; set; }
         bool IsReloading { get; set; }
         float NextFireTime { get; set; }
 
@@ -46,6 +49,7 @@ namespace Modules.WeaponModule.Models
         public System.Collections.Generic.HashSet<GameObject> PooledBulletPrefabs { get; } = new();
         public bool IsArmed { get; set; }
         public int Ammo { get; set; }
+        public int Reserve { get; set; }
         public bool IsReloading { get; set; }
         public float NextFireTime { get; set; }
         public bool IsTriggerHeld { get; set; }

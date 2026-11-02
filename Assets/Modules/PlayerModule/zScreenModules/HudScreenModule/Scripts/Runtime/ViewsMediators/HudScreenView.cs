@@ -59,6 +59,12 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         private int _money;
         private int _carried;
         private int _materials;
+        private bool _hasWallet;
+        private int _moneyChange;
+        private int _materialsChange;
+        private float _walletChangedAt = -10f;
+        private const float WALLET_POP = 0.25f;
+        private const float WALLET_CHANGE_SHOWN = 1.4f;
         private string _progress = string.Empty;
         private string _objective = string.Empty;
 
@@ -128,6 +134,7 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         private void Update()
         {
             DrawFeedback();
+            DrawWalletPop();
 
             if (_wave <= 0 || _waveStartTime <= 0f)
                 return;
@@ -224,6 +231,16 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
 
         public void ShowWallet(int money, int carried, int materials)
         {
+            // What came in or went out shows beside the totals for a moment, and the line swells.
+            if (_hasWallet && (money != _money || materials != _materials))
+            {
+                bool isFresh = Time.time - _walletChangedAt < WALLET_CHANGE_SHOWN;
+                _moneyChange = (isFresh ? _moneyChange : 0) + money - _money;
+                _materialsChange = (isFresh ? _materialsChange : 0) + materials - _materials;
+                _walletChangedAt = Time.time;
+            }
+
+            _hasWallet = true;
             _money = money;
             _carried = carried;
             _materials = materials;
@@ -239,7 +256,37 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         private void DrawWallet()
         {
             _walletText.gameObject.SetActive(true);
-            _walletText.text = $"<color=#FFC857>Para: {_money}</color>  <color=#C8B08A>Malzeme: {_materials}</color>\n<size=80%>Çanta: {_carried}</size>{_progress}";
+            bool showsChange = Time.time - _walletChangedAt < WALLET_CHANGE_SHOWN;
+            string money = showsChange ? Change(_moneyChange) : string.Empty;
+            string materials = showsChange ? Change(_materialsChange) : string.Empty;
+            _walletText.text = $"<color=#FFC857>Para: {_money}</color>{money}  <color=#C8B08A>Malzeme: {_materials}</color>{materials}\n<size=80%>Çanta: {_carried}</size>{_progress}";
+        }
+
+        private static string Change(int amount) => amount switch
+        {
+            > 0 => $" <size=80%><color=#7CFF7C>+{amount}</color></size>",
+            < 0 => $" <size=80%><color=#FF6B6B>{amount}</color></size>",
+            _ => string.Empty
+        };
+
+        private bool _walletChangeDrawn;
+
+        private void DrawWalletPop()
+        {
+            if (_walletText == null)
+                return;
+
+            float age = Time.time - _walletChangedAt;
+            float pop = Mathf.Clamp01(1f - age / WALLET_POP);
+            _walletText.rectTransform.localScale = Vector3.one * (1f + 0.15f * pop * pop);
+
+            // The change beside the totals goes once its moment is over.
+            bool showsChange = age < WALLET_CHANGE_SHOWN;
+            if (showsChange == _walletChangeDrawn)
+                return;
+
+            _walletChangeDrawn = showsChange;
+            DrawWallet();
         }
 
         public void ShowObjective(string title, bool isActive, float progress)
@@ -288,11 +335,13 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         private string _weaponName;
         private int _ammo;
         private int _magazineSize;
+        private int _reserve = -1;
 
-        public void ShowAmmo(int ammo, int magazineSize)
+        public void ShowAmmo(int ammo, int magazineSize, int reserve)
         {
             _ammo = ammo;
             _magazineSize = magazineSize;
+            _reserve = reserve;
             DrawAmmo();
         }
 
@@ -307,7 +356,9 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
             if (_ammoText == null)
                 return;
 
-            string ammo = $"{_ammo} / {_magazineSize}";
+            // Spare rounds beside the magazine; red once they are gone, a sign that never runs out on the fallback weapon.
+            string spare = _reserve < 0 ? "∞" : _reserve == 0 ? "<color=#FF5A5A>0</color>" : _reserve.ToString();
+            string ammo = $"{_ammo} / {_magazineSize}  <size=70%><color=#9AA4B2>{spare}</color></size>";
             _ammoText.text = string.IsNullOrEmpty(_weaponName) ? ammo : $"<size=60%>{_weaponName}</size>\n{ammo}";
         }
 

@@ -18,6 +18,9 @@ namespace Modules.PlayerModule.Signals
         /// <summary>The local player's weapon fired.</summary>
         public Signal ShakeCamera = new();
 
+        /// <summary>Something heavy went off at this point: the local camera shakes the harder the closer it is.</summary>
+        public Signal<Vector3> RumbleAt = new();
+
         /// <summary>Whether one player's rounds hurt another. Server only.</summary>
         public Signal<bool> SetFriendlyFire = new();
 

@@ -27,13 +27,13 @@ namespace Modules.EconomyModule.ShopScreenModule.ViewsMediators
         private void OnScreenShown(IScreenBody screen)
         {
             _view.BuyClicked += OnBuyClicked;
-            _signals.Incoming.ApplyMoney.AddListener(_view.ShowMoney);
+            _signals.Incoming.ApplyWallet.AddListener(_view.ShowWallet);
         }
 
         private void OnScreenHidden(IScreenBody screen)
         {
             _view.BuyClicked -= OnBuyClicked;
-            _signals.Incoming.ApplyMoney.RemoveListener(_view.ShowMoney);
+            _signals.Incoming.ApplyWallet.RemoveListener(_view.ShowWallet);
         }
 
         private void OnBuyClicked(int item)

@@ -94,6 +94,7 @@ namespace Modules.PlayerModule.RootsContexts
                 .ToSequence<PublishCameraSettingsCommand>();
 
             CommandBinder.Bind(_signals.Incoming.ShakeCamera).ToSequence<SignalDispatchCommand>(_internalSignals.ShakeLocalCamera);
+            CommandBinder.Bind(_signals.Incoming.RumbleAt).ToSequence<ShakeForRumbleCommand>();
         }
 
         public override void DestroyContext()

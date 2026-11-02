@@ -22,6 +22,10 @@ namespace Modules.EnemyModule.ViewsMediators
             _view.BossChanged += OnBossChanged;
             _view.ObjectiveChanged += OnObjectiveChanged;
             _view.ObjectiveEnded += OnObjectiveEnded;
+            _view.ZombieHitShown += OnZombieHitShown;
+            _view.ZombieDeathShown += OnZombieDeathShown;
+            _view.BlastShown += OnBlastShown;
+            _view.StructureFellShown += OnStructureFellShown;
             _internalSignals.PoolRequested.Dispatch(_view);
             _internalSignals.BoardRegistered.Dispatch(_view);
         }
@@ -38,7 +42,19 @@ namespace Modules.EnemyModule.ViewsMediators
             _view.BossChanged -= OnBossChanged;
             _view.ObjectiveChanged -= OnObjectiveChanged;
             _view.ObjectiveEnded -= OnObjectiveEnded;
+            _view.ZombieHitShown -= OnZombieHitShown;
+            _view.ZombieDeathShown -= OnZombieDeathShown;
+            _view.BlastShown -= OnBlastShown;
+            _view.StructureFellShown -= OnStructureFellShown;
         }
+
+        private void OnZombieHitShown(UnityEngine.Vector3 position) => _internalSignals.ZombieHitShown.Dispatch(position);
+
+        private void OnZombieDeathShown(UnityEngine.Vector3 position) => _internalSignals.ZombieDeathShown.Dispatch(position);
+
+        private void OnBlastShown(UnityEngine.Vector3 position) => _internalSignals.BlastShown.Dispatch(position);
+
+        private void OnStructureFellShown(UnityEngine.Vector3 position) => _internalSignals.StructureFellShown.Dispatch(position);
 
         private void OnObjectiveChanged(string title, bool isActive, float progress) =>
             _signals.Outgoing.ObjectiveChanged.Dispatch(title, isActive, progress);
@@ -48,7 +64,11 @@ namespace Modules.EnemyModule.ViewsMediators
         private void OnBossChanged(string name, int health, int maxHealth) =>
             _signals.Outgoing.BossStateChanged.Dispatch(name, health, maxHealth);
 
-        private void OnWaveCleared(int wave) => _signals.Outgoing.WaveCleared.Dispatch(wave);
+        private void OnWaveCleared(int wave)
+        {
+            _internalSignals.WaveClearedShown.Dispatch();
+            _signals.Outgoing.WaveCleared.Dispatch(wave);
+        }
 
         private void OnAllyOrderRequested(ulong clientId) => _internalSignals.AllyOrderRequested.Dispatch(clientId);
 

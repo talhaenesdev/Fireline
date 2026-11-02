@@ -12,8 +12,10 @@ namespace Modules.WeaponModule.Controllers
 
         public override void Execute()
         {
-            int magazineSize = _model.LocalWeapon?.Config != null ? _model.LocalWeapon.Config.MagazineSize : 0;
-            _signals.Outgoing.AmmoChanged.Dispatch(_model.Ammo, magazineSize);
+            var config = _model.LocalWeapon?.Config;
+            int magazineSize = config != null ? config.MagazineSize : 0;
+            int reserve = config != null && config.InfiniteReserve ? -1 : _model.Reserve;
+            _signals.Outgoing.AmmoChanged.Dispatch(_model.Ammo, magazineSize, reserve);
         }
     }
 }

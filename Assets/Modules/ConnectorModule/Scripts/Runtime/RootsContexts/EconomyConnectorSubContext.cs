@@ -54,13 +54,14 @@ namespace Modules.ConnectorModule.RootsContexts
             _economySignals.Outgoing.WaveRewardAnnounced.Connect(_hudScreenSignals.Incoming.ApplyWaveCleared, GROUP);
             _economySignals.Outgoing.LocalProgressChanged.Connect(_hudScreenSignals.Incoming.ApplyProgress, GROUP);
             // The shop shows only the money; the bag is the HUD's.
-            _economySignals.Outgoing.LocalWalletChanged.Connect(_shopScreenSignals.Incoming.ApplyMoney, (money, carried, materials) => money, GROUP);
+            _economySignals.Outgoing.LocalWalletChanged.Connect(_shopScreenSignals.Incoming.ApplyWallet, GROUP);
             _economySignals.Outgoing.ShopEntered.Connect(_shopScreenSignals.Incoming.Open, GROUP);
             _economySignals.Outgoing.ShopLeft.Connect(_shopScreenSignals.Incoming.Close, GROUP);
             _economySignals.Outgoing.HealPurchased.Connect(_playerSignals.Incoming.Heal, GROUP);
             _economySignals.Outgoing.ShieldPurchased.Connect(_playerSignals.Incoming.AddShield, GROUP);
             _economySignals.Outgoing.FireRatePurchased.Connect(_weaponSignals.Incoming.ImproveFireRate, GROUP);
             _economySignals.Outgoing.ReloadPerkPurchased.Connect(_weaponSignals.Incoming.ImproveReload, GROUP);
+            _economySignals.Outgoing.AmmoPurchased.Connect(_weaponSignals.Incoming.RefillAmmo, GROUP);
             _economySignals.Outgoing.PerkPurchased.Connect(_playerSignals.Incoming.ApplyPerk, GROUP);
             _economySignals.Outgoing.TurretPurchased.Connect(_enemySignals.Incoming.GrantTurret, GROUP);
             _economySignals.Outgoing.BarricadePurchased.Connect(_enemySignals.Incoming.GrantBarricade, GROUP);

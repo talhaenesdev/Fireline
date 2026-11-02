@@ -55,6 +55,7 @@ namespace Modules.ConnectorModule.RootsContexts
         private void OutgoingSignals()
         {
             _enemySignals.Outgoing.PlayerAttacked.Connect(_playerSignals.Incoming.ApplyDamage, GROUP);
+            _enemySignals.Outgoing.Rumbled.Connect(_playerSignals.Incoming.RumbleAt, GROUP);
             _enemySignals.Outgoing.ZombieKilled.Connect(_matchSignals.Incoming.ZombieKilled, GROUP);
             _enemySignals.Outgoing.HeadquartersDestroyed.Connect(_matchSignals.Incoming.LoseZombieMatch, GROUP);
             _enemySignals.Outgoing.WaveStateChanged.Connect(_hudScreenSignals.Incoming.ApplyWave, GROUP);

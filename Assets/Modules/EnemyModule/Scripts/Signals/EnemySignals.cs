@@ -77,6 +77,9 @@ namespace Modules.EnemyModule.Signals
 
     public class EnemySignalsOutgoing
     {
+        /// <summary>A blast went off or a structure came down here, on every process.</summary>
+        public Signal<Vector3> Rumbled = new();
+
         /// <summary>A player wants a structure mended: client id, structure, health asked for, what it costs. Server only.</summary>
         public Signal<ulong, int, int, int> RepairQuoted = new();
 

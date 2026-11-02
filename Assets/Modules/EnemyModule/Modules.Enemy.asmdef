@@ -3,6 +3,8 @@
   "references": [
     "FlowIoC",
     "Modules.Enemy.Signals",
+    "Modules.Audio",
+    "Modules.Audio.Shared",
     "Unity.Netcode.Runtime",
     "Modules.Match.Shared",
     "Unity.TextMeshPro",

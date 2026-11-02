@@ -30,6 +30,9 @@ namespace Modules.EconomyModule.Signals
         /// <summary>Server: a client said what level it is: client id, level.</summary>
         public Signal<ulong, int> LevelReported = new();
 
+        /// <summary>Server, test builds only: a client pressed the cheat key.</summary>
+        public Signal<ulong> CheatRequested = new();
+
         /// <summary>The economy's frame: pick up, sell, and the shop zone.</summary>
         public Signal Tick = new(hideCommandLog: true);
     }

@@ -19,13 +19,23 @@ namespace Modules.EconomyModule.ShopScreenModule.ViewsMediators
     public class ShopScreenView : ScreenView
     {
         private const string TITLE = "MAĞAZA";
+        private const string PERK_TITLE = "YETENEK MAKİNESİ";
+        private const string DOOR_TITLE = "KAPI";
         private const string BUY = "Al";
 
+        private const float HEADER = 110f;
+        private const float ROW_STEP = 64f;
+        private const float FOOTER = 12f;
+        private const float SCREEN_MARGIN = 40f;
+
         private RectTransform _panel;
+        private RectTransform _content;
+        private TMP_Text _titleText;
         private TMP_Text _moneyText;
         private readonly List<Row> _rows = new();
         private ShopItemCVO[] _items = Array.Empty<ShopItemCVO>();
         private int _money;
+        private int _materials;
 
         /// <summary>Buy was pressed on this item, by its place in the list.</summary>
         public Action<int> BuyClicked;
@@ -50,6 +60,7 @@ namespace Modules.EconomyModule.ShopScreenModule.ViewsMediators
         public void ShowItems(ShopItemCVO[] items)
         {
             _items = items ?? Array.Empty<ShopItemCVO>();
+            _titleText.text = TitleOf(_items);
 
             while (_rows.Count < _items.Length)
                 _rows.Add(CreateRow(_rows.Count));
@@ -57,14 +68,21 @@ namespace Modules.EconomyModule.ShopScreenModule.ViewsMediators
             for (int i = 0; i < _rows.Count; i++)
                 _rows[i].Root.SetActive(i < _items.Length);
 
-            _panel.sizeDelta = new Vector2(_panel.sizeDelta.x, 110f + _items.Length * 64f);
+            // The panel grows with the stock until it meets the screen's edges; past that the rows scroll.
+            float rows = _items.Length * ROW_STEP;
+            float screen = transform is RectTransform parent && parent.rect.height > 0f ? parent.rect.height : Screen.height;
+            float height = Mathf.Min(HEADER + rows + FOOTER, screen - SCREEN_MARGIN * 2f);
+            _panel.sizeDelta = new Vector2(_panel.sizeDelta.x, height);
+            _content.sizeDelta = new Vector2(_content.sizeDelta.x, rows);
+            _content.anchoredPosition = Vector2.zero;
             WireRows();
             Draw();
         }
 
-        public void ShowMoney(int money)
+        public void ShowWallet(int money, int carried, int materials)
         {
             _money = money;
+            _materials = materials;
             Draw();
         }
 
@@ -83,13 +101,18 @@ namespace Modules.EconomyModule.ShopScreenModule.ViewsMediators
             if (_moneyText == null)
                 return;
 
-            _moneyText.text = $"Para: {_money}";
+            _moneyText.text = $"Para: {_money}   <color=#C8B08A>Malzeme: {_materials}</color>";
             for (int i = 0; i < _items.Length && i < _rows.Count; i++)
             {
                 ShopItemCVO item = _items[i];
-                bool affordable = _money >= item.Price;
-                _rows[i].Label.text = $"{item.Name}  <color=#9AA4B2><size=80%>{Describe(item)}</size></color>\n<color=#FFC857>{item.Price}</color>{(item.MaterialCost > 0 ? $"  <color=#C8B08A>+{item.MaterialCost} malzeme</color>" : string.Empty)}";
-                _rows[i].Button.interactable = affordable;
+                bool hasMoney = _money >= item.Price;
+                bool hasMaterials = _materials >= item.MaterialCost;
+                string price = hasMoney ? $"<color=#FFC857>{item.Price}</color>" : $"<color=#E05555>{item.Price}</color>";
+                string materials = item.MaterialCost <= 0 ? string.Empty
+                    : hasMaterials ? $"  <color=#C8B08A>+{item.MaterialCost} malzeme</color>" : $"  <color=#E05555>+{item.MaterialCost} malzeme</color>";
+                _rows[i].Label.text = $"{item.Name}  <color=#9AA4B2><size=80%>{Describe(item)}</size></color>\n{price}{materials}";
+                _rows[i].Label.alpha = hasMoney && hasMaterials ? 1f : 0.45f;
+                _rows[i].Button.interactable = hasMoney && hasMaterials;
             }
         }
 
@@ -109,6 +132,9 @@ namespace Modules.EconomyModule.ShopScreenModule.ViewsMediators
             ShopItemType.WallUpgrade => "bütün duvarlar bir kademe güçlenir: tahta, taş, metal",
             ShopItemType.SpikeTrap => "dikenli tel; üstündeki zombiler yavaşlar ve kanar",
             ShopItemType.Mine => "mayın; yaklaşan ilk zombide patlar",
+            ShopItemType.Ammo => item.Index > 0
+                ? $"sadece tabancaya {item.Amount:0} şarjör yedek mermi"
+                : $"elindeki silaha {item.Amount:0} şarjör yedek mermi",
             ShopItemType.BarracksUpgrade => "kışlaların daha çok asker tutar, daha hızlı yetiştirir",
             ShopItemType.Perk => item.Index switch
             {
@@ -121,24 +147,54 @@ namespace Modules.EconomyModule.ShopScreenModule.ViewsMediators
             _ => string.Empty
         };
 
+        // The zone's stock says what it is: a perk machine sells only perks, a door only its opening.
+        private static string TitleOf(ShopItemCVO[] items)
+        {
+            if (items.Length == 0)
+                return TITLE;
+            if (Array.TrueForAll(items, item => item.Type is ShopItemType.Perk or ShopItemType.ReloadPerk))
+                return PERK_TITLE;
+            if (Array.TrueForAll(items, item => item.Type == ShopItemType.Door))
+                return DOOR_TITLE;
+            return TITLE;
+        }
+
         private void BuildPanel()
         {
             _panel = Rect("Panel", transform, new Vector2(1f, 0.5f), new Vector2(-30f, 0f), new Vector2(380f, 300f));
             _panel.pivot = new Vector2(1f, 0.5f);
             _panel.gameObject.AddComponent<Image>().color = new Color(0.07f, 0.08f, 0.1f, 0.93f);
 
-            TMP_Text title = Text("Title", _panel, TITLE, 32f, FontStyles.Bold);
+            TMP_Text title = _titleText = Text("Title", _panel, TITLE, 32f, FontStyles.Bold);
             Place(title.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, -30f), new Vector2(-40f, 44f));
             title.color = new Color(0.4f, 0.75f, 1f);
 
             _moneyText = Text("Money", _panel, string.Empty, 22f, FontStyles.Bold);
             Place(_moneyText.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, -70f), new Vector2(-40f, 30f));
             _moneyText.color = new Color(1f, 0.78f, 0.34f);
+
+            // The rows sit in a scrolling list under the title, clipped to the panel.
+            RectTransform viewport = Rect("Viewport", _panel, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+            Place(viewport, Vector2.zero, Vector2.one, new Vector2(0f, -(HEADER - FOOTER) * 0.5f), new Vector2(0f, -(HEADER + FOOTER)));
+            viewport.gameObject.AddComponent<RectMask2D>();
+            viewport.gameObject.AddComponent<Image>().color = Color.clear;
+
+            _content = Rect("Content", viewport, new Vector2(0.5f, 1f), Vector2.zero, new Vector2(0f, 0f));
+            _content.anchorMin = new Vector2(0f, 1f);
+            _content.anchorMax = new Vector2(1f, 1f);
+            _content.pivot = new Vector2(0.5f, 1f);
+
+            var scroll = _panel.gameObject.AddComponent<ScrollRect>();
+            scroll.viewport = viewport;
+            scroll.content = _content;
+            scroll.horizontal = false;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 30f;
         }
 
         private Row CreateRow(int index)
         {
-            RectTransform row = Rect($"Item_{index}", _panel, new Vector2(0.5f, 1f), new Vector2(0f, -110f - index * 64f), new Vector2(340f, 56f));
+            RectTransform row = Rect($"Item_{index}", _content, new Vector2(0.5f, 1f), new Vector2(0f, -index * ROW_STEP), new Vector2(340f, 56f));
             row.pivot = new Vector2(0.5f, 1f);
             row.gameObject.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.06f);
 

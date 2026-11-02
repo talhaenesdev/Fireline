@@ -7,6 +7,7 @@ namespace Modules.PlayerModule.HudScreenModule.Models
         float MaxHealth { get; set; }
         int Ammo { get; set; }
         int MagazineSize { get; set; }
+        int Reserve { get; set; }
 
         int Wave { get; set; }
         int ZombiesLeft { get; set; }
@@ -27,6 +28,7 @@ namespace Modules.PlayerModule.HudScreenModule.Models
         public float MaxHealth { get; set; }
         public int Ammo { get; set; }
         public int MagazineSize { get; set; }
+        public int Reserve { get; set; }
         public int Wave { get; set; }
         public int ZombiesLeft { get; set; }
         public float WaveStartTime { get; set; }

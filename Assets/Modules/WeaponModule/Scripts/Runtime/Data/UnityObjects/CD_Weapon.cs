@@ -15,6 +15,14 @@ namespace Modules.WeaponModule.Data.UnityObjects
         [SerializeField] private int _magazineSize = 7;
         [SerializeField] private float _reloadDuration = 1.5f;
 
+        [Header("Ammo: rounds carried besides the magazine")]
+        [Tooltip("Never runs out of spare rounds; the weapon a player falls back on.")]
+        [SerializeField] private bool _infiniteReserve;
+        [Tooltip("Spare rounds the weapon comes with.")]
+        [SerializeField] private int _startReserve = 60;
+        [Tooltip("The most spare rounds a player can carry for it.")]
+        [SerializeField] private int _maxReserve = 180;
+
         [Header("Rounds")]
         [SerializeField] private int _damage = 10;
         [SerializeField] private float _bulletSpeed = 20f;
@@ -36,6 +44,9 @@ namespace Modules.WeaponModule.Data.UnityObjects
         public bool Automatic => _automatic;
         public int MagazineSize => _magazineSize;
         public float ReloadDuration => _reloadDuration;
+        public bool InfiniteReserve => _infiniteReserve;
+        public int StartReserve => _startReserve;
+        public int MaxReserve => _maxReserve;
         public int Damage => _damage;
         public float BulletSpeed => _bulletSpeed;
         public float BulletLifetime => _bulletLifetime;

@@ -51,6 +51,9 @@ namespace Modules.PlayerModule.Signals
 
         public Signal ShakeLocalCamera = new();
 
+        /// <summary>A shake this many times the configured one.</summary>
+        public Signal<float> ShakeLocalCameraBy = new();
+
         /// <summary>The local camera came up, with its config.</summary>
         public Signal<CD_CameraSettings> LocalCameraRegistered = new();
 

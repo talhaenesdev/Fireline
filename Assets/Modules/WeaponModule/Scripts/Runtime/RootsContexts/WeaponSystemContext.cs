@@ -61,6 +61,10 @@ namespace Modules.WeaponModule.RootsContexts
             CommandBinder.Bind(_signals.Incoming.AimChanged).ToSequence<StoreAimCommand>();
             CommandBinder.Bind(_signals.Incoming.ImproveFireRate).ToSequence<ImproveFireRateCommand>();
             CommandBinder.Bind(_signals.Incoming.ImproveReload).ToSequence<ImproveReloadCommand>();
+
+            CommandBinder.Bind(_signals.Incoming.RefillAmmo)
+                .ToSequence<RefillAmmoCommand>()
+                .ToSequence<PublishAmmoCommand>();
             CommandBinder.Bind(_signals.Incoming.SetArmed).ToSequence<StoreArmedCommand>();
             CommandBinder.Bind(_signals.Incoming.ReloadInput).ToSequence<SignalDispatchCommand>(_internalSignals.Reload);
 

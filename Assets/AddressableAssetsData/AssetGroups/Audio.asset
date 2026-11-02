@@ -15,6 +15,36 @@ MonoBehaviour:
   m_GroupName: Audio
   m_GUID: 26a737dfabcad2247ac56432ad3ba0d4
   m_SerializeEntries:
+  - m_GUID: c69b7b5a4a89451aab1e0e54449f65b2
+    m_Address: Assets/Modules/EnemyModule/Art/Audio/SND_SFX_ZombieHit_01.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1986f72540d149e3a6420ae2dba1c220
+    m_Address: Assets/Modules/EnemyModule/Art/Audio/SND_SFX_ZombieDeath_01.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 818110c0bdd84420847b5f341378707e
+    m_Address: Assets/Modules/EnemyModule/Art/Audio/SND_SFX_Explosion_01.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 75b9ba5fdfe24b76943b46ef66a9542f
+    m_Address: Assets/Modules/EnemyModule/Art/Audio/SND_SFX_StructureBreak_01.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 89046e8d83d449bcbd3bc7695dc08714
+    m_Address: Assets/Modules/EnemyModule/Art/Audio/SND_SFX_WaveCleared_01.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a5c5873095004bb1aa50b27ccce8480e
+    m_Address: Assets/Modules/EconomyModule/Art/Audio/SND_SFX_Buy_01.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2c0c3713366b31c4b9d37a4bf613db31
     m_Address: Assets/Sound/gun-reload-1.mp3
     m_ReadOnly: 0

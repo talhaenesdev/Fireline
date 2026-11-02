@@ -8,11 +8,13 @@ namespace Modules.EconomyModule.ShopScreenModule.Models
     {
         ShopItemCVO[] Items { get; set; }
         int Money { get; set; }
+        int Materials { get; set; }
     }
 
     internal class ShopScreenModel : IShopScreenModel
     {
         public ShopItemCVO[] Items { get; set; } = Array.Empty<ShopItemCVO>();
         public int Money { get; set; }
+        public int Materials { get; set; }
     }
 }

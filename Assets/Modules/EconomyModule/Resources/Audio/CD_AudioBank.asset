@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 610555e5027ee254896801cbc64ce6c9, type: 3}
+  m_Name: CD_AudioBank
+  m_EditorClassIdentifier: Modules.Audio.Shared::Modules.AudioModule.Shared.Data.UnityObjects.CD_AudioBank
+  Module: EconomyModule
+  PreloadAtBoot: 1
+  Sounds:
+  - Key: EconomyModule/Buy
+    Clips:
+    - m_AssetGUID: a5c5873095004bb1aa50b27ccce8480e
+      m_SubObjectName:
+      m_SubObjectType:
+      m_SubObjectGUID:
+      m_EditorAssetChanged: 0
+    Volume: 0.6
+    Channel: 1
+    Loop: 0
+    SpatialBlend: 0
+    MinDistance: 5
+    MaxDistance: 35
+    MinInterval: 0

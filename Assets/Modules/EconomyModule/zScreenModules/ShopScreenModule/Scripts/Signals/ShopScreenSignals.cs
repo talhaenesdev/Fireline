@@ -16,8 +16,8 @@ namespace Modules.EconomyModule.ShopScreenModule.Signals
 
         public Signal Close = new();
 
-        /// <summary>The local player's money, so the shop shows what is affordable.</summary>
-        public Signal<int> ApplyMoney = new();
+        /// <summary>The local player's money, carried loot and materials, so the shop shows what is affordable.</summary>
+        public Signal<int, int, int> ApplyWallet = new();
     }
 
     public class ShopScreenSignalsOutgoing

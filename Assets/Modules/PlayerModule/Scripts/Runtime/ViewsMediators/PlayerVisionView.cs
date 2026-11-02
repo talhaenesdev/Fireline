@@ -5,8 +5,8 @@ using UnityEngine;
 namespace Modules.PlayerModule.ViewsMediators
 {
     /// <summary>
-    /// The local player's line of sight: other players outside its cone or behind a wall are not
-    /// drawn. It changes what this screen shows and nothing the server decides.
+    /// The local player's line of sight: other players out of range or behind a wall are not
+    /// drawn, whichever way the player faces. It changes what this screen shows and nothing the server decides.
     /// </summary>
     [RequireComponent(typeof(ViewInjector))]
     public class PlayerVisionView : MonoBehaviour, IView
@@ -15,7 +15,6 @@ namespace Modules.PlayerModule.ViewsMediators
 
         [SerializeField] private Transform _vision;
         [SerializeField] private float _visionRange = 10f;
-        [SerializeField] private float _visionAngle = 90f;
         [SerializeField] private LayerMask _obstacleLayers;
 
         public bool IsRegistered { get; set; }
@@ -45,9 +44,6 @@ namespace Modules.PlayerModule.ViewsMediators
 
             if (direction.sqrMagnitude <= 0.001f)
                 return true;
-
-            if (Vector3.Angle(origin.forward, direction.normalized) > _visionAngle * 0.5f)
-                return false;
 
             // Started a little ahead of the centre so the avatar's own collider does not block it.
             Vector3 rayOrigin = origin.position + direction.normalized * 0.1f;

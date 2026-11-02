@@ -17,7 +17,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &8743939763932537061
 Transform:
   m_ObjectHideFlags: 0
@@ -407,7 +407,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 08afef9f36dbf434faa5e70edde1de38, type: 3}
+  m_Resource: {fileID: 8300000, guid: bd296fec10a5467caf75666d52b25766, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
@@ -549,6 +549,7 @@ GameObject:
   - component: {fileID: 1593028955294145048}
   - component: {fileID: 5489066500811363722}
   - component: {fileID: 4256359592281015775}
+  - component: {fileID: 7391846205517730419}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -1058,7 +1059,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Modules.Player::Modules.PlayerModule.ViewsMediators.PlayerFootstepAudio
   _audioSource: {fileID: 4848236523332474789}
   _footstepClips:
-  - {fileID: 8300000, guid: 08afef9f36dbf434faa5e70edde1de38, type: 3}
+  - {fileID: 8300000, guid: bd296fec10a5467caf75666d52b25766, type: 3}
+  - {fileID: 8300000, guid: 975342ca186841d585918cebc22b3e59, type: 3}
+  - {fileID: 8300000, guid: 62681ae6045b4b5abc6d9aeb9724b7d3, type: 3}
+  - {fileID: 8300000, guid: 52f7c11139e44e8d99b821579cd12eb8, type: 3}
   _stepInterval: 0.35
   _movementThreshold: 0.01
 --- !u!114 &4256359592281015775
@@ -6196,3 +6200,15 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 873937947625581050, guid: 850d694e5906d9c4facd4768c43739dd, type: 3}
   m_PrefabInstance: {fileID: 6754194239430560962}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7391846205517730419
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6727836590595305734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c3e9a51d2b84f6e9a0c4b1d5e2f7a83, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Modules.Player::Modules.PlayerModule.ViewsMediators.PlayerAimIndicator

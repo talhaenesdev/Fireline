@@ -13,7 +13,8 @@ namespace Modules.WeaponModule.Controllers
 
         public override void Execute()
         {
-            if (_model.LocalWeapon != null && _model.IsArmed && _model.Ammo <= 0 && !_model.IsReloading)
+            if (_model.LocalWeapon?.Config != null && _model.IsArmed && _model.Ammo <= 0 && !_model.IsReloading
+                && (_model.LocalWeapon.Config.InfiniteReserve || _model.Reserve > 0))
                 _internalSignals.Reload.Dispatch();
         }
     }

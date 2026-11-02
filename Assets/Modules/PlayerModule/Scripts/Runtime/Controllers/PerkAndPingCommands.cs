@@ -121,7 +121,7 @@ namespace Modules.PlayerModule.Controllers
             foreach (IPlayerAvatar avatar in _model.Avatars.Values)
             {
                 if (avatar != _model.LocalAvatar && avatar.IsDead)
-                    _markers.Add(new MarkerVO(avatar.Transform.position, MarkerKind.DownedTeammate));
+                    _markers.Add(new MarkerVO(avatar.Transform.position, MarkerKind.DownedTeammate, avatar.PlayerName));
             }
 
             _model.Pings.RemoveAll(ping => ping.until < Time.time);

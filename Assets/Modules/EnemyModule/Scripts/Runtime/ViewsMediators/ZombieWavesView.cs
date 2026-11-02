@@ -104,6 +104,13 @@ namespace Modules.EnemyModule.ViewsMediators
         public Action<int> StructureGranted;
         public Action<ulong, Vector3, int> StructurePlaceRequested;
         public Action<int> WaveCleared;
+        public Action<Vector3> ZombieHitShown;
+        public Action<Vector3> ZombieDeathShown;
+        public Action<Vector3> BlastShown;
+        public Action<Vector3> StructureFellShown;
+
+        // Chunks thrown by hits, deaths, blasts and falls; one particle system serves them all.
+        private ChunkBurst _chunks;
 
         /// <summary>The boss's name, health and most health; an empty name when there is none.</summary>
         public Action<string, int, int> BossChanged;
@@ -418,6 +425,18 @@ namespace Modules.EnemyModule.ViewsMediators
         {
             if (_pool != null)
                 _pool.Get<BlastRing>(_blastPoolKey, transform)?.Show(position, radius, color);
+
+            Chunks().Burst(position, new Color(0.25f, 0.2f, 0.15f), 14 + Mathf.RoundToInt(radius * 3f), 7f, 0.22f);
+            Chunks().Burst(position, color, 8, 9f, 0.16f);
+            BlastShown?.Invoke(position);
+        }
+
+        private ChunkBurst Chunks()
+        {
+            if (_chunks == null)
+                _chunks = ChunkBurst.Create(transform);
+
+            return _chunks;
         }
 
         [ClientRpc]
@@ -484,6 +503,9 @@ namespace Modules.EnemyModule.ViewsMediators
         {
             if (_pool != null)
                 _pool.Get<DamageNumber>(_damageNumberPoolKey, transform)?.Show(position, damage, damage >= _heavyHitDamage);
+
+            Chunks().Burst(position, new Color(0.55f, 0.05f, 0.05f), damage >= _heavyHitDamage ? 6 : 3, 3.5f, 0.12f);
+            ZombieHitShown?.Invoke(position);
         }
 
         [ClientRpc]
@@ -491,6 +513,10 @@ namespace Modules.EnemyModule.ViewsMediators
         {
             if (_pool != null)
                 _pool.Get<ZombieCorpse>(_corpsePoolKey, transform)?.Show(position, yaw, tint, scale);
+
+            Chunks().Burst(position, new Color(0.5f, 0.04f, 0.04f), 10, 4.5f, 0.16f * scale);
+            Chunks().Burst(position, tint * 0.8f, 5, 3.5f, 0.2f * scale);
+            ZombieDeathShown?.Invoke(position);
         }
 
         [ClientRpc]
@@ -561,6 +587,11 @@ namespace Modules.EnemyModule.ViewsMediators
 
             foreach (int id in gone)
             {
+                // Taken off the board mid-match means it fell: it breaks apart where it stood.
+                Vector3 position = _turretVisuals[id].transform.position;
+                Chunks().Burst(position, new Color(0.45f, 0.38f, 0.3f), 22, 6f, 0.28f);
+                StructureFellShown?.Invoke(position);
+
                 _turretVisuals[id].Dismiss();
                 _turretVisuals.Remove(id);
             }

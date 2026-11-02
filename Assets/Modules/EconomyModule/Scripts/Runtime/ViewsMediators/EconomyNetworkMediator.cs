@@ -17,6 +17,7 @@ namespace Modules.EconomyModule.ViewsMediators
             _view.Purchased += OnPurchased;
             _view.DoorsChanged += OnDoorsChanged;
             _view.LevelReported += OnLevelReported;
+            _view.CheatRequested += OnCheatRequested;
             _internalSignals.PoolRequested.Dispatch(_view);
 
             if (_view.IsSpawned)
@@ -34,11 +35,14 @@ namespace Modules.EconomyModule.ViewsMediators
             _view.Purchased -= OnPurchased;
             _view.DoorsChanged -= OnDoorsChanged;
             _view.LevelReported -= OnLevelReported;
+            _view.CheatRequested -= OnCheatRequested;
         }
 
         private void OnDoorsChanged() => _internalSignals.DoorsChanged.Dispatch();
 
         private void OnLevelReported(ulong clientId, int level) => _internalSignals.LevelReported.Dispatch(clientId, level);
+
+        private void OnCheatRequested(ulong clientId) => _internalSignals.CheatRequested.Dispatch(clientId);
 
         private void OnSpawned() => _internalSignals.BoardRegistered.Dispatch(_view);
 

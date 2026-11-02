@@ -77,6 +77,7 @@ namespace Modules.EconomyModule.ViewsMediators
         public Action<int, int> Purchased;
         public Action DoorsChanged;
         public Action<ulong, int> LevelReported;
+        public Action<ulong> CheatRequested;
 
         public CD_Loot Loot => _loot;
         public CD_Shop Shop => _shop;
@@ -239,6 +240,20 @@ namespace Modules.EconomyModule.ViewsMediators
         [ServerRpc(RequireOwnership = false)]
         private void ReportLevelServerRpc(int level, ServerRpcParams rpcParams = default) =>
             LevelReported?.Invoke(rpcParams.Receive.SenderClientId, level);
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // Test cheat: F1 asks the server for money and materials. Not in a release build.
+        private void Update()
+        {
+            var keyboard = UnityEngine.InputSystem.Keyboard.current;
+            if (IsSpawned && keyboard != null && keyboard.f1Key.wasPressedThisFrame)
+                CheatServerRpc();
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void CheatServerRpc(ServerRpcParams rpcParams = default) =>
+            CheatRequested?.Invoke(rpcParams.Receive.SenderClientId);
+#endif
 
         private void OnDoorsChanged(NetworkListEvent<int> change) => DoorsChanged?.Invoke();
 

@@ -1,5 +1,7 @@
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.BaseModule.Controller.Commands;
+using Modules.AudioModule.Services;
+using Modules.AudioModule.Shared;
 using Modules.EnemyModule.Controllers;
 using Modules.EnemyModule.Models;
 using Modules.EnemyModule.Signals;
@@ -35,6 +37,16 @@ namespace Modules.EnemyModule.RootsContexts
         public override void CommandBindings()
         {
             base.CommandBindings();
+
+            CommandBinder.Bind(_internalSignals.ZombieHitShown).ToSequence<IAudioService.Commands.PlayAt>(AudioKey.Enemy.ZombieHit);
+            CommandBinder.Bind(_internalSignals.ZombieDeathShown).ToSequence<IAudioService.Commands.PlayAt>(AudioKey.Enemy.ZombieDeath);
+            CommandBinder.Bind(_internalSignals.BlastShown)
+                .ToSequence<IAudioService.Commands.PlayAt>(AudioKey.Enemy.Explosion)
+                .ToSequence<AnnounceRumbleCommand>();
+            CommandBinder.Bind(_internalSignals.StructureFellShown)
+                .ToSequence<IAudioService.Commands.PlayAt>(AudioKey.Enemy.StructureBreak)
+                .ToSequence<AnnounceRumbleCommand>();
+            CommandBinder.Bind(_internalSignals.WaveClearedShown).ToSequence<IAudioService.Commands.Play>(AudioKey.Enemy.WaveCleared);
 
             CommandBinder.Bind(_internalSignals.PoolRequested).ToSequence<ConfigureBoardPoolCommand>();
             CommandBinder.Bind(_internalSignals.BoardRegistered)

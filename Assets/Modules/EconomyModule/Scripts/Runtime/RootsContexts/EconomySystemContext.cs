@@ -1,4 +1,6 @@
 using FlowIoC.BaseModule.Contexts;
+using Modules.AudioModule.Services;
+using Modules.AudioModule.Shared;
 using Modules.EconomyModule.Controllers;
 using Modules.EconomyModule.Models;
 using Modules.EconomyModule.Signals;
@@ -57,7 +59,9 @@ namespace Modules.EconomyModule.RootsContexts
             CommandBinder.Bind(_signals.Incoming.PayEveryone)
                 .ToSequence<RequireServerCommand>()
                 .ToSequence<PayEveryoneCommand>();
-            CommandBinder.Bind(_internalSignals.Purchased).ToSequence<ApplyPurchaseCommand>();
+            CommandBinder.Bind(_internalSignals.Purchased)
+                .ToSequence<ApplyPurchaseCommand>()
+                .ToSequence<IAudioService.Commands.Play>(AudioKey.Economy.Buy);
 
             CommandBinder.Bind(_internalSignals.BuyRequested)
                 .ToSequence<RequireServerCommand>()
@@ -66,6 +70,10 @@ namespace Modules.EconomyModule.RootsContexts
             CommandBinder.Bind(_signals.Incoming.DropLoot)
                 .ToSequence<RequireServerCommand>()
                 .ToSequence<DropLootCommand>();
+
+            CommandBinder.Bind(_internalSignals.CheatRequested)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<GrantCheatCommand>();
 
             CommandBinder.Bind(_signals.Incoming.Buy).ToSequence<RequestBuyCommand>();
 
