@@ -8,8 +8,17 @@ namespace Modules.EnemyModule.Models
     internal interface IEnemyModel
     {
         IZombieWaveBoard Board { get; set; }
+
+        /// <summary>Every Root has set up, so the module's pool groups are registered and may be drawn from.</summary>
+        bool IsLaunched { get; set; }
         CD_ZombieWaves Config { get; }
         bool IsRunning { get; set; }
+
+        /// <summary>The break before the next wave is on: a skip is taken only now.</summary>
+        bool IsInBreak { get; set; }
+
+        /// <summary>A player asked for the next wave during this break.</summary>
+        bool IsBreakSkipped { get; set; }
         int Wave { get; set; }
 
         /// <summary>The match's difficulty, as an index into the config's difficulties.</summary>
@@ -134,8 +143,11 @@ namespace Modules.EnemyModule.Models
     internal class EnemyModel : IEnemyModel
     {
         public IZombieWaveBoard Board { get; set; }
+        public bool IsLaunched { get; set; }
         public CD_ZombieWaves Config => Board?.Config;
         public bool IsRunning { get; set; }
+        public bool IsInBreak { get; set; }
+        public bool IsBreakSkipped { get; set; }
         public int Wave { get; set; }
         public int Difficulty { get; set; } = 1;
         public Dictionary<ulong, ZombieRVO> Zombies { get; } = new();

@@ -3,6 +3,7 @@
   "references": [
     "UnityEngine.UI",
     "Unity.TextMeshPro",
+    "Modules.Localization",
     "FlowIoC",
     "Modules.Shop.Screen.Signals",
     "Modules.Economy.Shared"

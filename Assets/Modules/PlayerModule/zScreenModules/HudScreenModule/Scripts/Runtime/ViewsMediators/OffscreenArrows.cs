@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Modules.PlayerModule.Shared.Data.ValueObjects;
 using Modules.PlayerModule.Shared.Enums;
+using Modules.LocalizationModule.Entities;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,14 +19,16 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         private const int MAX_ZOMBIE_ARROWS = 12;
 
         private readonly RectTransform _root;
+        private readonly TextLocalizer _localizer;
         private readonly List<Image> _arrows = new();
         private readonly List<Image> _downedIcons = new();
         private readonly List<TextMeshProUGUI> _labels = new();
         private Sprite _crossSprite;
         private Sprite _sprite;
 
-        public OffscreenArrows(RectTransform parent)
+        public OffscreenArrows(RectTransform parent, TextLocalizer localizer)
         {
+            _localizer = localizer;
             var go = new GameObject("OffscreenArrows", typeof(RectTransform));
             _root = (RectTransform) go.transform;
             _root.SetParent(parent, false);
@@ -65,7 +68,7 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
                         Image icon = Icon(icons++);
                         icon.rectTransform.anchoredPosition = point;
                         icon.rectTransform.localScale = Vector3.one * (1f + 0.15f * Mathf.Sin(Time.time * 6f));
-                        Label(labels++, point + new Vector2(0f, 46f), $"{marker.Label} <color=#FF6B6B>DÜŞTÜ</color>\n<size=75%>{distance}</size>");
+                        Label(labels++, point + new Vector2(0f, 46f), $"{marker.Label} <color=#FF6B6B>{_localizer.Get("DÜŞTÜ")}</color>\n<size=75%>{distance}</size>");
                         continue;
                     }
 

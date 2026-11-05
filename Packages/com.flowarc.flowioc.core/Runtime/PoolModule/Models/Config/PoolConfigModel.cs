@@ -1,0 +1,69 @@
+using System.Collections.Generic;
+using FlowIoC.BaseModule.Attributes;
+using FlowIoC.ConsoleModule;
+using FlowIoC.PoolModule.Data.ValueObjects;
+
+namespace FlowIoC.PoolModule.Models.Config
+{
+    /// <summary>
+    /// The groups the modules registered. Nothing is read at construction: every group arrives
+    /// from a PoolSubContext on the Root of the module that uses it.
+    /// </summary>
+    internal class PoolConfigModel : IPoolConfigModel
+    {
+        [ShowInModelViewer] private readonly Dictionary<string, PoolItemBaseCVO> _itemConfigMap = new(); // itemKey -> itemConfig
+        [ShowInModelViewer] private readonly Dictionary<string, string> _itemToGroupConfigMap = new(); // itemKey -> groupConfigKey
+        [ShowInModelViewer] private readonly Dictionary<string, PoolGroupCVO> _groupConfigMap = new(); // groupConfigKey -> groupConfig
+
+        private void AddGroupConfig(string group, PoolGroupCVO entry)
+        {
+            if (entry.Group == null)
+            {
+                FlowLogger.LogError(SystemLogType.Pool, $"[PoolConfigModel.AddGroupConfig][group({group})] has no CD_PoolGroup.");
+                return;
+            }
+
+            if (!_groupConfigMap.ContainsKey(group))
+                _groupConfigMap.Add(group, entry);
+
+            foreach (var item in entry.Group.Items)
+            {
+                var poolKey = entry.GroupSpecificPools ? $"{group}_{item.PoolKey}" : item.PoolKey;
+                if (_itemConfigMap.ContainsKey(poolKey))
+                {
+                    FlowLogger.LogWarning(SystemLogType.Pool, $"Duplicate pool key detected: {poolKey}. Overwriting with latest config.");
+                }
+
+                _itemConfigMap[poolKey] = item;
+                _itemToGroupConfigMap[poolKey] = group;
+            }
+        }
+        private void RemoveGroupConfig(string group)
+        {
+            if (!_groupConfigMap.ContainsKey(group)) return;
+
+            foreach (var item in _groupConfigMap[group].Group.Items)
+            {
+                var poolKey = _groupConfigMap[group].GroupSpecificPools ? $"{group}_{item.PoolKey}" : item.PoolKey;
+                _itemConfigMap.Remove(poolKey);
+                _itemToGroupConfigMap.Remove(poolKey);
+            }
+
+            _groupConfigMap.Remove(group);
+        }
+
+        public bool TryGetItemConfig(string itemKey, out PoolItemBaseCVO itemConfig) => _itemConfigMap.TryGetValue(itemKey, out itemConfig);
+        /// <summary>
+        /// The group an item was registered under, or null for an item nobody registered. Null
+        /// rather than a thrown key: every service asks this first, and a key with a typo in it is
+        /// the ordinary way a mistake reaches the pool.
+        /// </summary>
+        public string GetGroupConfigOfItem(string itemKey)
+            => itemKey != null && _itemToGroupConfigMap.TryGetValue(itemKey, out string group) ? group : null;
+        public Dictionary<string, PoolGroupCVO> GetGroupConfigMap() => _groupConfigMap;
+        public PoolGroupCVO GetGroupConfig(string groupConfigKey) => _groupConfigMap[groupConfigKey];
+        public bool IsGroupConfigExist(string groupConfigKey) => _groupConfigMap.ContainsKey(groupConfigKey);
+        public void RegisterPoolConfig(KeyValuePair<string, PoolGroupCVO> config) => AddGroupConfig(config.Key, config.Value);
+        public void UnregisterPoolConfig(KeyValuePair<string, PoolGroupCVO> config) => RemoveGroupConfig(config.Key);
+    }
+}

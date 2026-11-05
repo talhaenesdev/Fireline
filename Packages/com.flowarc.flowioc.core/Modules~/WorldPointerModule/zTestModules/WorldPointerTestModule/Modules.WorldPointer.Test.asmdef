@@ -1,0 +1,20 @@
+{
+  "name": "Modules.WorldPointer.Test",
+  "references": [
+    "FlowIoC",
+    "Modules.WorldPointer",
+    "Modules.PointerSample.Screen",
+    "Modules.PointerSample.Screen.Shared",
+    "Modules.PointerControls.Screen",
+    "Modules.PointerControls.Screen.Signals"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

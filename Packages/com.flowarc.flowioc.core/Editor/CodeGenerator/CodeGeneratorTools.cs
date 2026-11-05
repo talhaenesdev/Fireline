@@ -1,0 +1,62 @@
+﻿#if UNITY_EDITOR
+using FlowIoC.Editor.CodeGenerator.Menus;
+using FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule;
+using UnityEditor;
+using UnityEngine;
+using CreateModuleMenu = FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule.CreateModuleMenu;
+
+namespace FlowIoC.Editor.CodeGenerator
+{
+    internal static class CodeGeneratorTools
+    {
+        /// <summary>
+        /// The floor for the three single-file generators. Each one carries a name, its options, a
+        /// module tree and the button that writes the file, and below this the tree is the part
+        /// that gives way.
+        /// </summary>
+        private static readonly Vector2 GENERATOR_WINDOW_SIZE = new Vector2(520, 640);
+
+        [MenuItem("Tools/FlowIoC/Create New Module", false, -1301)]
+        private static void CreateModule()
+        {
+            var window = EditorWindow.GetWindow<CreateModuleMenu>("Create Module");
+            window.minSize = new Vector2(820, 800);
+        }
+
+        [MenuItem("Tools/FlowIoC/Edit Module/Delete Module", false, -1300)]
+        private static void DeleteModule()
+        {
+            var window = EditorWindow.GetWindow<DeleteModuleMenu>("Delete Module");
+            window.minSize = new Vector2(500, 400);
+        }
+
+        [MenuItem("Tools/FlowIoC/Edit Module/Create View", false, -1287)]
+        private static void CreateViewV2()
+        {
+            var window = EditorWindow.GetWindow<CreateViewMenu>("Create View");
+            window.minSize = GENERATOR_WINDOW_SIZE;
+        }
+
+        [MenuItem("Tools/FlowIoC/Edit Module/Create Model", false, -1286)]
+        private static void CreateModelV2()
+        {
+            var window = EditorWindow.GetWindow<CreateModelMenu>("Create Model");
+            window.minSize = GENERATOR_WINDOW_SIZE;
+        }
+
+        [MenuItem("Tools/FlowIoC/Edit Module/Create Command", false, -1285)]
+        private static void CreateCommandV2()
+        {
+            var window = EditorWindow.GetWindow<CreateCommandMenu>("Create Command");
+            window.minSize = GENERATOR_WINDOW_SIZE;
+        }
+
+        [MenuItem("Tools/FlowIoC/Edit Module/Create Function", false, -1284)]
+        private static void CreateFunction()
+        {
+            var window = EditorWindow.GetWindow<CreateFunctionMenu>("Create Function");
+            window.minSize = GENERATOR_WINDOW_SIZE;
+        }
+    }
+}
+#endif

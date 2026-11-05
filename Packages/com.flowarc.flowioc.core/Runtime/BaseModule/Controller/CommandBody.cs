@@ -1,0 +1,183 @@
+﻿using System;
+using FlowIoC.BaseModule.Contexts;
+using FlowIoC.BaseModule.Controller.CommandGroup;
+using FlowIoC.ConsoleModule;
+
+namespace FlowIoC.BaseModule.Controller
+{
+    public abstract class CommandBody : ICommandBody
+    {
+        public ICommandGroupResolver CommandGroupResolver { get; set; }
+        public bool IsRetain { get; set; }
+        public bool HasRetain { get; set; }
+
+        /// <summary>
+        /// The context this instance was last filled from, and the binding generation it was filled
+        /// at. A pooled command asks for the same models and signals on every run and the container
+        /// answers the same way, so the members are resolved again only once one of these two moves.
+        /// </summary>
+        internal IContext InjectedContext;
+
+        internal int InjectionStamp = -1;
+
+        /// <summary>
+        /// What the last fill wrote into the [Inject] and [InjectSignal] properties, in entry
+        /// order - kept so a parked instance can have them back without resolving again.
+        /// </summary>
+        internal object[] InjectedValues;
+
+        /// <summary>
+        /// Which execution of this pooled instance is the current one. A command that retains and
+        /// releases inside its own Execute is back in the pool before that Execute returns, and the
+        /// next step of the same type takes the same instance straight out again - so the frame that
+        /// started the first run finds an instance whose flags belong to the second. It reads this
+        /// before it acts on them.
+        /// </summary>
+        internal int RunToken;
+
+        /// <summary>The name a diagnostic prints for this Command - the nested path for a step a Service ships.</summary>
+        private string DisplayName => new CommandDisplayName().Of(GetType());
+
+        public virtual void Retain()
+        {
+            IsRetain = true;
+            HasRetain = true;
+        }
+
+        [UnityEngine.HideInCallstack]
+        public virtual void Release(params object[] commandGroupData)
+        {
+            if (CommandGroupResolver == null)
+            {
+                LogDetachedCall("Release");
+                return;
+            }
+
+            CommandGroupResolver.ReleaseCommand(this, commandGroupData);
+        }
+
+        [UnityEngine.HideInCallstack]
+        public virtual void Stop()
+        {
+            if (CommandGroupResolver == null)
+            {
+                LogDetachedCall("Stop");
+                return;
+            }
+
+            CommandGroupResolver.StopCommand(this);
+        }
+
+        /// <summary>
+        /// Clears what the run left behind, as the command goes back to the pool. It does not
+        /// touch <see cref="HasRetain"/>: a command that retained and released inside one
+        /// Execute passes through here before the step is judged, and clearing the flag there
+        /// would make the step look synchronous and complete it a second time.
+        /// <see cref="BeginRun"/> is where the flag is cleared instead.
+        /// </summary>
+        public virtual void Clean()
+        {
+            IsRetain = false;
+            CommandGroupResolver = null;
+        }
+
+        /// <summary>
+        /// Readies a pooled instance for one execution. Both retain flags belong to a single run,
+        /// and leaving either of them set carried the last run's answer into this one - a command
+        /// that retains only on some branch was then treated as retained forever, and the sequence
+        /// waited for a Release that was never coming.
+        /// </summary>
+        internal void BeginRun(ICommandGroupResolver commandGroupResolver)
+        {
+            IsRetain = false;
+            HasRetain = false;
+            RunToken++;
+            CommandGroupResolver = commandGroupResolver;
+        }
+
+        /// <summary>
+        /// The typed entry point the group resolver calls. Each arity overrides it and hands the
+        /// payload to its own Execute, so a dispatch costs a virtual call rather than a metadata
+        /// lookup and a reflective invoke.
+        /// </summary>
+        internal abstract void InvokeExecute(object[] parameters);
+
+        /// <summary>
+        /// Whether the payload holds as many values as this Execute takes. Reported rather than
+        /// thrown, because the mismatch is authored in a Context and the reader needs to be told
+        /// which binding to look at.
+        /// </summary>
+        internal bool HasArity(object[] parameters, int expected)
+        {
+            int provided = parameters?.Length ?? 0;
+            if (provided == expected)
+                return true;
+
+            FlowLogger.LogError(SystemLogType.CommandOperation,
+                "<b><color=#FF6666>► Execute signature mismatch!</color></b>\n" +
+                "<b><color=#FF6666>► Command:</color><color=#FFEFD5> " + DisplayName + "</color></b>\n" +
+                "<b><color=#FF6666>► Expects:</color><color=#FFEFD5> " + expected + " parameter(s)</color></b>\n" +
+                "<b><color=#FF6666>► Signal carried:</color><color=#FFEFD5> " + provided + "</color></b>",
+                GetType(),
+                "Execute signature mismatch on " + DisplayName + ": it takes " + expected +
+                " parameter(s) and the signal carried " + provided + ".");
+
+            return false;
+        }
+
+        /// <summary>
+        /// Reads one payload slot as <typeparamref name="T"/>. A dispatched null fills a slot whose
+        /// type can hold one, which is what keeps an optional payload from shifting every value
+        /// after it.
+        /// </summary>
+        internal bool TryFill<T>(object[] parameters, int index, out T value)
+        {
+            object raw = parameters[index];
+
+            if (raw is T typed)
+            {
+                value = typed;
+                return true;
+            }
+
+            value = default;
+
+            if (raw == null)
+            {
+                Type slotType = typeof(T);
+                if (!slotType.IsValueType || Nullable.GetUnderlyingType(slotType) != null)
+                    return true;
+
+                LogSlotMismatch(index, slotType.Name, "null");
+                return false;
+            }
+
+            LogSlotMismatch(index, typeof(T).Name, raw.GetType().Name);
+            return false;
+        }
+
+        private void LogSlotMismatch(int index, string expectedTypeName, string providedTypeName)
+        {
+            FlowLogger.LogError(SystemLogType.CommandOperation,
+                "<b><color=#FF6666>► Execute parameter mismatch!</color></b>\n" +
+                "<b><color=#FF6666>► Command:</color><color=#FFEFD5> " + DisplayName + "</color></b>\n" +
+                "<b><color=#FF6666>► Parameter:</color><color=#FFEFD5> " + index + "</color></b>\n" +
+                "<b><color=#FF6666>► Expected:</color><color=#FFEFD5> " + expectedTypeName + "</color></b>\n" +
+                "<b><color=#FF6666>► Provided:</color><color=#FFEFD5> " + providedTypeName + "</color></b>",
+                GetType(),
+                "Execute parameter " + index + " of " + DisplayName + " expects " + expectedTypeName +
+                " and the signal carried " + providedTypeName + ".");
+        }
+
+        private void LogDetachedCall(string methodName)
+        {
+            FlowLogger.LogError(SystemLogType.CommandOperation,
+                "<b><color=#FF6666>► " + methodName + " on a command that is not running!</color></b>\n" +
+                "<b><color=#FF6666>► Command:</color><color=#FFEFD5> " + DisplayName + "</color></b>\n" +
+                "<b><color=#FF6666>► Reason:</color><color=#FFEFD5> its group already finished, or " +
+                methodName + " was called twice.</color></b>",
+                GetType(),
+                methodName + " was called on " + DisplayName + " after its group finished.");
+        }
+    }
+}

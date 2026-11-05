@@ -11,5 +11,7 @@ namespace Modules.LobbyModule.LobbyScreenModule.Signals
     /// </summary>
     internal class LobbyScreenInternalSignals : ISignalHolder
     {
+        /// <summary>The language button was pressed.</summary>
+        public Signal SwitchLanguage = new();
     }
 }

@@ -7,7 +7,9 @@
     "Modules.Audio.Shared",
     "FlowIoC",
     "Modules.Economy.Shared",
-    "Modules.Economy.Signals"
+    "Modules.Economy.Signals",
+    "Modules.Localization",
+    "Unity.TextMeshPro"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

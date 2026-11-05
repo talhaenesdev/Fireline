@@ -26,11 +26,17 @@ namespace Modules.EnemyModule.Signals
         /// <summary>A board registered and needs the pool before it draws anything.</summary>
         public Signal<IZombieWaveBoard> PoolRequested = new();
 
+        /// <summary>The module launched: every Root has set up, and with them the pool groups.</summary>
+        public Signal Launched = new();
+
         /// <summary>Server: a player asked to mend the structure they stand by.</summary>
         public Signal<ulong> RepairRequested = new();
 
         /// <summary>Server: a player asked to switch their soldiers between guarding and following.</summary>
         public Signal<ulong> AllyOrderRequested = new();
+
+        /// <summary>Server: a player asked for the next wave now.</summary>
+        public Signal SkipBreakRequested = new();
 
         /// <summary>Buyer's process: the server gave the local player a structure of this kind to place.</summary>
         public Signal<int> StructureGranted = new();

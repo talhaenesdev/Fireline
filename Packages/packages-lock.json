@@ -1,17 +1,16 @@
 {
   "dependencies": {
     "com.flowarc.flowioc.core": {
-      "version": "https://github.com/FlowArc/FlowIoC.git#1.28.0",
+      "version": "file:com.flowarc.flowioc.core",
       "depth": 0,
-      "source": "git",
+      "source": "embedded",
       "dependencies": {
         "com.unity.addressables": "2.9.1",
         "com.unity.inputsystem": "1.11.0",
         "com.unity.nuget.newtonsoft-json": "3.2.2",
         "com.unity.render-pipelines.core": "17.0.0",
         "com.unity.render-pipelines.universal": "17.0.0"
-      },
-      "hash": "e29462e206a5b76f28320f06180526216faa5f07"
+      }
     },
     "com.unity.2d.sprite": {
       "version": "1.0.0",

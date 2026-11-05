@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using FlowIoC.BaseModule.Injectable.Components;
 using FlowIoC.ScreenModule.ViewsMediators.Screen;
+using Modules.LocalizationModule.Entities;
 using Modules.MatchModule.Shared.Data.ValueObjects;
 using Modules.PlayerModule.Shared.Data.ValueObjects;
 using TMPro;
@@ -61,11 +62,27 @@ namespace Modules.MatchModule.MatchScreenModule.ViewsMediators
         /// <summary>The player answered yes on the confirmation panel.</summary>
         public Action ExitConfirmed;
 
+        /// <summary>Filled by the Mediator; every text on the screen is looked up through it.</summary>
+        public TextLocalizer Localizer { get; } = new();
+
+        // The fixed lines this screen shows; any label built with one is translated with it.
+        private static readonly HashSet<string> FixedTexts = new()
+        {
+            CONFIRM_QUESTION, CONFIRM_YES, CONFIRM_NO, GAME_OVER_TITLE, GAME_OVER_BODY, GAME_OVER_LEAVE,
+            SETTINGS, SETTINGS_CLOSE, HEIGHT_LABEL, FOLLOW_LABEL, SHAKE_LABEL, "Leave"
+        };
+
         private void Awake()
         {
             BuildConfirmPanel();
             BuildGameOverPanel();
             BuildSettings();
+
+            foreach (TMP_Text label in GetComponentsInChildren<TMP_Text>(true))
+            {
+                if (FixedTexts.Contains(label.text))
+                    Localizer.Bind(label, label.text);
+            }
         }
 
         private void OnEnable()

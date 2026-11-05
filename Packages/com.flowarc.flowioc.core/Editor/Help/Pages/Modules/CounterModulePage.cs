@@ -1,0 +1,182 @@
+#if UNITY_EDITOR
+
+using System.Collections.Generic;
+using FlowIoC.Editor.Icons;
+
+namespace FlowIoC.Editor.Help.Pages.Modules
+{
+    /// <summary>
+    /// The counter module: what it does, how a game calls it, where the time it counts
+    /// with comes from, and the button that puts it in the project.
+    /// </summary>
+    internal class CounterModulePage : ModulePage
+    {
+        private readonly HelpImages _images = new HelpImages();
+
+        public override string ModuleFolderName => "CounterModule";
+
+        public override string Title => "Counter Module";
+
+        public override string Subtitle => "Named timers, up and down";
+
+        public override FlowIcon Icon => FlowIcon.Stopwatch;
+
+        public override IReadOnlyList<HelpTab> MoreTabs => new[]
+        {
+            new HelpTab("Usage", DrawUsage,
+                "Inject the service and start a countdown.",
+                "CountDownInstantly starts from now and hands back the moment it started from, "
+                + "which is what you save if the countdown has to survive a restart."),
+            new HelpTab("Time Source", DrawTimeSource,
+                "Everything the module counts with comes from one interface.",
+                "It ships with the device clock behind it, which needs no network and is ready the "
+                + "moment it is asked - that is what lets the module work as soon as it is installed.")
+        };
+
+        public override string BodyHeadline => "Named counters that call back once a second.";
+
+        public override string BodyTagline =>
+            "A chest that opens in an hour, an energy bar that refills, a round timer - all of them "
+            + "are one call and a callback rather than a coroutine of their own.";
+
+        public override void DrawBody(HelpPainter painter)
+        {
+            painter.Image(_images.Get("CounterTestScene.png"),
+                "CounterTestScene in play: a one-minute countdown two seconds in.");
+
+            painter.Separator();
+            painter.SubHeading("What it gives you");
+            painter.Bullet(
+                "A counter is a string id. Several callers may listen to the same one: the first "
+                + "sets how long it runs, the rest only add their callbacks to it.");
+            painter.Bullet(
+                "Ticks arrive as seconds left, or as 0..1 of the whole countdown when that suits "
+                + "the bar you are filling better.");
+            painter.Bullet(
+                "It measures forward as well as down. CountUpFrom counts up from a moment "
+                + "in the past, with or without an end.");
+            painter.Bullet(
+                "Nothing has to wait for it. A counter asked for before the module is up is "
+                + "held, and starts on its own once the time source answers.");
+
+            painter.Space();
+            painter.Note(
+                "It is a Service, so another module references Modules.Counter and injects "
+                + "ICounterService directly. That is the one thing the architecture lets a module "
+                + "reach across a boundary for.");
+
+            painter.Separator();
+            painter.SubHeading("Its signals");
+            painter.Paragraph(
+                "Incoming.Initialize prepares the time source and starts the clock. The module's own "
+                + "context dispatches it on setup, so a game sends it again only to retry a source "
+                + "that failed. Outgoing.Ready says whether that worked.");
+
+            painter.Separator();
+            painter.SubHeading("Trying it out");
+            painter.Paragraph(
+                "The module ships with a test module beside it, and the scene it runs in arrives with "
+                + "it. Open CounterTestScene under the test module's Scenes folder and press "
+                + "Play: a Start and a Stop button, a countdown, and the elapsed time next to it.");
+        }
+
+        private void DrawUsage(HelpPainter painter)
+        {
+            painter.Code(
+                "[Inject] private ICounterService _counter { get; set; }\n"
+                + "\n"
+                + "DateTime? startedAt = _counter.CountDownInstantly(\"chest\", 3600,\n"
+                + "    counterTick: remaining => _view.SetLabel($\"{remaining:0}s\"),\n"
+                + "    counterComplete: () => _signals.Outgoing.ChestReady.Dispatch());");
+
+            painter.Paragraph(
+                "Coming back to a countdown that began earlier - a chest the player left running - "
+                + "means giving the start time rather than the time left. The service works out "
+                + "what is left, and completes the countdown straight away if it already ran out.");
+            painter.Code(
+                "_counter.CountDownFrom(\"chest\", 3600, savedStartTime,\n"
+                + "    checkActive: isRunning => _view.SetWaiting(!isRunning),\n"
+                + "    counterTick: remaining => _view.SetLabel($\"{remaining:0}s\"),\n"
+                + "    counterComplete: () => _signals.Outgoing.ChestReady.Dispatch());");
+
+            painter.Separator();
+            painter.SubHeading("Joining and leaving");
+            painter.Paragraph(
+                "A second screen showing the same chest adds itself to the countdown already "
+                + "running instead of starting one. Remove the callbacks when the screen closes: a "
+                + "countdown nothing is listening to any more is dropped with them.");
+            painter.Code(
+                "_counter.AddCallbacks(\"chest\", counterTick: OnTick);\n"
+                + "_counter.RemoveCallbacks(\"chest\", counterTick: OnTick);");
+
+            painter.Separator();
+            painter.SubHeading("Filling a bar");
+            painter.Paragraph(
+                "Pass isPercentageTick and the tick arrives as 0..1 of the whole countdown, so the "
+                + "value goes straight onto a fillAmount with no arithmetic at the call site.");
+            painter.Code(
+                "_counter.AddCallbacks(\"chest\", isPercentageTick: true,\n"
+                + "    counterTick: fraction => _view.SetFill(fraction));");
+
+            painter.Separator();
+            painter.SubHeading("Counting up");
+            painter.Paragraph(
+                "CountUpFrom measures forward from a moment in the past. Leave the duration "
+                + "at zero and it runs for as long as the game does - a session timer, or how long "
+                + "since the player last collected something.");
+            painter.Code(
+                "_counter.CountUpFrom(\"session\", sessionStart,\n"
+                + "    checkActive: null,\n"
+                + "    elapsedTimeTick: elapsed => _view.SetPlayed(elapsed));");
+
+            painter.Space();
+            painter.Note(
+                "Stop(id) ends a counter early. Its stop callbacks run and its complete callbacks "
+                + "do not, because it never completed. As a step of a sequence it is "
+                + "ICounterService.Commands.Stop, the id given at the binding: "
+                + ".ToSequence<ICounterService.Commands.Stop>(\"MatchTimer\"). Starting a counter is "
+                + "not a step - it takes a start time and the callbacks the caller keeps.");
+        }
+
+        private void DrawTimeSource(HelpPainter painter)
+        {
+            painter.Code(
+                "public interface ITimeSource\n"
+                + "{\n"
+                + "    bool IsReady { get; }\n"
+                + "    DateTime UtcNow { get; }\n"
+                + "    void Prepare(Action<bool> onPrepared);\n"
+                + "}");
+
+            painter.Paragraph(
+                "A player who moves the device clock moves every counter with it. A game that "
+                + "cares writes its own source - a server time endpoint, a platform service - and "
+                + "names it in the module's context. The module lives in the game's own Assets, so "
+                + "that line is the game's to change.");
+            painter.Code(
+                "public override void InjectionBindings()\n"
+                + "{\n"
+                + "    base.InjectionBindings();\n"
+                + "\n"
+                + "    InjectionBinder.Bind<ICounterModel, CounterModel>();\n"
+                + "    InjectionBinder.Bind<ITimeSource, ServerTimeSource>();   // was DeviceTimeSource\n"
+                + "\n"
+                + "    InjectionBinderCrossContext.Bind<ICounterService, CounterService>();\n"
+                + "}");
+
+            painter.Paragraph(
+                "Prepare is what makes a source that has to fetch something workable. It may answer "
+                + "immediately, as the device clock does, or some time later. Until it answers "
+                + "IsActive is false, GetTime returns null, and counters asked for meanwhile wait "
+                + "- their checkActive callback is told false now and true when the clock arrives.");
+
+            painter.Space();
+            painter.Note(
+                "Read the time through GetTime rather than from DateTime.UtcNow at the call site. "
+                + "That is what makes swapping the source change every reading at once instead of "
+                + "only the ones that remembered to ask.");
+        }
+    }
+}
+
+#endif

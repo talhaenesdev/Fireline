@@ -1,0 +1,220 @@
+#if UNITY_EDITOR
+
+using System.Collections.Generic;
+using FlowIoC.Editor.Help.Graph;
+using FlowIoC.Editor.Help.WhatsNew;
+using FlowIoC.Editor.Icons;
+
+namespace FlowIoC.Editor.Help.Pages
+{
+    internal class WelcomePage : HelpPage
+    {
+        /// <summary>
+        /// The reading the window lands on after the package has been updated, named here so
+        /// that the startup notice can ask for it rather than for a tab number.
+        /// </summary>
+        /// <summary>The page's own name, so a caller asking for it does not spell it again.</summary>
+        internal const string PAGE_TITLE = "Welcome";
+
+        internal const string WHATS_NEW_TAB = "What's New";
+
+        /// <summary>
+        /// The reading a project lands on the first time it opens with FlowIoC installed, named
+        /// here for the same reason.
+        /// </summary>
+        internal const string INTRODUCTION_TAB = "Introduction";
+
+        private IReadOnlyList<WhatsNewVersionEVO> _releases;
+        private WhatsNewSource _source;
+        private LatestReleasedVersion _latest;
+
+        public WelcomePage() : base(Build())
+        {
+        }
+
+        public override string Title => PAGE_TITLE;
+
+        public override string Subtitle => "What is FlowIoC";
+
+        public override FlowIcon Icon => FlowIcon.Info;
+
+        public override bool Featured => true;
+
+        protected override string BodyTabTitle => INTRODUCTION_TAB;
+
+        protected override IReadOnlyList<HelpTab> MoreTabs => new[]
+        {
+            new HelpTab(WHATS_NEW_TAB, DrawWhatsNew,
+                "What changed, newest first.",
+                "One block a release, read from the package's own CHANGELOG.md - so what the "
+                + "window says the version brought is what the file says. The line above them "
+                + "is the newest release the registry has, asked for once a day.")
+        };
+
+        /// <summary>
+        /// What changed, newest first, read out of the changelog the package ships. Every entry
+        /// is one line: the detail is in CHANGELOG.md for whoever wants it, and a reader who has
+        /// just updated wants the headlines.
+        /// </summary>
+        private void DrawWhatsNew(HelpPainter painter)
+        {
+            _source ??= new WhatsNewSource();
+            _releases ??= _source.Releases();
+
+            DrawLatestRelease(painter);
+
+            if (_releases.Count == 0)
+            {
+                painter.Note(
+                    "The changelog that ships with the package could not be read, so there is "
+                    + "nothing to show here.");
+
+                return;
+            }
+
+            DrawReleases(painter);
+        }
+
+        /// <summary>
+        /// One line above the notes about the newest release a registry has, asked for at most
+        /// once a day and only from here. It is a line and not a button: a newer version being
+        /// out is worth knowing on the tab that says what changed, and taking it is the reader's
+        /// call, made in the Package Manager. Nothing is drawn until the registry has answered
+        /// once, and nothing at all for a copy the Package Manager does not resolve.
+        /// </summary>
+        private void DrawLatestRelease(HelpPainter painter)
+        {
+            _latest ??= new LatestReleasedVersion(_source);
+
+            UpdateNoticeEVO notice = new UpdateNoticeRule()
+                .For(_source.Version, _source.Source, _latest.Read(HelpWindow.RepaintOpen));
+
+            switch (notice.Kind)
+            {
+                case UpdateNoticeKind.Behind:
+                    painter.Note(notice.Text);
+                    break;
+
+                case UpdateNoticeKind.UpToDate:
+                    painter.Rule(notice.Text);
+                    break;
+            }
+        }
+
+        private void DrawReleases(HelpPainter painter)
+        {
+            var first = true;
+
+            foreach (WhatsNewVersionEVO release in _releases)
+            {
+                // One release is one topic, so the bar goes between two of them and not above the
+                // newest: a divider under the line that introduces the list would part nothing.
+                if (first)
+                    painter.Space();
+                else
+                    painter.Separator();
+
+                first = false;
+
+                painter.SubHeading(release.Date.Length > 0
+                    ? $"{release.Version}  -  {release.Date}"
+                    : release.Version);
+
+                foreach (WhatsNewGroupEVO group in release.Groups)
+                {
+                    painter.Rule(group.Title);
+
+                    foreach (string line in group.Lines)
+                        painter.Bullet(line);
+                }
+            }
+        }
+
+        protected override string BodyHeadline => "A game split into modules that never reference one another.";
+
+        protected override string BodyTagline =>
+            "FlowIoC is a signal-driven inversion of control framework for Unity. Each module owns "
+            + "its state, its logic and its presentation, and Connectors wire them together "
+            + "declaratively.";
+
+        protected override void DrawBody(HelpPainter painter)
+        {
+            painter.Paragraph(
+                "Nothing in C# enforces that. The compiler is happy to let one module reach into "
+                + "another; what keeps a FlowIoC project honest is the convention these pages "
+                + "describe - and the assembly definition each module carries, which makes the "
+                + "boundary real.");
+
+            painter.SubHeading("Why");
+            painter.Bullet("Modules that do not know each other. A module's signals are its whole public surface.");
+            painter.Bullet("Wiring you can read: bindings in one Context, crossings in one Connector.");
+            painter.Bullet("The flow is visible. Contexts, injections, signals and commands are logged to the Flow Console.");
+            painter.Bullet("Generators instead of boilerplate: Create Module, Create Command, Create Function, Create Model, Create View.");
+            painter.Bullet("Good for one developer, better for a team: two people can own two modules and never collide.");
+
+            painter.Separator();
+            painter.SubHeading("What is in the box");
+            painter.Bullet("Property injection, per context and across contexts.");
+            painter.Bullet("Typed signals in five arities, with command bindings and direct listeners.");
+            painter.Bullet("Command sequences and parallel groups, with retain and release for asynchronous work.");
+            painter.Bullet("View mediation: a View holds the scene references, a Mediator drives it.");
+            painter.Bullet("Functions - injectable methods you call directly and get an answer from.");
+            painter.Bullet("Connectors, so two modules meet in one readable place.");
+            painter.Bullet("Bundled modules for screens, pooling, addressable assets and the Flow Console.");
+
+            painter.Separator();
+            painter.SubHeading("How a click becomes a state change");
+            painter.Paragraph(
+                "One module, and the round trip a click makes through it before it comes back out "
+                + "as something another module can act on.");
+
+            painter.Space();
+            painter.Graph(Graph, Stepper);
+
+            painter.Bullet("A Root puts the module in the scene and starts its Context, which declares every binding.");
+            painter.Bullet("A Mediator turns raw input into an incoming signal. A Connector can dispatch the same signal from another module.");
+            painter.Bullet("The CommandBinder runs the commands bound to that signal, in sequence or in parallel.");
+            painter.Bullet("Commands act on Models, Services and Systems, and call Functions when they need a value back.");
+            painter.Bullet("What happened is announced as an outgoing signal - who listens is not the module's business.");
+            painter.Bullet("Mediators hear it and update their Views; Connectors carry it to other modules.");
+
+            painter.Space();
+            painter.Note(
+                "Work down the topics on the left. Each one walks a single diagram step by step and "
+                + "shows the code behind every step.");
+        }
+
+        /// <summary>
+        /// The round trip, drawn as a map rather than a walk: this page has no steps, so the
+        /// painter draws the boxes without the Previous and Next controls.
+        /// </summary>
+        private static HelpGraph Build()
+        {
+            var nodes = new List<HelpGraphNode>
+            {
+                new HelpGraphNode("root", "Root & Context", "starts the module, binds it", 0, 0),
+                new HelpGraphNode("incoming", "Incoming Signals", "what the module accepts", 0, 1),
+                new HelpGraphNode("commands", "Commands", "one unit of work each", 0, 2),
+                new HelpGraphNode("views", "Views & Mediators", "presentation only", 1, 0),
+                new HelpGraphNode("outgoing", "Outgoing Signals", "what the module announces", 1, 1),
+                new HelpGraphNode("state", "Models, Services, Systems", "state and work", 1, 2),
+                new HelpGraphNode("connector", "Connector", "the only place modules meet", 2, 1)
+            };
+
+            var edges = new List<HelpGraphEdge>
+            {
+                new HelpGraphEdge("root", "incoming", "binds"),
+                new HelpGraphEdge("views", "incoming", "dispatches"),
+                new HelpGraphEdge("incoming", "commands", "runs"),
+                new HelpGraphEdge("commands", "state", "acts on"),
+                new HelpGraphEdge("state", "outgoing", "announces"),
+                new HelpGraphEdge("outgoing", "views", "listens"),
+                new HelpGraphEdge("outgoing", "connector", "crosses")
+            };
+
+            return new HelpGraph(nodes, edges, new List<HelpGraphStep>(), 1.4f);
+        }
+    }
+}
+
+#endif

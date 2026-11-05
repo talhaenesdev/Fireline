@@ -1,0 +1,64 @@
+key,tr,en
+MAĞAZA,,SHOP
+SATIŞ,,SELL
+YETENEK MAKİNESİ,,PERK MACHINE
+KAPI,,DOOR
+MALZEME,,MATERIALS
+Al,,Buy
+Para: {0},,Money: {0}
+Malzeme: {0},,Materials: {0}
++{0} malzeme,,+{0} materials
++{0:0} can,,+{0:0} health
++{0:0} kalkan,,+{0:0} shield
+%{0:0} daha hızlı ateş,,{0:0}% faster fire
+"taşı, durduğun yere kur; zombilere ateş eder",,"carry it, build it where you stand; shoots zombies"
+elindeki silahın yerine geçer,,replaces the weapon in your hands
+kurduğun her taret bir seviye güçlenir,,every turret you built gets one level stronger
+"taşı, durduğun yere kur; zombileri durdurur",,"carry it, build it where you stand; stops zombies"
+"sağlam duvar; taşı, durduğun yere kur",,"a sturdy wall; carry it, build it where you stand"
+kışla kur; sana savaşan askerler yetiştirir,,build barracks; trains soldiers who fight for you
+"kapı; zombiler kırmak zorunda, sen geçersin",,"a gate; zombies must break it, you walk through"
+çevresindeki yapıları yavaşça tamir eder,,slowly repairs the buildings around it
+"bütün duvarlar bir kademe güçlenir: tahta, taş, metal",,"every wall goes up a tier: wood, stone, metal"
+dikenli tel; üstündeki zombiler yavaşlar ve kanar,,barbed wire; zombies on it slow down and bleed
+mayın; yaklaşan ilk zombide patlar,,a mine; blows up on the first zombie that comes close
+sadece tabancaya {0:0} şarjör yedek mermi,,{0:0} spare magazines for the pistol only
+elindeki silaha {0:0} şarjör yedek mermi,,{0:0} spare magazines for the weapon in your hands
+"kışlaların daha çok asker tutar, daha hızlı yetiştirir",,your barracks hold more soldiers and train faster
+en yüksek can %{0:0} artar - bir kez,,max health +{0:0}% - once
+canlandırman %{0:0} kısalır - bir kez,,your revives take {0:0}% less time - once
+%{0:0} daha hızlı koşarsın - bir kez,,you run {0:0}% faster - once
+kapıyı herkes için açar,,opens the door for everyone
+şarjör %{0:0} daha hızlı dolar - bir kez,,reload {0:0}% faster - once
+Altın Diş,,Gold Tooth
+Dev Gövde,,Juggernaut
+Duvar Güçlendirme,,Wall Upgrade
+Elektronik Parça,,Electronic Part
+Hızlı El,,Quick Hands
+Hızlı Tetik,,Quick Trigger
+Hızlı Şarjör,,Fast Mag
+Kışla Yükseltme,,Barracks Upgrade
+Kışla,,Barracks
+Kapı,,Gate
+Kapıyı Aç,,Open the Door
+Keskin Nişancı,,Sniper
+Mayın,,Mine
+Onarım İstasyonu,,Repair Station
+Pompalı,,Shotgun
+Tüfekçi,,Rifleman
+Taş,,Stone
+Taret Yükseltme,,Turret Upgrade
+İlaç Kutusu,,Medkit
+Çevik Ayak,,Swift Feet
+Barikat,,Barricade
+Can Paketi,,Health Pack
+Dikenli Tel,,Barbed Wire
+Duvar,,Wall
+Hurda Metal,,Scrap Metal
+Kalkan,,Shield
+Makineli,,Machine Gun
+Mermi,,Ammo
+Metal,,Metal
+Tabanca Mermisi,,Pistol Ammo
+Tahta,,Wood
+Taret,,Turret

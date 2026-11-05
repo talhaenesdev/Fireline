@@ -7,12 +7,14 @@ using Modules.MatchModule.MatchScreenModule.Models;
 using Modules.MatchModule.MatchScreenModule.ViewsMediators;
 using Modules.MatchModule.Shared.Data.ValueObjects;
 using Modules.PlayerModule.Shared.Data.ValueObjects;
+using Modules.LocalizationModule.Services;
 
 namespace Modules.MatchModule.MatchScreenModule.Controllers
 {
     internal class OpenMatchScreenCommand : Command
     {
         [Inject] private IScreenService _screenService { get; set; }
+        [Inject] private ILocalizationService _localization { get; set; }
         [Inject] private IMatchScreenModel _model { get; set; }
 
         public override async void Execute()
@@ -21,6 +23,7 @@ namespace Modules.MatchModule.MatchScreenModule.Controllers
 
             try
             {
+                Func<string, string> localize = _localization.Get;
                 MatchScreenView screen = await _screenService.Open<MatchScreenView>().Show<MatchScreenView>();
                 if (screen == null)
                 {
@@ -29,6 +32,7 @@ namespace Modules.MatchModule.MatchScreenModule.Controllers
                     return;
                 }
 
+                screen.Localizer.Use(localize);
                 screen.ShowScores(_model.Scores);
                 if (_model.CameraSettings.HasValue)
                     screen.ShowCameraSettings(_model.CameraSettings.Value);

@@ -1,0 +1,23 @@
+key,tr,en
+YERLEŞTİR,,PLACE
+ATEŞ,,FIRE
+PİNG,,PING
+TAMİR,,REPAIR
+EMİR,,ORDER
+ASKERLER SENİ TAKİP EDİYOR,,SOLDIERS ARE FOLLOWING YOU
+ASKERLER NÖBETTE,,SOLDIERS ARE ON GUARD
+Seviye {0},,Level {0}
+Para: {0},,Money: {0}
+Malzeme: {0},,Materials: {0}
+Çanta: {0},,Bag: {0}
+GÖREV: {0},,OBJECTIVE: {0}
+GÖREV TAMAM,,OBJECTIVE COMPLETE
++{0} para,,+{0} money
+GÖREV BAŞARISIZ,,OBJECTIVE FAILED
+CANLANDIR,,REVIVE
+DALGA {0} TEMİZLENDİ,,WAVE {0} CLEARED
+BOSS GELİYOR,,BOSS INCOMING
+DALGA {0},,WAVE {0}
+{0} sn sonra geliyor,,coming in {0} s
+Kalan zombi: {0},,Zombies left: {0}
+DÜŞTÜ,,DOWN

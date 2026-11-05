@@ -108,3 +108,6 @@ InitTestScene*.unity*
 
 # Rider settings per assembly, written by Tools/FlowIoC/Module Scanner; the solution-wide Fireline.sln.DotSettings stays tracked
 *.csproj.DotSettings
+
+# F12 screenshots for the store page
+/[Ss]creenshots/

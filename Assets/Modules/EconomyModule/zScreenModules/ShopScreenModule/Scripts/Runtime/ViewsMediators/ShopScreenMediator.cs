@@ -24,6 +24,7 @@ namespace Modules.EconomyModule.ShopScreenModule.ViewsMediators
             _view.HideCompleted -= OnScreenHidden;
         }
 
+
         private void OnScreenShown(IScreenBody screen)
         {
             _view.BuyClicked += OnBuyClicked;

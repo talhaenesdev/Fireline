@@ -84,6 +84,9 @@ namespace Modules.PlayerModule.HudScreenModule.Signals
         /// <summary>The soldiers' order button was pressed.</summary>
         public Signal OrderClicked = new();
 
+        /// <summary>The button that brings the next wave in now was pressed.</summary>
+        public Signal SkipWaveClicked = new();
+
         /// <summary>The place-turret button was pressed.</summary>
         public Signal PlaceTurretClicked = new();
     }

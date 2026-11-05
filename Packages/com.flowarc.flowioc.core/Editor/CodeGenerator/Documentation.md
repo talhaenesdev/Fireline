@@ -1,0 +1,308 @@
+# Code Generator
+
+FlowIoC modules have a fixed shape: a folder tree, an assembly definition, a namespace
+derived from the path, and a `Root` / `Context` pair. Every module the generator creates
+is also registered in the project's module index, keyed on the folder's own Unity GUID.
+The generators create all of that correctly and keep it correct when things move.
+
+The rule of thumb: **never create a module, view or screen by copying an existing
+one.** A copy carries the source module's namespace and its asmdef name, and Unity
+refuses the resulting duplicate assembly name — see Pitfalls, below.
+
+- [Create Module](#create-module)
+- [Create View](#create-view)
+- [Create Command](#create-command)
+- [Create Function](#create-function)
+- [Create Model](#create-model)
+- [Namespaces and the Module Index](#namespaces-and-the-module-index)
+- [Delete Module](#delete-module)
+- [Scenarios](#scenarios)
+- [Pitfalls](#pitfalls)
+
+---
+
+## Create Module
+
+**Tools ▸ FlowIoC ▸ Create New Module**
+
+Name the module, pick a type, and choose which optional folders you want.
+
+### Module types
+
+| Type | For | Produces |
+|---|---|---|
+| `Main` | A feature or service — gameplay, economy, audio | `Assets/Modules/<Name>Module/` with the standard tree, `Modules.<Name>.asmdef`, `<Name>Root` and `<Name>Context` |
+| `Screen` | One UI screen | The above plus a `ScreenView` / `ScreenMediator` pair, a `<Name>ScreenSignals` holder, a `<Name>ScreenContext` deriving from `ScreenSubContext` that declares where the prefab lives - added to the parent module's Root - and optionally a scene |
+| `Test` | An isolated test harness for another module | The above, wrapped in editor-only preprocessor directives so it never ships |
+
+### Options
+
+| Option | Effect |
+|---|---|
+| `Create Root` / `Create Context` | Generate the pair. Leave both on unless you are adding a module that will only ever be a sub-context. |
+| `Create Signals` | Write the module's `<Name>Signals` holder with its empty `Incoming` and `Outgoing` classes, and bind it in the Context's `SignalBindings`. On by default; forced on for a Screen module, whose context binds it and which a Connector reaches through it. Not offered for a Test module, which wires other modules' signals rather than owning any. |
+| `Create Scene` | Add a scene, so the module can be opened and played on its own |
+| Actions (Screen only) | Names such as `OnBackButtonClicked`. Each becomes a callback on the View and a handler on the Mediator. |
+| Optional folders | `Resources`, `Editor`, `Scenes`, `Prefabs` and the rest — add what the module needs |
+
+### What lands on disk
+
+```
+Assets/Modules/EconomyModule/
+├── Modules.Economy.asmdef
+└── Scripts/Runtime/
+    ├── RootsContexts/
+    │   ├── EconomyRoot.cs
+    │   └── EconomyContext.cs
+    └── Signals/
+        └── EconomySignals.cs
+```
+
+Plus whichever optional folders you selected. The module is registered in the
+project's module index the moment its folder exists — there is no marker file on
+disk to keep in sync or to accidentally delete.
+
+Naming a Screen module: give it the screen's name (`Settings`, `DailyReward`), not
+`SettingsScreenScreen`. The generator adds the suffix.
+
+---
+
+## Create View
+
+**Tools ▸ FlowIoC ▸ Edit Module ▸ Create View**
+
+Pick the module and sub-module, name the view, and the generator writes the `View` class
+and the `Mediator` class, with the actions you listed already on both.
+
+The `View` carries `[RequireComponent(typeof(ViewInjector))]`, which is the reason to use
+the tool rather than writing the pair by hand: a view without `ViewInjector` compiles,
+binds, and then silently never registers — the mediator's `OnRegister` never runs and
+nothing in the console says why. The prefab is yours to make; only Create Module builds
+one, for a screen module.
+
+The generated mediator comes with empty `OnRegister` / `OnRemove` bodies. Whatever you
+subscribe in the first, unsubscribe in the second; mediators are pooled, and a
+leftover subscription comes back attached to the next view.
+
+Remember the binding — the generator writes the classes, not the line in your context:
+
+```csharp
+public override void MediationBindings()
+{
+    base.MediationBindings();
+    MediationBinder.Bind<InventoryView>().To<InventoryMediator>();
+}
+```
+
+---
+
+## Create Command
+
+**Tools ▸ FlowIoC ▸ Edit Module ▸ Create Command**
+
+Writes a command into the module's `Controllers` folder with the right namespace. Tick
+`Bind` and name the signal holder and the signal, and it writes the binding into the
+module's Context as well — `Is Sequel` choosing between `ToSequence` and `ToParallel`.
+Left clear, the binding is yours to add in `CommandBindings()`:
+
+```csharp
+CommandBinder.Bind(_signals.Incoming.Purchase)
+    .ToSequence<ValidatePurchaseCommand>()
+    .ToSequence<GrantItemCommand>();
+```
+
+Name commands after what they do to the world — `GrantItemCommand`,
+`PersistMatchResultCommand` — not after the signal that triggers them. A command named
+`OnPurchaseCommand` cannot be reused in a second chain without lying about itself.
+
+---
+
+## Create Function
+
+**Tools ▸ FlowIoC ▸ Edit Module ▸ Create Function**
+
+Writes a function into the same `Controllers` folder the Commands are in. A Command and a
+Function are both controllers — neither holds state, and both do the module's work — so the
+module has one folder for them rather than two.
+
+There is nothing to bind. A function is called from inside a Command's `Execute` rather than
+dispatched, so the generator writes the one file and touches no Context.
+
+What the window is actually for is the base type. A function derives from one of the shipped
+arities and never from `FunctionBody` — its constructor is internal, so the compiler says so —
+and the parameters, the return type and the base's generic arguments all have to agree:
+
+| Kind | Base written | `Execute` |
+|---|---|---|
+| Void | `FunctionVoid`, `FunctionVoid<T1..T4>` | `public override void Execute(...)` |
+| Return | `FunctionReturn<TReturn>`, `FunctionReturn<TReturn, T1..T4>` | `public override TReturn Execute(...)` |
+| Async | `AsyncFunction`, `AsyncFunction<TValue>` | `public override IEnumerator Execute()` |
+
+An async function's type argument is the value its callback carries, not a parameter — so the
+parameter rows are not offered for one, and it answers through `FunctionCompletedCallback`.
+
+Four parameters is where the shipped arities stop. A function that wants a fifth takes a value
+object instead, which is what the fifth parameter was going to be anyway.
+
+---
+
+## Create Model
+
+**Tools ▸ FlowIoC ▸ Edit Module ▸ Create Model**
+
+Writes the `IXModel` / `XModel` pair into the module's `Models` folder and binds it in
+the module's Context, through the module's own binder:
+
+```csharp
+InjectionBinder.Bind<IEconomyModel,EconomyModel>();                  // written for you
+InjectionBinderCrossContext.Bind<IEconomyModel, EconomyModel>();     // your edit, when shared
+```
+
+That default is the right one. Cross-context is for models other modules genuinely read,
+and every one of those is a coupling you will have to maintain.
+
+`Create Dummy Model` writes an `XDummyModel` beside the pair and binds all three. The
+three-argument overload hands a test context the dummy and everything else the real
+implementation; the swap sits behind `UNITY_EDITOR` and is made on `Context.IsTest`, so a
+build always gets the real one.
+
+---
+
+## Namespaces and the Module Index
+
+Namespaces are derived from the module's path, so moving a folder in the Project
+window desynchronises the code from its location.
+
+**`Tools ▸ FlowIoC ▸ Module Scanner`** reads every module and reports what has fallen out
+of step — a stale module index, a missing assembly definition, a `.csproj.DotSettings`
+that no longer describes the module's folders — and repairs from one button everything
+that can be repaired without renaming an assembly.
+
+Rider's own *Adjust Namespaces* is what rewrites the `namespace` line inside a `.cs`
+file once the settings are right. Module Scanner's job is to make sure they are.
+
+Every module lives in one asset, `ED_ModuleIndex.asset`, beside the code
+generator settings. It is a cache, not something you hand-edit: name, kind and
+nesting are all read back off the folder tree on every rebuild, so a stale entry is
+fixed by running *Module Scanner* — or just reopening the project, which rebuilds it
+the same way on its own. Each module's folder-type GUID map is durable state
+instead — carried forward rather than read back off the tree, and healed only
+lazily, not on every rebuild.
+
+Being a cache, it is not committed: FlowIoC writes a `.gitignore` beside it covering
+the asset and its `.meta`, so two branches adding modules never meet in the same
+serialized file. Your own lines in that file are left alone — only what sits between
+`FLOWIOC:BEGIN` and `FLOWIOC:END` is rewritten. A project that already committed the
+asset has to untrack it once with
+`git rm --cached Assets/Plugins/FlowIoC/Editor/CodeGenerator/ED_ModuleIndex.asset*`.
+
+The symptom that you needed *Module Scanner* is a generator writing into the wrong
+folder, or a Root whose sub-context list has gone empty after a move.
+
+---
+
+## Delete Module
+
+**Tools ▸ FlowIoC ▸ Edit Module ▸ Delete Module**
+
+Removes the folder, its assembly definition and its module metadata together.
+
+Deleting by hand leaves the asmdef reference in every other module that referenced it,
+and Unity reports that as a compile error naming the *referencing* module — not the
+one you deleted.
+
+Before deleting, search the project for references to the module's signals and
+models. Connector wiring is resolved at runtime, so a
+connector still pointing at a deleted module's signals fails when the scene runs, not
+when the project compiles.
+
+---
+
+## Scenarios
+
+### Generate, do not copy
+
+```
+✅ Tools ▸ FlowIoC ▸ Create New Module → "Inventory", type Main.
+   Correct namespace, correct asmdef name, registered as its own module.
+```
+
+```
+❌ Duplicate EconomyModule, rename the folder to InventoryModule, find-and-replace
+   the namespaces by hand. The asmdef is still named Modules.Economy, so Unity
+   refuses the duplicate assembly name — see Pitfalls, below.
+```
+
+### Fix namespaces at the moment you move something
+
+```
+✅ Move the folder, then run Module Scanner and Fix All, then compile.
+```
+
+```
+❌ Move the folder and keep working. The next generated class lands in the old
+   namespace, and the mismatch surfaces days later as a missing sub-context.
+```
+
+### Let the tool write the pair
+
+```
+✅ Create View writes the view and the mediator, and the view carries
+   RequireComponent(typeof(ViewInjector)) — so the component arrives with it.
+```
+
+```
+❌ Hand-written view with no ViewInjector on the object. It compiles, the mediation
+   binding is there, and OnRegister never runs — with no error to search for.
+```
+
+### Name a command after its effect
+
+```csharp
+// ✅ Reusable in any chain that needs this to happen.
+public class GrantItemCommand : Command { }
+```
+
+```csharp
+// ❌ Named after its trigger. The second chain that needs it has to either rename it
+//    or live with a lie.
+public class OnPurchaseSignalCommand : Command { }
+```
+
+---
+
+## Pitfalls
+
+### The generator writes into the wrong module
+
+The module index is stale — usually after a folder move. Run *Tools ▸ FlowIoC ▸
+Module Scanner* and Fix All to rebuild it.
+
+### A new module does not appear in the sub-context picker
+
+The picker lists `Context` types found in the assemblies. Check that the module's
+asmdef exists and that the project compiled; a module whose assembly failed to build
+contributes no types. Also check for `[ExcludeFromContextWindow]`, which hides a
+context deliberately.
+
+### A generated Test module ships in the build
+
+Test modules are wrapped in editor-only preprocessor directives, but only the files
+the generator wrote. Anything you add afterwards needs the same guard, and the test
+module's asmdef should stay out of the build's assembly graph.
+
+### Two modules end up with the same assembly name
+
+Copying a module and renaming only the folder. Assembly names must be unique;
+Unity's error names the collision but not the copy that caused it. Delete the copy and
+generate the module properly.
+
+---
+
+## Related
+
+- [Editor Tools](../README.md) — everything else in the FlowIoC menu
+- [README — Module Layout Convention](../../README.md#module-layout-convention) — the
+  folder shape the generator produces
+- [Base Module](../../Runtime/BaseModule/Documentation/BaseModule.md) — what goes in
+  the generated Root and Context

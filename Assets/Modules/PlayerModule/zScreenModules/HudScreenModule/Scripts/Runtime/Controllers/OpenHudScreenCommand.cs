@@ -6,12 +6,14 @@ using FlowIoC.ScreenModule.Service;
 using Modules.PlayerModule.HudScreenModule.Models;
 using Modules.PlayerModule.HudScreenModule.ViewsMediators;
 using UnityEngine;
+using Modules.LocalizationModule.Services;
 
 namespace Modules.PlayerModule.HudScreenModule.Controllers
 {
     internal class OpenHudScreenCommand : Command
     {
         [Inject] private IScreenService _screenService { get; set; }
+        [Inject] private ILocalizationService _localization { get; set; }
         [Inject] private IHudScreenModel _model { get; set; }
 
         public override async void Execute()
@@ -20,6 +22,7 @@ namespace Modules.PlayerModule.HudScreenModule.Controllers
 
             try
             {
+                Func<string, string> localize = _localization.Get;
                 HudScreenView screen = await _screenService.Open<HudScreenView>().Show<HudScreenView>();
                 if (screen == null)
                 {
@@ -28,6 +31,7 @@ namespace Modules.PlayerModule.HudScreenModule.Controllers
                     return;
                 }
 
+                screen.Localizer.Use(localize);
                 screen.ShowHealth(_model.Health, _model.MaxHealth);
                 screen.ShowAmmo(_model.Ammo, _model.MagazineSize, _model.Reserve);
                 screen.ShowShield(_model.Shield);

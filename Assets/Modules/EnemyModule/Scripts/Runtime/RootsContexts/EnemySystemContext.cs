@@ -48,7 +48,14 @@ namespace Modules.EnemyModule.RootsContexts
                 .ToSequence<AnnounceRumbleCommand>();
             CommandBinder.Bind(_internalSignals.WaveClearedShown).ToSequence<IAudioService.Commands.Play>(AudioKey.Enemy.WaveCleared);
 
-            CommandBinder.Bind(_internalSignals.PoolRequested).ToSequence<ConfigureBoardPoolCommand>();
+            // The pool groups are registered in Setup, a frame after a board in the scene registers, so
+            // a board is handed the pool only once the module has launched.
+            CommandBinder.Bind(_internalSignals.PoolRequested)
+                .ToSequence<RequireLaunchedCommand>()
+                .ToSequence<ConfigureBoardPoolCommand>();
+            CommandBinder.Bind(_internalSignals.Launched)
+                .ToSequence<MarkLaunchedCommand>()
+                .ToSequence<ConfigureStoredBoardPoolCommand>();
             CommandBinder.Bind(_internalSignals.BoardRegistered)
                 .ToSequence<StoreBoardCommand>()
                 .ToSequence<PoolZombiesCommand>()
@@ -120,6 +127,11 @@ namespace Modules.EnemyModule.RootsContexts
 
             CommandBinder.Bind(_signals.Incoming.RequestRepair).ToSequence<RequestRepairCommand>();
             CommandBinder.Bind(_signals.Incoming.ToggleAllyOrder).ToSequence<RequestAllyOrderCommand>();
+            CommandBinder.Bind(_signals.Incoming.SkipWaveBreak).ToSequence<RequestSkipBreakCommand>();
+
+            CommandBinder.Bind(_internalSignals.SkipBreakRequested)
+                .ToSequence<RequireServerCommand>()
+                .ToSequence<SkipBreakCommand>();
 
             CommandBinder.Bind(_internalSignals.AllyOrderRequested)
                 .ToSequence<RequireServerCommand>()
@@ -165,6 +177,12 @@ namespace Modules.EnemyModule.RootsContexts
             CommandBinder.Bind(_signals.Incoming.DamageZombie)
                 .ToSequence<RequireServerCommand>()
                 .ToSequence<DamageZombieCommand>();
+        }
+
+        public override void Launch()
+        {
+            base.Launch();
+            _internalSignals.Launched.Dispatch();
         }
 
         public override void DestroyContext()

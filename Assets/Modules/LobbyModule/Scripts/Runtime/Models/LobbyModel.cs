@@ -39,6 +39,6 @@ namespace Modules.LobbyModule.Models
         public void SetSession(SessionStateVO session) => Session = session;
 
         public LobbyStateVO ToStateVO() => new(Session.HasSession, Session.IsHost, Session.JoinCode,
-            Session.PlayerCount, Session.MaxPlayers, Session.IsLocalReady, Session.AreAllReady, IsBusy, Status, Mode, Difficulty, Map);
+            Session.PlayerCount, Session.MaxPlayers, Session.IsLocalReady, Session.AreAllReady, Session.PlayerReady, IsBusy, Status, Mode, Difficulty, Map);
     }
 }

@@ -1,0 +1,632 @@
+# Flow Console
+
+Flow Console is FlowIoC's own log window. It is worth using instead of Unity's for
+one reason: the framework already logs itself into it. Every signal dispatch, every
+command step, every context phase, every screen state change is on a channel you can
+toggle — so most of the time you diagnose a flow by *watching* it rather than by
+adding logs.
+
+Open it at **Tools ▸ FlowIoC ▸ Flow Console**. The first time a project meets FlowIoC - or the
+first time it updates to a FlowIoC that has the tab to hand out - it opens itself, focused, as a
+tab beside Unity's Console — beside the Project window when the Console is not open, floating
+when neither is — and the layout keeps the tab from then on. That happens once per project and
+reader: somebody who closes the tab has decided, and the menu item is the door after that.
+
+- [The Two Kinds of Channel](#the-two-kinds-of-channel)
+- [The Window](#the-window)
+- [Logging From Your Code](#logging-from-your-code)
+- [Formatting With Profiles](#formatting-with-profiles)
+- [Preferences](#preferences)
+- [Reading a Flow](#reading-a-flow)
+- [Silencing Noise](#silencing-noise)
+- [Scenarios](#scenarios)
+- [Pitfalls](#pitfalls)
+
+---
+
+## The Two Kinds of Channel
+
+**Framework channels** are built in and written by FlowIoC itself:
+
+| Channel | What appears on it |
+|---|---|
+| `Context` | Root and Context lifecycle: initialize, start, each binding phase, setup, launch, destroy |
+| `Injection` | Bindings created and resolved |
+| `Signal` | Every dispatch, with the signal name and parameter count |
+| `Command` | Every command step as it executes |
+| `CommandOperation` | Group orchestration and pool returns |
+| `Function` | Function execution |
+| `Screen` | Screen open, show, hide, unload, layer decisions |
+| `Pool` | Pool creation, checkout, return |
+| `Asset` | Asset load and release |
+
+You never write to these — they are the framework narrating itself. You toggle them
+in the console window.
+
+Three of them are not the framework narrating itself. `Unity` carries anything Unity
+wrote — a `Debug.Log`, an exception, a native warning — from whichever thread wrote it: a
+line a `Task` writes reaches the window on the next editor update, so nothing Unity's own
+console shows is missing here. `Compiler` carries compile errors
+and warnings, taken from `CompilationPipeline`. `Shader` carries a shader that would not
+compile, read off the asset with `ShaderUtil` after it is imported. They are read through
+Unity's public API and nothing else, so a Unity upgrade cannot quietly break them. All
+three are recorded whether or not logging is switched on: turning it off is a statement about
+*your* logging, and a console that then showed no compile errors would be useless at the
+moment it is most needed.
+
+Their rows carry an icon where every other channel carries its `[Name]` tag — the Unity
+logo the Hierarchy draws beside a scene, the C# script icon, the shader icon — and no
+stripe, so a line that is not the framework's is told apart at a glance, and the message
+is exactly what Unity wrote: searched, collapsed and copied as it came.
+
+**A row's tag sits on its source line.** `[Signal]`, `[Command]`, `[Player]` are written at
+the front of the message when the line is logged — search, copy and the detail panel see
+them there — but the list draws them on the second line, before the file and line, so the
+first line is the message alone. The framework's rows carry their tag on a faint plate of
+the channel's colour, with a stripe of the same colour down the row's edge; a module's rows
+carry theirs bare, and no stripe. That is what tells `[Screen]` the framework wrote from
+`[Screen]` a module of that name wrote. A one-line row has no source line and keeps the
+tag where it was written.
+
+`Shader` is a channel of its own rather than part of `Compiler`, because the two answer
+different questions. A C# error stops the domain reloading and nothing runs at all; a
+broken shader renders one material magenta and everything else carries on. Somebody who
+filters to `Compiler` is asking whether they can press play, and shader rows in that column
+would answer the wrong question.
+
+A shader error reaches Unity's own console twice over: once off the asset when it is
+imported, carrying the file and the line, and once as text when the variant actually
+compiles, carrying neither. Flow Console keeps the first and drops the second, so the row
+you see is the one you can double-click open. The second copy is dropped only when the
+first was really recorded — a variant that fails at play time was never imported, so
+Unity's text is then the only copy there is and it is kept.
+
+**Project channels** are yours: one per module, generated as a `const string` on `FlowModule`
+with the module's colour beside it. `FlowModule.AnalyticsModule` is the module's name - the console
+logs on it as the channel, and anything else that keys something by module reads the same constant.
+It is declared **in the module**, in a part of its own:
+
+```csharp
+// Modules/AnalyticsModule/Scripts/Generated/FlowModule.AnalyticsModule.cs
+using UnityEngine;
+
+namespace FlowIoC.ConsoleModule
+{
+    public static partial class FlowModule
+    {
+        /// <summary>The AnalyticsModule module, and its channel in the Flow Console.</summary>
+        public const string AnalyticsModule = "AnalyticsModule";
+
+        /// <summary>The colour AnalyticsModule's rows are drawn in. A "Colour: #RRGGBB" line above the block in the module's MODULE.md sets it.</summary>
+        public static readonly Color AnalyticsModuleColor = new Color32(103, 166, 228, 255);
+    }
+}
+```
+
+Beside it sits a `FlowIoC.Generated.asmref`, which is what puts the part into FlowIoC's own
+assembly rather than into the module's. Parts of a partial class have to share an assembly, and
+every module has an assembly of its own - without the asmref this could not be a partial class at
+all. The one name that belongs to no module, `FlowModule.Default`, is declared by the package
+itself.
+
+There is no list of channels anywhere else. A module has a channel because it is in the module
+index, the generator writes the part from the index, and the console reads every `const string` on
+`FlowModule` back - so a module that exists has a channel, a module that is gone has none, and
+nothing falls out of step with the modules.
+
+**A module's colour and tag are the module's own.** Every module is coloured from the day it is
+created, picked from a palette of twelve tones by the module's name, so the same module is the same
+colour on every machine, and its lines carry its name as a tag from the same day — `[Player]` for
+PlayerModule, in the module's colour. A module that wants a colour of its own says so in its card,
+as a line directly above the generated block of `MODULE.md`, and may declare a profile - a tag of
+its own, and how the message after it is drawn - the same way:
+
+```
+Colour: #E5A50A
+Profile: prefix="[Analytics]" prefix-style=bold prefix-colour=#39FF00
+```
+
+Both lines are read and written by the console: right-click the module's channel in the Filters
+panel and choose **Colour and profile...** to edit them in a window, which writes the card and
+regenerates the part. The console follows on the next compile. A colour left on the palette's pick
+writes no line, and a profile left on the default tag writes none either, so a card says something
+only when somebody chose; a prefix cleared out writes `Profile: none`, which is how a module's lines
+carry no tag at all, and **Reset** takes both lines off the card. The Profile line's keys are
+`prefix`, `prefix-style`, `prefix-colour`, `message-style`, `message-colour`, `postfix`,
+`postfix-style` and `postfix-colour`; text is quoted, a colour is hex, a style is `bold`, `italic`,
+`underline` or a comma-joined list of them, and every key is optional.
+
+**A channel is a name, not a number.** It used to be an `int`, handed out in order and reassigned
+whenever the list was sorted - so a module whose name sorted early moved every channel after it onto
+a different number, and with it every saved filter and every row already recorded. There was also
+nobody to hand out the next number: two people adding a module on two branches were each handed the
+same one. A name has neither problem, and a part per module means the two of them do not even touch
+the same file.
+
+Because both are generated, a renamed or newly created module gets its channel without anyone
+editing a list, and a deleted module takes its channel with it.
+
+---
+
+## The Window
+
+Everything Unity's console does, Flow Console does the same way, so it can be the only
+console you keep open.
+
+| Toolbar | What it does |
+|---|---|
+| `Clear ▾` | Empties the list. The arrow holds **Clear on Play**, **Clear on Recompile** and **Clear on Build**. |
+| `Collapse` | Folds rows that say the same thing from the same place onto one line with a count. The row keeps the place of its first occurrence, so the list does not reorder itself while you read it. |
+| `Error Pause` | Pauses play mode on the next error, exception or assert. |
+| `Editor ▾` | Unity's attach-to-player picker, the same one the Console and the Profiler draw. Pick a development player and its rows arrive here - see [Attaching a device](#attaching-a-device). |
+| search box | See [Searching](#searching). |
+| `Locate` | Scrolls the selected row back into view. |
+| `⚙` | Floats over the list's top-right corner while it is closed. Pressed, it opens a bar of its own across the top of the list - the rows start under it - with what shapes the rows at its left end and `Source` and `Export` at its right. `Filters` sits beside the gear while its panel is closed and heads the panel once it is open. |
+| `Time ▾` | What leads a row. **Classic** is the clock to the second, `13:05:23`, the way Unity's console leads a row; **Extended**, the default, adds the milliseconds, `13:05:23:088`; **Frame** is the frame the row was written in and the gap since the row above, `f120  +12ms`. |
+| `1/2/3 lines` | How many lines a row shows. Two is Unity's shape: the message, and underneath it where it came from. |
+| `Flow` | Groups the rows into the flows they belong to. See below. |
+| `Pinned` | Shows only the rows you pinned. |
+| `Source:` | The Source capture, raised and lowered where the flow is being read rather than under Preferences. |
+| `Export` | Saves or copies the rows that are showing, as plain text. |
+| `Presets` | Channel filters saved under a name. Two ship with the console; the rest are yours. |
+
+A window too narrow for all of that drops controls whole rather than drawing them half, the
+way Unity's console does. On the toolbar the search goes first, then `Editor ▾`, then `Error
+Pause`; `Clear`, `Collapse` and the three counts are never dropped, and neither is a search
+with something typed in it. On the bar `Source` goes first, then `Export`, then `Pinned`,
+`Flow`, the line count and `Time` in that order; the gear and `Filters` stay.
+
+The bar's switches are on the tab's menu as well - right-click the tab, or press the `⋮` at its
+corner - the way Unity's Console keeps its line count there, and on a right-click on the list
+below the last row. A menu has no width, so a control the bar dropped is still one click away,
+and it ticks whatever is in force.
+
+The list follows new logs down while it is resting at the bottom and leaves you alone
+once you scroll up. Arrows walk it, PageUp/PageDown move by a screen, Home and End take
+the two ends, **Enter** opens the selected row's source and **Ctrl+C** copies it with its
+trace. **P** pins the selected row.
+
+Double-clicking a row opens the code that wrote it. Where a diagnostic is the framework
+complaining about your code — a command that released without retaining, a view with no
+context above it — the row opens **your** file, not the framework's guard clause.
+
+A line is drawn across the list wherever a play session begins or ends, so a list that
+spans one does not run the editing and the run together.
+
+The list survives a recompile. `FlowLogger.Logs` is a static and a domain reload would
+otherwise empty it at the moment a compile error most wants reading, so the newest five
+thousand rows are written down before the reload and read back after it.
+
+### Channels
+
+Clicking a channel hides or shows it. **Alt+clicking** one narrows the console to it,
+and alt+clicking the one that is already alone brings the rest back — twenty-nine clicks
+are not an answer when one channel of thirty is interesting.
+
+The panel's left edge drags, so a module name that does not fit gets the room it needs.
+It goes no narrower than half its starting width and no wider than leaves the list its
+room; as it narrows, the counts on its headers come off before the names do. The width
+is yours, kept with your switches.
+
+What a switch hides is the channel's plain logs. **A warning and an error show whatever
+its channel's switch, its group's mute or an isolation says.** `Context` is off by
+default, and *Shared asset is not filed on any Root!* is written on it, so a console that
+let the switch decide showed the error in Unity's window and not in this one. The Warning
+and Error toggles on the bar are what hide a report. Unity's console follows the same rule:
+a warning and an error reach it always - whatever `SendLogsToUnityConsole`, the channel's
+switch or the master switch says - and a plain log only while `SendLogsToUnityConsole` is on
+and its channel is on.
+
+What you switch on and off is yours. It lives in EditorPrefs, keyed by the project, and
+nothing committed is written when you click — one developer's filter has no business turning up in
+everybody else's diff, or switching their channels to match when they pull. What a channel shows as
+for somebody who has not touched it is the default it ships with: `Signal`, `Command` and the three
+channels Unity writes are on, the framework's machinery underneath them is off, and every module
+is on. A channel you never touched follows that default, and so does one a module added after you
+last opened the panel. **Presets ▸ Defaults** drops your switches and puts you back on it.
+
+An empty list says why it is empty when there is a reason: *every channel is switched
+off*, or *N rows hidden by filters* when rows exist and none passes the channels, the
+mute, the isolation, the severity toggles or the search.
+
+### Searching
+
+Terms are ANDed, a term starting with `-` excludes, and a term wrapped in slashes is a
+regular expression. What matched is painted behind the text, because a narrowed list says
+which rows survived but not why.
+
+```
+screen open        both words
+-tick              everything except the tick loop
+probe -retry       both at once
+/probe (1|2)\d/    a regular expression
+```
+
+A half-typed expression says `bad pattern` beside the box rather than quietly emptying
+the list. Beside the severity counters is how many rows are shown against how many the
+console is holding.
+
+### Pinning
+
+Pinning a row is you saying this one is not noise, so it outranks everything that hides
+rows: the channel switches, the severity toggles, the trim that bounds the list, and the
+automatic clears on play, recompile and build. A warning and an error outrank the channel
+switches the same way, and nothing else — the severity toggles still hide them, the trim
+still takes them. A search still narrows past it — that is
+looking for something rather than hiding a kind of log — and the `Clear` button still
+empties everything, because pressing it is asking for exactly that.
+
+### Flow
+
+Every log the framework writes while a signal runs its commands carries the id of that
+flow, and a flow started from inside another carries its parent's. `Flow` reads those
+back: each flow opens with a line that folds it away, and a nested one sits indented
+under it. Read straight down, a busy frame is four operations interleaved; grouped, each
+one is a block you can follow.
+
+A silenced command contributes no node — `[HideCommandLog]` on it, or `hideCommandLog: true`
+on the signal that runs it, suppresses the framework's lines and there is nothing left to make
+one from — so a log you wrote inside it sits directly under the flow's root. Inventing a node for a command somebody asked to hide
+would undo the request.
+
+### Attaching a device
+
+Pick a running development player under `Editor ▾` — the same connection Unity's Console
+and the Profiler attach through. From then on every row the player would have recorded
+arrives in this window with what it had on the device: the channel, the flow it belongs
+to, the frame, and the source file and line as far as the build's stack traces carry
+them. The player's own Unity lines come too — an exception, a native warning, a third
+party's `Debug.Log` — on the `Unity` channel with their trace, so double-clicking one
+opens the file.
+
+A line is drawn where the device's rows begin, named for the device, and each row carries
+a dim tag after the time — `13:05:23:088 · Android Pixel 7 |` — so editor rows and device
+rows that interleave still say which is which. In Flow mode a device's flows are grouped
+on their own, never under an editor flow that happens to share the number.
+
+One setup step fails silently when skipped: the build must be a **Development Build**. A
+release player never connects and sends nothing - and it has nothing to send, because `FlowLogger.Log`
+and `LogWarning` compile only in the Editor and in a Development Build. There is no scripting
+define to add.
+
+Unity's own forwarding — the `Player Logging` toggle in Unity's Console — keeps working
+beside this. While a FlowIoC player is attached its copy of each line is dropped here,
+because the row has already arrived with its channel and flow; attached to a player
+without FlowIoC, that copy is the only one and is kept.
+
+Rows go one message each with `TrySend`, so a buffer the editor has not drained drops
+rows rather than stalling the game. The connection is single: one player at a time, the
+one the Profiler is on.
+
+---
+
+## Logging From Your Code
+
+```csharp
+using FlowIoC.ConsoleModule;
+
+FlowLogger.Log("Execute - AddCurrencyCommand");
+FlowLogger.LogWarning("Currency clamped to zero.");
+FlowLogger.LogError("Save slot is not writable.");
+FlowLogger.LogLong(serializedPayload);
+```
+
+A line names no channel. The compiler writes the file the call sits in into the call —
+`[CallerFilePath]`, resolved when the code compiles, not when it runs — and the module is in
+the path: a Command under `Modules/PlayerModule/…` logs on `PlayerModule`, a screen under
+`MainModule/zScreenModules/MainScreenModule/…` on `MainScreenModule`, a test module's files on
+the module they test, and a file outside any module on `Default`. The same call carries the line
+number, so the row knows its file and line without a stack being walked, whatever *Stack Trace
+Capture* says. A log line copied from one module into another lands on the right module by
+itself, because nothing in the line says which module it was written for.
+
+Name the channel by hand only where the file is not the module the line is about — a Connector
+reporting on the module it wires, a test outside the modules — with the module's constant:
+
+```csharp
+FlowLogger.Log(FlowModule.PlayerModule, "Execute - AddCurrencyCommand");
+```
+
+The Module Scanner's *Log channels* check reports a channel typed by hand, `FlowModule.Default`,
+or a module's own constant inside that module, with the file and the line, and Fix rewrites the
+call: it cuts the channel where only the message follows, and writes the module's constant where
+a profile or a context follows.
+
+`LogLong` is for output you want kept intact — a JSON body, a serialized save — that
+would otherwise be truncated.
+
+> **Spell the names out. Never `nameof` inside a log message.**
+> `$"{nameof(Execute)} - {nameof(AddCurrencyCommand)}"` written inside `AddCurrencyCommand`
+> is a real reference to the type, so Find Usages and a plain search answer *where is this
+> Command used* with the command's own logging lines instead of the Context that binds it.
+> A rename then leaves the literal stale, and that is the cheaper of the two costs.
+
+Every one of these methods except `LogError` carries `[Conditional("UNITY_EDITOR")]` and
+`[Conditional("DEVELOPMENT_BUILD")]` - the two are OR'd, so the call stays wherever either symbol
+is defined. In the Editor and in a Development Build the logs are there; in a release build the
+calls are removed by the compiler, including the string interpolation that would have built the
+message. This is why you can leave `"..."` logs in shipping code without paying for them, and why
+there is no scripting define to manage: Unity defines both symbols itself. `LogError` is the one
+that ships, and a channel-less `LogError` ships with the path of the file it sits in as a string
+literal - the compiler wrote it there. That is the same path a stack trace carries in a
+development build; name the channel by hand at an error site if a release build must not carry it.
+
+---
+
+## Formatting With Profiles
+
+A module's everyday look is the `Profile:` line in its card - every line the module logs without
+naming a channel wears it. A `FlowLogProfile` passed by hand is for one line that should stand out
+from the rest, and the call names the channel with it.
+
+A `FlowLogProfile` decorates a message with a prefix, a postfix, colours and styles.
+It is a fluent builder, so a module can define its profiles once and reuse them.
+
+```csharp
+private static readonly FlowLogProfile Warning = new FlowLogProfile()
+    .SetPrefix("[ECONOMY]", FlowTextStyle.Bold, "#FFAA00")
+    .SetMessageStyle(FlowTextStyle.Italic)
+    .SetMessageColor("#DDDDDD")
+    .SetPostfix("<-- check this", FlowTextStyle.None, "#888888");
+
+FlowLogger.Log(FlowModule.EconomyModule, "Currency went negative.", Warning);
+```
+
+| Method | Sets |
+|---|---|
+| `SetPrefix(text, style, color \| hex)` | the tag before the message |
+| `SetPostfix(text, style, color \| hex)` | the tag after it |
+| `SetMessageStyle(style)` / `SetMessageColor(color \| hex)` | the message itself |
+| `SetColor(color \| hex)` | prefix, message and postfix at once |
+
+`FlowTextStyle` is a flags enum — `None`, `Bold`, `Italic`, `Underline` — so styles
+combine:
+
+```csharp
+.SetPrefix("[BOOT]", FlowTextStyle.Bold | FlowTextStyle.Underline, "#00CCFF")
+```
+
+Colours take either a `Color` or a hex string.
+
+Keep profiles as `static readonly` fields. A profile built inline allocates on every
+log call, which matters exactly where logging matters least — inside a loop.
+
+---
+
+## Preferences
+
+How much the logger does is yours, under **Edit ▸ Preferences ▸ FlowIoC ▸ Flow Console**. These are
+EditorPrefs, read through `FlowLogger.Preferences`; there is no committed settings asset, so one
+developer raising the capture while chasing a flow turns up in nobody else's diff. A player reads
+the defaults written here.
+
+| Preference | Effect |
+|---|---|
+| Logging enabled (`IsLoggingEnabled`) | Master switch. Off: nothing is recorded and nothing is mirrored. A warning and an error still reach Unity's console. |
+| Mirror into Unity's console (`SendLogsToUnityConsole`) | Mirror the plain logs into Unity's own console, for when you need the two side by side - each only while its channel is on. Warnings and errors reach Unity's console whether this is on or off. |
+| Source capture (`StackTraceCapture`) | Which logs work out where they came from. `WarningsAndErrors` is the default and the one to leave alone: capturing a source builds the whole managed stack as a string and picks it apart, and the framework logs every signal, injection and command, so this is the most expensive thing the console does. Raise it to `Always` while following a flow and put it back afterwards. `Never` is the cheapest and shows no source for anything. Also on the console's bar, as `Source`. |
+| Max log count (`MaxLogCount`) | How many logs are kept. The oldest are dropped past this, so a long play session does not hold every log it ever wrote. `0` keeps all of them. |
+| Deep analysis in the detail panel (`DeepAnalysis`) | On: the detail panel shows the class name and the full stack trace. Off: only the source line. Editor-only — on device no trace is shown. |
+
+Which channels show is the Filters panel's, a module's colour and profile are the module's own in
+its `MODULE.md`, and the framework's channels - their colours, their `[Tag]`s, which of them are on
+by default - are a table in the package.
+
+---
+
+## Reading a Flow
+
+The framework channels are most useful in combination. A single button press should
+read like this:
+
+```
+[Signal]           'ShopSignals.PurchaseRequested' dispatched (1 parameter)
+[CommandOperation] 'ShopSignals.PurchaseRequested' opened a command group
+[Command]          ValidatePurchaseCommand executed as Sequence
+[Command]          SpendCurrencyCommand executed as Sequence
+[Signal]           'PlayerSignals.CurrencyChanged' dispatched (1 parameter)
+[Command]          GrantItemCommand executed as Sequence
+```
+
+Reading that top to bottom answers most questions without a breakpoint:
+
+- **Dispatch line missing** → the mediator or connector never fired. The problem is
+  upstream of the command chain.
+- **Dispatch present, no command line** → the signal is not bound, or you bound a
+  different instance of the signal holder.
+- **Chain stops mid-way** → a step retained and never resolved. After ten seconds a warning
+  names the Command; Play's end lists every step still waiting past it.
+- **Commands run in an order you did not expect** → check where `ToParallel` sits in
+  the binding.
+
+Turn off every channel but `Signal` and `Command` while chasing a flow. Turn on
+`Context` when something did not initialise, and `Screen` or `Pool` when the symptom
+is visual.
+
+---
+
+## Silencing Noise
+
+A tick loop dispatching many times per second drowns everything else. One flag on its
+signal suppresses the framework's lifecycle logs for the whole loop without hiding the
+channel entirely:
+
+```csharp
+// Silences the dispatch, and every step and sub group it runs.
+public Signal Tick = new(hideCommandLog: true);
+```
+
+It does not affect your own `FlowLogger` calls inside the commands. A warning or an error
+raised inside the hidden run still appears, followed by where the run was:
+
+```
+Currency went negative.
+  in 'Tick' (hidden), step 3 of 4: PublishExpiredTimersCommand; before it: WaitForNextTickCommand, AdvanceTimersCommand
+```
+
+`[HideCommandLog]` on a command silences that command's execute and pool-return lines
+wherever it is bound — for a command that is noisy in every flow, not for a loop.
+
+To hide a whole project channel, switch it off in the window. That is a whole-channel switch,
+not a per-loop one, so prefer the signal flag when only one loop is noisy.
+
+For a loop you did not write — somebody else's module, or the framework's own lines — the
+search box does the same job without touching any code: `-tick` hides every row whose
+message carries the word and leaves the channel alone.
+
+See [Commands — Silencing High-Frequency Chains](../../BaseModule/Controller/Documentation/Controller.md#silencing-high-frequency-chains)
+for the full table.
+
+---
+
+## Scenarios
+
+### Watch the flow before adding a log
+
+```csharp
+// ✅ Turn on the Signal and Command channels and press the button. The console
+//    already shows which step is missing — no code change, no rebuild.
+```
+
+```csharp
+// ❌ Sprinkling Debug.Log through four commands to find out which one runs, when the
+//    framework has been logging exactly that the whole time.
+Debug.Log("ValidatePurchaseCommand start");
+Debug.Log("ValidatePurchaseCommand end");
+```
+
+### Let the file name the channel
+
+```csharp
+// ✅ Written under Modules/EconomyModule, so it logs on EconomyModule - and still does
+//    after it is copied into another module.
+FlowLogger.Log("Granted 100 soft currency.");
+```
+
+```csharp
+// ❌ A channel named from inside the module it names. It says nothing the path did not,
+//    and the day the line is pasted into ShopModule it keeps logging as Economy.
+FlowLogger.Log(FlowModule.EconomyModule, "Granted 100 soft currency.");
+```
+
+```csharp
+// ❌ Two strings are channel then message. This logs "Granted 100 soft currency." on a
+//    channel called "Economy" that no module owns - no colour, no switch, no card.
+FlowLogger.Log("Economy", "Granted 100 soft currency.");
+```
+
+### Say what happened, not that you got here
+
+```csharp
+// ✅ The line is useful six months later, in a bug report from a player.
+FlowLogger.Log($"Purchase '{_itemId}' for {_price} {_currencyType}; balance now {_model.Balance}.");
+```
+
+```csharp
+// ❌ Tells you the method ran, which the Command channel already told you.
+FlowLogger.Log("PurchaseCommand executed");
+```
+
+### Reuse profiles
+
+```csharp
+// ✅ Built once, used everywhere in the module.
+private static readonly FlowLogProfile Economy = new FlowLogProfile()
+    .SetPrefix("[ECONOMY]", FlowTextStyle.Bold, "#FFAA00");
+
+FlowLogger.Log(FlowModule.EconomyModule, message, Economy);
+```
+
+```csharp
+// ❌ A new profile object per call, inside the hot path.
+FlowLogger.Log(FlowModule.EconomyModule, message,
+    new FlowLogProfile().SetPrefix("[ECONOMY]", FlowTextStyle.Bold, "#FFAA00"));
+```
+
+### `LogError` for things that are actually wrong
+
+```csharp
+// ✅ An error is a state the game cannot recover from on its own.
+FlowLogger.LogError("Save file is corrupt; falling back to defaults.");
+```
+
+```csharp
+// ❌ Errors used for flow control. The error filter fills with expected outcomes and
+//    stops being the first place anyone looks.
+FlowLogger.LogError("Player cannot afford this item.");
+```
+
+---
+
+## Pitfalls
+
+### Nothing appears in the console
+
+Check in this order: *Logging enabled* under Preferences ▸ FlowIoC ▸ Flow Console; the channel's
+switch in the window — an empty list says so when every channel is off; and, for a device, whether
+the build is a Development Build. In a release build every `FlowLogger` call is compiled away, so
+the code looks correct and produces nothing.
+
+### A log says "Source not captured"
+
+That is the Source capture, and it is the default rather than a fault. Ordinary logs do not
+work out where they came from, because doing so is the console's most expensive operation and
+the framework writes a log for every signal, injection and command. Warnings and errors still
+carry their source. Raise `Source` on the console's bar to `Always` while following a
+particular flow, and put it back when you are done.
+
+### The console forgets old logs
+
+*Max log count* under Preferences caps what is kept, at 5000 by default, and the oldest go
+first. Raise it, or set it to `0` for no limit, if a long session has to be read back whole.
+
+### `FlowModule.MyModule` does not exist
+
+The module's part is missing or out of date. It is written from the module index when the
+Editor loads and whenever a module is created, installed or renamed; run *Tools ▸ FlowIoC ▸
+Module Scanner* and repair, or delete `Scripts/Generated` in the module and let the next load
+write it again. Never edit a part by hand; it is overwritten.
+
+### `FlowLogger.Log(SystemLogType.Signal, ...)` does not compile
+
+The `SystemLogType` overloads are `internal` — they belong to the framework, and the framework's
+channels are the framework's to write on. Game code logs the message alone and the module comes
+from the file; a line about another module names it with its `FlowModule` constant.
+
+### A line landed on `Default` that should be on my module
+
+The channel is read off the file's path, and the path had no folder named `*Module` above the
+file - the script sits outside `Modules/`, or the module's folder was renamed by hand to something
+without the suffix. Move the file into the module, or name the channel with the module's
+`FlowModule` constant at that one call.
+
+### Logs are missing their stack trace on device
+
+A device builds a row only while an editor is attached to it (see [Attaching a
+device](#attaching-a-device)), and then only with what the build's stack traces carry: a
+Mono development build names the file and the line, an IL2CPP build needs its symbols.
+Unattached, no `ConsoleLog` is built at all. For on-device diagnosis without an editor,
+put the context you need into the message itself.
+
+### The console is slow with a long session
+
+Every log is retained in `FlowLogger.Logs`. Call `FlowLogger.ClearLogs()` between
+test runs, or at a natural boundary such as returning to the menu — or turn on **Clear
+on Play** and let entering play mode do it.
+
+### A pinned row disappeared
+
+The `Clear` button empties everything, pins included. Everything else leaves them: the
+automatic clears, the trim at `MaxLogCount`, a recompile, and turning a channel or a
+severity off. A search is the other exception, and it is not a fault — a search is
+looking for something, and answering it with rows pinned for another reason is noise.
+
+---
+
+## Related
+
+- [README — FlowIoC at a Glance](../../../README.md#flowioc-at-a-glance)
+- [Commands](../../BaseModule/Controller/Documentation/Controller.md) — the command
+  and signal channels in practice
+- [Base Module](../../BaseModule/Documentation/BaseModule.md) — what the `Context`
+  channel is narrating

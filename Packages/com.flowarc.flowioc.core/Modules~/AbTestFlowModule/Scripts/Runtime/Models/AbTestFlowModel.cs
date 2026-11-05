@@ -1,0 +1,166 @@
+using System.Collections.Generic;
+using FlowIoC.BaseModule.Adapters;
+using FlowIoC.BaseModule.Constructables;
+using FlowIoC.BaseModule.Injectable.Attributes;
+using FlowIoC.ConsoleModule;
+using Modules.AbTestFlowModule.Data.UnityObjects;
+using Modules.AbTestFlowModule.Data.ValueObjects;
+using Modules.AbTestFlowModule.RootsContexts;
+using Modules.AbTestFlowModule.Shared.Data.UnityObjects;
+using Modules.AbTestFlowModule.Shared.Data.ValueObjects;
+using UnityEngine;
+
+namespace Modules.AbTestFlowModule.Models
+{
+    /// <summary>
+    /// Holds the config and the assignments. PostConstruct only takes the two assets off the Root's
+    /// adapter and readies them; it decides nothing. The deciding is a Command's, started by the
+    /// service, and the result comes back through SetAssignment.
+    /// </summary>
+    public class AbTestFlowModel : IAbTestFlowModel, IConstructable
+    {
+        [Inject(nameof(AbTestFlowServiceContext))]
+        private GameObject _root { get; set; }
+
+        private AbTestCVO _activeTest;
+        private readonly List<AbTestStatusRVO> _statuses = new();
+
+        private RD_AbTestStatus _published;
+
+#if UNITY_EDITOR
+        private readonly EditorAssetSnapshots _snapshots = new();
+#endif
+
+        public bool IsPostConstructed { get; set; }
+        public bool IsDeconstructed { get; set; }
+
+        public AbTestCVO ActiveTest => _activeTest;
+
+        public IReadOnlyList<AbTestStatusRVO> Statuses => _statuses;
+
+        public void PostConstruct()
+        {
+            _activeTest = null;
+            _statuses.Clear();
+
+            if (!TryReadAdapter(out CD_AbTests config, out _published))
+                return;
+
+            _activeTest = config.ActiveTest();
+
+#if UNITY_EDITOR
+            // Before anything is written: every asset of the active test's control group, because
+            // which group this player lands in is not known yet, and the published asset, which is
+            // filled at boot. Put back straight away as well as at the end, so a variant lands on
+            // the asset's file rather than on whatever an earlier run left in memory - the way a
+            // build starts from what was built into it.
+            _snapshots.Capture(AssetsAboutToChange(_activeTest, _published));
+            _snapshots.Restore();
+#endif
+
+            _published.Clear();
+        }
+
+        public void Deconstruct()
+        {
+            _activeTest = null;
+            _statuses.Clear();
+        }
+
+        public void SetStatus(AbTestStatusRVO status)
+        {
+            if (status == null || string.IsNullOrEmpty(status.AbTestId))
+                return;
+
+            for (var i = 0; i < _statuses.Count; i++)
+            {
+                if (_statuses[i].AbTestId != status.AbTestId)
+                    continue;
+
+                _statuses[i] = status;
+                Publish(status);
+                return;
+            }
+
+            _statuses.Add(status);
+            Publish(status);
+        }
+
+        public void ClearStatuses()
+        {
+            _statuses.Clear();
+
+            if (_published != null)
+                _published.Clear();
+        }
+
+        public AbTestStatusRVO GetStatus(string abTestId)
+        {
+            foreach (AbTestStatusRVO status in _statuses)
+            {
+                if (status.AbTestId == abTestId)
+                    return status;
+            }
+
+            return null;
+        }
+
+        public string GetGroup(string abTestId)
+        {
+            AbTestStatusRVO status = GetStatus(abTestId);
+
+            return status != null && status.IsInTest ? status.Group : null;
+        }
+
+#if UNITY_EDITOR
+        public void RestoreEditorAssets() => _snapshots.Restore();
+#endif
+
+        private void Publish(AbTestStatusRVO status)
+        {
+            if (_published != null)
+                _published.Set(status);
+        }
+
+        /// <summary>
+        /// The adapter on the Root is where the two assets are filed, under their type names. One
+        /// that is missing is reported by the adapter itself, naming the asset and the Root, so
+        /// this only has to notice the null.
+        /// </summary>
+        private bool TryReadAdapter(out CD_AbTests config, out RD_AbTestStatus published)
+        {
+            config = null;
+            published = null;
+
+            var adapter = _root.GetComponent<RootAdapter>();
+            if (adapter == null)
+            {
+                FlowLogger.LogError("AbTestFlowServiceRoot has no RootAdapter, so no experiment can run.", _root);
+                return false;
+            }
+
+            config = adapter.GetScriptable<CD_AbTests>();
+            published = adapter.GetScriptable<RD_AbTestStatus>();
+
+            return config != null && published != null;
+        }
+
+#if UNITY_EDITOR
+        private List<ScriptableObject> AssetsAboutToChange(AbTestCVO test, RD_AbTestStatus published)
+        {
+            var assets = new List<ScriptableObject> {published};
+
+            if (test == null || test.Groups.Count == 0)
+                return assets;
+
+            foreach (ScriptableObject original in test.Groups[0].Assets)
+            {
+                if (original != null)
+                    assets.Add(original);
+            }
+
+            return assets;
+        }
+#endif
+    }
+}

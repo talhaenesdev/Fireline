@@ -1,6 +1,7 @@
 using System;
 using FlowIoC.BaseModule.Injectable.Components;
 using FlowIoC.ScreenModule.ViewsMediators.Screen;
+using Modules.LocalizationModule.Entities;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -30,6 +31,10 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         public Action PingClicked;
         public Action RepairClicked;
         public Action OrderClicked;
+        public Action SkipWaveClicked;
+
+        /// <summary>Filled by the Mediator; every text on the HUD is looked up through it.</summary>
+        public TextLocalizer Localizer { get; } = new();
 
         private Button _ping;
         private Button _repair;
@@ -37,6 +42,7 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         private OffscreenArrows _arrows;
 
         private Button _placeTurretButton;
+        private Button _skipWaveButton;
 
         private TouchJoystick _stick;
         private TouchHoldButton _fire;
@@ -105,7 +111,18 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
 
             _placeTurretButton = TouchControlsBuilder.WideButton(transform, "PlaceTurretButton", "YERLEŞTİR");
             _placeTurretButton.gameObject.SetActive(false);
-            _arrows = new OffscreenArrows((RectTransform) transform);
+            _arrows = new OffscreenArrows((RectTransform) transform, Localizer);
+            BindLabel(_placeTurretButton, "YERLEŞTİR");
+
+            // Under the countdown, only while the break is on.
+            _skipWaveButton = TouchControlsBuilder.WideButton(transform, "SkipWaveButton", "DALGAYI BAŞLAT");
+            var skipRect = (RectTransform) _skipWaveButton.transform;
+            skipRect.anchorMin = skipRect.anchorMax = new Vector2(0.5f, 1f);
+            skipRect.anchoredPosition = new Vector2(0f, -160f);
+            skipRect.sizeDelta = new Vector2(280f, 54f);
+            _skipWaveButton.gameObject.SetActive(false);
+            BindLabel(_skipWaveButton, "DALGAYI BAŞLAT");
+            Localizer.Changed += Redraw;
 
             if (!Application.isMobilePlatform)
                 return;
@@ -116,6 +133,27 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
             _ping = TouchControlsBuilder.TapButton(transform, "PingButton", new Vector2(-110f, 330f), 90f, new Color(0.3f, 0.75f, 1f), "PİNG");
             _repair = TouchControlsBuilder.TapButton(transform, "RepairButton", new Vector2(-230f, 330f), 90f, new Color(0.55f, 0.85f, 0.4f), "TAMİR");
             _order = TouchControlsBuilder.TapButton(transform, "OrderButton", new Vector2(-350f, 330f), 90f, new Color(0.45f, 0.6f, 1f), "EMİR");
+            BindLabel(_fire, "ATEŞ");
+            BindLabel(_ping, "PİNG");
+            BindLabel(_repair, "TAMİR");
+            BindLabel(_order, "EMİR");
+        }
+
+        private void BindLabel(Component control, string text)
+        {
+            if (control != null)
+                Localizer.Bind(control.GetComponentInChildren<TMP_Text>(true), text);
+        }
+
+        private string L(string text) => Localizer.Get(text);
+
+        // The language changed: whatever the HUD composed is composed again.
+        private void Redraw()
+        {
+            if (_hasWallet)
+                DrawWallet();
+            DrawWave();
+            DrawAmmo();
         }
 
         // The fill is a picture, not a filled Image: it is cut from the right, picture and rect together.
@@ -151,6 +189,7 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         {
             _reviveButton.onClick.AddListener(OnReviveClicked);
             _placeTurretButton.onClick.AddListener(OnPlaceTurretClicked);
+            _skipWaveButton.onClick.AddListener(OnSkipWaveClicked);
 
             if (_stick == null)
                 return;
@@ -167,6 +206,7 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         {
             _reviveButton.onClick.RemoveListener(OnReviveClicked);
             _placeTurretButton.onClick.RemoveListener(OnPlaceTurretClicked);
+            _skipWaveButton.onClick.RemoveListener(OnSkipWaveClicked);
 
             if (_stick == null)
                 return;
@@ -187,9 +227,10 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         private void OnPingClicked() => PingClicked?.Invoke();
         private void OnRepairClicked() => RepairClicked?.Invoke();
         private void OnOrderClicked() => OrderClicked?.Invoke();
+        private void OnSkipWaveClicked() => SkipWaveClicked?.Invoke();
 
         public void ShowAllyOrder(bool isFollowing) =>
-            ShowBanner(isFollowing ? "ASKERLER SENİ TAKİP EDİYOR" : "ASKERLER NÖBETTE");
+            ShowBanner(L(isFollowing ? "ASKERLER SENİ TAKİP EDİYOR" : "ASKERLER NÖBETTE"));
 
         public void ShowMarkers(Modules.PlayerModule.Shared.Data.ValueObjects.MarkerVO[] markers) => _arrows.Show(markers, Camera.main);
 
@@ -249,7 +290,7 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
 
         public void ShowProgress(int level, int intoLevel, int levelSize)
         {
-            _progress = $"\n<size=70%><color=#9AD0FF>Seviye {level}  ({intoLevel}/{levelSize} XP)</color></size>";
+            _progress = $"\n<size=70%><color=#9AD0FF>{Localizer.Format("Seviye {0}", level)}  ({intoLevel}/{levelSize} XP)</color></size>";
             DrawWallet();
         }
 
@@ -259,7 +300,7 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
             bool showsChange = Time.time - _walletChangedAt < WALLET_CHANGE_SHOWN;
             string money = showsChange ? Change(_moneyChange) : string.Empty;
             string materials = showsChange ? Change(_materialsChange) : string.Empty;
-            _walletText.text = $"<color=#FFC857>Para: {_money}</color>{money}  <color=#C8B08A>Malzeme: {_materials}</color>{materials}\n<size=80%>Çanta: {_carried}</size>{_progress}";
+            _walletText.text = $"<color=#FFC857>{Localizer.Format("Para: {0}", _money)}</color>{money}  <color=#C8B08A>{Localizer.Format("Malzeme: {0}", _materials)}</color>{materials}\n<size=80%>{Localizer.Format("Çanta: {0}", _carried)}</size>{_progress}";
         }
 
         private static string Change(int amount) => amount switch
@@ -291,13 +332,13 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
 
         public void ShowObjective(string title, bool isActive, float progress)
         {
-            _objective = isActive ? $"\n<size=55%><color=#7FE08A>GÖREV: {title}  %{Mathf.RoundToInt(progress * 100f)}</color></size>" : string.Empty;
+            _objective = isActive ? $"\n<size=55%><color=#7FE08A>{Localizer.Format("GÖREV: {0}", L(title))}  %{Mathf.RoundToInt(progress * 100f)}</color></size>" : string.Empty;
             DrawWave();
         }
 
         public void ShowObjectiveEnded(bool isHeld, int reward) => ShowBanner(isHeld
-            ? $"<color=#7FE08A>GÖREV TAMAM</color>\n<size=60%><color=#FFC857>+{reward} para</color></size>"
-            : "<color=#FF5A5A>GÖREV BAŞARISIZ</color>");
+            ? $"<color=#7FE08A>{L("GÖREV TAMAM")}</color>\n<size=60%><color=#FFC857>{Localizer.Format("+{0} para", reward)}</color></size>"
+            : $"<color=#FF5A5A>{L("GÖREV BAŞARISIZ")}</color>");
 
         /// <summary>
         /// Puts the revive button over the downed teammate, where the camera sees them, and fills
@@ -329,7 +370,7 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
             bool isReviving = progress >= 0f;
             _reviveProgress.fillAmount = isReviving ? progress : 0f;
             _reviveButton.interactable = !isReviving;
-            _reviveLabel.text = isReviving ? "..." : "CANLANDIR";
+            _reviveLabel.text = isReviving ? "..." : L("CANLANDIR");
         }
 
         private string _weaponName;
@@ -359,7 +400,7 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
             // Spare rounds beside the magazine; red once they are gone, a sign that never runs out on the fallback weapon.
             string spare = _reserve < 0 ? "∞" : _reserve == 0 ? "<color=#FF5A5A>0</color>" : _reserve.ToString();
             string ammo = $"{_ammo} / {_magazineSize}  <size=70%><color=#9AA4B2>{spare}</color></size>";
-            _ammoText.text = string.IsNullOrEmpty(_weaponName) ? ammo : $"<size=60%>{_weaponName}</size>\n{ammo}";
+            _ammoText.text = string.IsNullOrEmpty(_weaponName) ? ammo : $"<size=60%>{L(_weaponName)}</size>\n{ammo}";
         }
 
         public void ShowHurt(float amount)
@@ -368,21 +409,21 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         }
 
         public void ShowWaveCleared(int wave, int reward) =>
-            ShowBanner($"DALGA {wave} TEMİZLENDİ\n<size=60%><color=#FFC857>+{reward} para</color></size>");
+            ShowBanner($"{Localizer.Format("DALGA {0} TEMİZLENDİ", wave)}\n<size=60%><color=#FFC857>{Localizer.Format("+{0} para", reward)}</color></size>");
 
         /// <summary>The boss's health across the top; a boss that just came in is announced.</summary>
         public void ShowBoss(string name, int health, int maxHealth)
         {
             bool isShown = !string.IsNullOrEmpty(name) && maxHealth > 0;
             if (isShown && !_bossBar.gameObject.activeSelf)
-                ShowBanner($"<color=#FF5A5A>BOSS GELİYOR</color>\n<size=60%>{name}</size>");
+                ShowBanner($"<color=#FF5A5A>{L("BOSS GELİYOR")}</color>\n<size=60%>{L(name)}</size>");
 
             _bossBar.gameObject.SetActive(isShown);
             if (!isShown)
                 return;
 
             _bossFill.anchorMax = new Vector2(Mathf.Clamp01((float) health / maxHealth), 1f);
-            _bossLabel.text = $"{name}  {health} / {maxHealth}";
+            _bossLabel.text = $"{L(name)}  {health} / {maxHealth}";
         }
 
         public void ShowBanner(string text)
@@ -427,13 +468,14 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         private void DrawWave()
         {
             _waveText.gameObject.SetActive(_wave > 0);
+            int seconds = _waveStartTime > 0f ? Mathf.CeilToInt(_waveStartTime - Time.time) : 0;
+            _skipWaveButton.gameObject.SetActive(_wave > 0 && seconds > 0);
             if (_wave <= 0)
                 return;
 
-            int seconds = _waveStartTime > 0f ? Mathf.CeilToInt(_waveStartTime - Time.time) : 0;
             _waveText.text = seconds > 0
-                ? $"DALGA {_wave}\n<size=70%>{seconds} sn sonra geliyor</size>"
-                : $"DALGA {_wave}\n<size=70%>Kalan zombi: {_zombiesLeft}</size>{_objective}";
+                ? $"{Localizer.Format("DALGA {0}", _wave)}\n<size=70%>{Localizer.Format("{0} sn sonra geliyor", seconds)}</size>"
+                : $"{Localizer.Format("DALGA {0}", _wave)}\n<size=70%>{Localizer.Format("Kalan zombi: {0}", _zombiesLeft)}</size>{_objective}";
         }
 
         protected override void PlayShowAnimation() => ShowCompleted?.Invoke(this);

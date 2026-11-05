@@ -23,6 +23,7 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
             _view.HideCompleted -= OnScreenHidden;
         }
 
+
         private void OnScreenShown(IScreenBody screen)
         {
             _signals.Incoming.ApplyHealth.AddListener(_view.ShowHealth);
@@ -40,6 +41,7 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
             _view.PingClicked += OnPingClicked;
             _view.RepairClicked += OnRepairClicked;
             _view.OrderClicked += OnOrderClicked;
+            _view.SkipWaveClicked += OnSkipWaveClicked;
             _signals.Incoming.ApplyShield.AddListener(_view.ShowShield);
             _signals.Incoming.ApplyWallet.AddListener(_view.ShowWallet);
             _signals.Incoming.ApplyRevive.AddListener(_view.ShowRevive);
@@ -68,6 +70,7 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
             _view.PingClicked -= OnPingClicked;
             _view.RepairClicked -= OnRepairClicked;
             _view.OrderClicked -= OnOrderClicked;
+            _view.SkipWaveClicked -= OnSkipWaveClicked;
             _signals.Incoming.ApplyShield.RemoveListener(_view.ShowShield);
             _signals.Incoming.ApplyWallet.RemoveListener(_view.ShowWallet);
             _signals.Incoming.ApplyRevive.RemoveListener(_view.ShowRevive);
@@ -87,5 +90,6 @@ namespace Modules.PlayerModule.HudScreenModule.ViewsMediators
         private void OnPingClicked() => _signals.Outgoing.PingClicked.Dispatch();
         private void OnRepairClicked() => _signals.Outgoing.RepairClicked.Dispatch();
         private void OnOrderClicked() => _signals.Outgoing.OrderClicked.Dispatch();
+        private void OnSkipWaveClicked() => _signals.Outgoing.SkipWaveClicked.Dispatch();
     }
 }

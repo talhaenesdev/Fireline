@@ -14,6 +14,8 @@ namespace Modules.WeaponModule.ViewsMediators
     [RequireComponent(typeof(ViewInjector))]
     public class NetworkBulletView : NetworkBehaviour, IView, INetworkBullet
     {
+        private const float HIT_RADIUS = 0.06f;
+
         private Vector3 _direction;
         private float _speed;
         private float _remainingLifetime;
@@ -54,17 +56,35 @@ namespace Modules.WeaponModule.ViewsMediators
             if (!IsServer || !IsSpawned)
                 return;
 
-            transform.position += _direction * (_speed * Time.deltaTime);
+            // Swept, not left to the trigger: a fast round moves further in one step than a small
+            // zombie is wide, and a trigger only sees where it lands, so it flew through them.
+            float distance = _speed * Time.deltaTime;
+            Vector3 start = transform.position;
+            RaycastHit[] hits = Physics.SphereCastAll(start, HIT_RADIUS, _direction, distance,
+                Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide);
+            Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+            foreach (RaycastHit hit in hits)
+            {
+                if (hit.collider == null || hit.collider.transform.IsChildOf(transform))
+                    continue;
+
+                if (hit.collider.GetComponentInParent<NetworkBulletView>() != null)
+                    continue;
+
+                // Where the round met it, so a wall shows its impact there.
+                transform.position = start + _direction * hit.distance;
+                Hit?.Invoke(hit.collider);
+
+                if (!IsSpawned)
+                    return;
+            }
+
+            transform.position = start + _direction * distance;
             _remainingLifetime -= Time.deltaTime;
 
             if (_remainingLifetime <= 0f)
                 Despawn();
-        }
-
-        private void OnTriggerEnter(Collider other)
-        {
-            if (IsServer && IsSpawned)
-                Hit?.Invoke(other);
         }
 
         public void ShowImpact(Vector3 point)

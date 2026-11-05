@@ -5,6 +5,7 @@
     "Modules.Lobby.Screen.Signals",
     "Modules.Lobby.Shared",
     "Modules.PlayerName",
+    "Modules.Localization",
     "Unity.TextMeshPro",
     "UnityEngine.UI",
     "Modules.Match.Shared"

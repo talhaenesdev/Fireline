@@ -40,6 +40,9 @@ namespace Modules.EnemyModule.Entities
         /// <summary>Client: asks the server to switch the local player's soldiers between guarding and following.</summary>
         void RequestAllyOrder();
 
+        /// <summary>Client: asks the server to cut the break short and send the next wave.</summary>
+        void RequestSkipBreak();
+
         /// <summary>Server: tells the player whether their soldiers now follow them.</summary>
         void AnnounceAllyOrderServer(ulong clientId, bool isFollowing);
 

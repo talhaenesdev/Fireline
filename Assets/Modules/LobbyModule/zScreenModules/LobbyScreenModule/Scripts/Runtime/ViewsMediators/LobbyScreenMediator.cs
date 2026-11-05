@@ -12,6 +12,7 @@ namespace Modules.LobbyModule.LobbyScreenModule.ViewsMediators
     {
         [Inject] private LobbyScreenView _view { get; set; }
         [InjectSignal] private LobbyScreenSignals _signals { get; set; }
+        [InjectSignal] private LobbyScreenInternalSignals _internalSignals { get; set; }
 
         public void OnRegister()
         {
@@ -25,6 +26,7 @@ namespace Modules.LobbyModule.LobbyScreenModule.ViewsMediators
             _view.HideCompleted -= OnScreenHidden;
         }
 
+
         private void OnScreenShown(IScreenBody screen)
         {
             _view.CreateClicked += OnCreateClicked;
@@ -35,6 +37,7 @@ namespace Modules.LobbyModule.LobbyScreenModule.ViewsMediators
             _view.ModeClicked += OnModeClicked;
             _view.DifficultyClicked += OnDifficultyClicked;
             _view.MapClicked += OnMapClicked;
+            _view.LanguageClicked += OnLanguageClicked;
             _signals.Incoming.ApplyState.AddListener(OnStateChanged);
         }
 
@@ -48,6 +51,7 @@ namespace Modules.LobbyModule.LobbyScreenModule.ViewsMediators
             _view.ModeClicked -= OnModeClicked;
             _view.DifficultyClicked -= OnDifficultyClicked;
             _view.MapClicked -= OnMapClicked;
+            _view.LanguageClicked -= OnLanguageClicked;
             _signals.Incoming.ApplyState.RemoveListener(OnStateChanged);
         }
 
@@ -99,6 +103,12 @@ namespace Modules.LobbyModule.LobbyScreenModule.ViewsMediators
         {
             if (CanSend())
                 _signals.Outgoing.MapClicked.Dispatch();
+        }
+
+        private void OnLanguageClicked()
+        {
+            if (CanSend())
+                _internalSignals.SwitchLanguage.Dispatch();
         }
 
         private bool CanSend() => _view.Data.HasState(ScreenState.AvailableToSendSignal);

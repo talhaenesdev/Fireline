@@ -6,6 +6,7 @@
     "Modules.Match.Screen.Signals",
     "Modules.Match.Shared",
     "Unity.TextMeshPro",
+    "Modules.Localization",
     "UnityEngine.UI"
   ],
   "includePlatforms": [],

@@ -2,6 +2,8 @@ using FlowIoC.BaseModule.Injectable.Components;
 using FlowIoC.BaseModule.ViewsMediators.View;
 using Modules.EconomyModule.Entities;
 using Modules.EconomyModule.Enums;
+using Modules.LocalizationModule.Entities;
+using TMPro;
 using UnityEngine;
 
 namespace Modules.EconomyModule.ViewsMediators
@@ -23,6 +25,19 @@ namespace Modules.EconomyModule.ViewsMediators
         [SerializeField] private GameObject _blocker;
 
         public bool IsRegistered { get; set; }
+
+        /// <summary>Filled by the Mediator; the zone's sign is translated through it.</summary>
+        public TextLocalizer Localizer { get; } = new();
+
+        // The sign over the zone keeps the text it was authored with as its key.
+        private void Awake()
+        {
+            foreach (TMP_Text sign in GetComponentsInChildren<TMP_Text>(true))
+            {
+                if (!string.IsNullOrWhiteSpace(sign.text))
+                    Localizer.Bind(sign, sign.text);
+            }
+        }
 
         public int Id => _id;
         public EconomyZoneKind Kind => _kind;

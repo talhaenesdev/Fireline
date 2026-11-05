@@ -1,0 +1,328 @@
+﻿using System.Collections.Generic;
+using FlowIoC.BaseModule.Attributes;
+using FlowIoC.BaseModule.Contexts;
+using FlowIoC.BaseModule.Root;
+using FlowIoC.BaseModule.ViewsMediators.Utils;
+using FlowIoC.BaseModule.ViewsMediators.View;
+using FlowIoC.BaseModule.ViewsMediators.View.Data;
+using FlowIoC.BaseModule.ViewsMediators.View.Enums;
+using FlowIoC.ConsoleModule;
+using UnityEngine;
+
+namespace FlowIoC.BaseModule.Injectable.Components
+{
+    /// <summary>
+    /// Wears the Mediator colour. A Mediator is not a component, so that colour would otherwise
+    /// never appear in an inspector - and this is the piece that hands a View to one.
+    /// </summary>
+    [FlowHeader(FlowRole.Mediator, label: "View Injector")]
+    public class ViewInjector : MonoBehaviour
+    {
+        public List<ViewInjectorData> viewDataList;
+
+        private Dictionary<IView, IContext> _viewRegistrationDataDict;
+
+        private RootsManager _rootsManager;
+
+        private IContext _assignedContext;
+
+        private bool _waitingForContexts;
+
+        /// <summary>
+        /// Names the context this object's views belong to, for a view that is not authored under
+        /// its module's Root - a screen the screen service instantiates and parents under a layer,
+        /// for example. Set it before the object is activated; every view on the object then
+        /// registers against this context instead of the one found by bubbling up the hierarchy.
+        /// </summary>
+        public void AssignContext(IContext context) => _assignedContext = context;
+
+        internal IContext AssignedContext => _assignedContext;
+
+        private RootsManager _rootsManagerInstance =>
+            _rootsManager ??= RootsManagerFactory.GetRootsManager() as RootsManager;
+
+        #region Unity Methods
+
+        private void Start()
+        {
+            ListUnlistedViews();
+
+            if (viewDataList.Count == 0)
+                return;
+
+            _viewRegistrationDataDict = new Dictionary<IView, IContext>(viewDataList.Count);
+
+            bool waiting = false;
+
+            for (int i = 0; i < viewDataList.Count; i++)
+            {
+                ViewInjectorData viewInjectorData = viewDataList[i];
+
+                // An entry whose view component was removed after the inspector last wrote the
+                // list. There is nothing to register, and resolving it threw.
+                if (viewInjectorData.View == null)
+                    continue;
+
+                IContext context = ResolveContext(viewInjectorData);
+
+                // ResolveContext has already said what was missing. Carrying on leaves the other
+                // views on this object working, which is what a reader trying to fix one wants.
+                if (context == null)
+                    continue;
+
+                _viewRegistrationDataDict[(IView) viewInjectorData.View] = context;
+
+                if (context.IsStarted)
+                    RegisterView(viewInjectorData);
+                else
+                    waiting = true;
+            }
+
+            // One subscription for the whole object. Subscribing once per view meant the handler
+            // ran once per view and unsubscribed once per run, so the first context to become
+            // ready could take away the subscription every other view was still waiting on.
+            if (!waiting)
+                return;
+
+            _rootsManagerInstance.OnContextReady += OnContextsReadyListener;
+            _waitingForContexts = true;
+        }
+
+        public virtual void OnDestroy()
+        {
+            RootsManagerFactory.ExecuteSafelyOnRootsManager(rootsManager =>
+            {
+                if (_waitingForContexts && _rootsManager?.OnContextReady != null)
+                {
+                    _rootsManager.OnContextReady -= OnContextsReadyListener;
+                    _waitingForContexts = false;
+                }
+            });
+
+            // An injector added from code and destroyed before its Start never had the list
+            // written; there is nothing to unregister.
+            if (viewDataList == null)
+                return;
+
+            for (int i = 0; i < viewDataList.Count; i++)
+            {
+                ViewInjectorData viewInjectorData = viewDataList[i];
+                if (!viewInjectorData.IsRegistered)
+                    continue;
+                IView view = (IView) viewInjectorData.View;
+                view.UnRegister();
+            }
+        }
+
+        /// <summary>
+        /// The context a view was registered against. A screen registers before Unity's Start has
+        /// built the dictionary, so the assigned context is answered first.
+        /// </summary>
+        public IContext GetContextOfView(IView view)
+        {
+            if (_assignedContext != null)
+                return _assignedContext;
+
+            return _viewRegistrationDataDict != null && _viewRegistrationDataDict.TryGetValue(view, out IContext context)
+                ? context
+                : null;
+        }
+
+        #endregion
+
+        #region Context
+
+        /// <summary>
+        /// Which context a view belongs to, and the one place that answers it. Registration used
+        /// to decide for itself and only ever looked at the selected Root, so a view that named
+        /// its Root waited for the named context and then registered against whatever Root
+        /// happened to sit above it in the hierarchy.
+        ///
+        /// A context assigned by a loader outranks everything the entry says, because the object
+        /// cannot know in the editor where it will be parented.
+        /// </summary>
+        internal IContext ResolveContext(ViewInjectorData viewInjectorData)
+        {
+            if (_assignedContext != null)
+                return _assignedContext;
+
+            switch (viewInjectorData.ContextSource)
+            {
+                case ViewContextSource.SelectedRoot:
+                    return ContextOfSelectedRoot(viewInjectorData);
+
+                case ViewContextSource.RootName:
+                    return ContextOfNamedRoot(viewInjectorData);
+
+                default:
+                    return ((IView) viewInjectorData.View).FindViewContext();
+            }
+        }
+
+        private IContext ContextOfSelectedRoot(ViewInjectorData viewInjectorData)
+        {
+            if (viewInjectorData.SelectedRoot != null)
+                return viewInjectorData.SelectedRoot.GetContext();
+
+            Report(viewInjectorData, "is set to Selected Root and none is selected. A prefab cannot hold "
+                                     + "a reference to a Root in the scene - name the Root instead.");
+
+            return null;
+        }
+
+        private IContext ContextOfNamedRoot(ViewInjectorData viewInjectorData)
+        {
+            IRoot root = string.IsNullOrEmpty(viewInjectorData.RootName)
+                ? null
+                : _rootsManagerInstance.GetRootByName(viewInjectorData.RootName);
+
+            if (root != null)
+                return root.GetContext();
+
+            Report(viewInjectorData, $"asks for the Root named \"{viewInjectorData.RootName}\", which is "
+                                     + "not in the scene.");
+
+            return null;
+        }
+
+        /// <summary>
+        /// Says which view on which object could not find a context. Both halves matter: an
+        /// object carries several views, and a scene carries several of the object.
+        /// </summary>
+        private void Report(ViewInjectorData viewInjectorData, string problem)
+        {
+            string viewName = viewInjectorData.View == null ? "a missing view" : viewInjectorData.View.GetType().Name;
+            string message = $"ViewInjector on \"{name}\": {viewName} {problem}";
+
+            FlowLogger.LogError(SystemLogType.Injection, message);
+        }
+
+        #endregion
+
+        #region Injection
+
+        private void OnContextsReadyListener(IContext context)
+        {
+            bool pending = false;
+
+            for (int i = 0; i < viewDataList.Count; i++)
+            {
+                ViewInjectorData viewInjectorData = viewDataList[i];
+
+                if (viewInjectorData.View == null)
+                    continue;
+
+                if (!_viewRegistrationDataDict.TryGetValue((IView) viewInjectorData.View, out IContext registeredContext))
+                    continue;
+
+                if (registeredContext == context)
+                    RegisterView(viewInjectorData);
+                else if (!registeredContext.IsStarted)
+                    pending = true;
+            }
+
+            // Held until every view on this object has its context. One Root becoming ready says
+            // nothing about the Root another view on the same object is waiting for.
+            if (pending)
+                return;
+
+            _rootsManagerInstance.OnContextReady -= OnContextsReadyListener;
+            _waitingForContexts = false;
+        }
+
+        private void RegisterView(ViewInjectorData viewInjectorData)
+        {
+            if (viewInjectorData.AutoRegister)
+                TryToInject((IView) viewInjectorData.View);
+        }
+
+        private bool TryToInject(IView viewComponent)
+        {
+            ViewInjectorData injectorData = GetViewInjectorData(viewComponent);
+            if (injectorData.IsRegistered)
+                return false;
+
+            bool injectResult = viewComponent.Register(injectorData);
+            injectorData.IsRegistered = injectResult;
+            return injectResult;
+        }
+
+        /// <summary>
+        /// The entry for a view on this object. A view the list does not name gets the entry the
+        /// inspector would have written for it - bubble up, register - so the list only has to say
+        /// what differs from that. The inspector writes the list, and an object assembled from code,
+        /// or a view added to it from code, reached Start unlisted: an empty list was an error the
+        /// reader had to fix by selecting the object, and a view missing from a partial list simply
+        /// never registered, with nothing logged.
+        /// </summary>
+        public ViewInjectorData GetViewInjectorData(IView view)
+        {
+            // Unity hands a component added at runtime a null list rather than an empty one.
+            viewDataList ??= new List<ViewInjectorData>();
+
+            for (int i = 0; i < viewDataList.Count; i++)
+            {
+                if (viewDataList[i].View == (Object) view)
+                    return viewDataList[i];
+            }
+
+            if (view is not Component component || component.gameObject != gameObject)
+                return null;
+
+            ViewInjectorData entry = new ViewInjectorData
+            {
+                View = component,
+                AutoRegister = true,
+                ContextSource = ViewContextSource.BubbleUp,
+                IsRegistered = false
+            };
+
+            viewDataList.Add(entry);
+
+            return entry;
+        }
+
+        private void ListUnlistedViews()
+        {
+            viewDataList ??= new List<ViewInjectorData>();
+
+            List<IView> views = new List<IView>();
+            GetComponents(views);
+
+            for (int i = 0; i < views.Count; i++)
+                GetViewInjectorData(views[i]);
+        }
+
+        public void ViewInjectionCompleted(IView view)
+        {
+            ViewInjectorData injectorData = GetViewInjectorData(view);
+            if (injectorData == null)
+                return;
+
+            injectorData.IsRegistered = true;
+            view.IsRegistered = true;
+        }
+
+        #endregion
+
+        internal void InitializeForEditor()
+        {
+            viewDataList = new List<ViewInjectorData>();
+
+            List<IView> viewComponentList = new List<IView>();
+            GetComponents<IView>(viewComponentList);
+
+            for (int i = 0; i < viewComponentList.Count; i++)
+            {
+                ViewInjectorData viewInjectorData = new ViewInjectorData
+                {
+                    View = (Object) viewComponentList[i],
+                    AutoRegister = true,
+                    IsRegistered = false
+                };
+
+                viewDataList.Add(viewInjectorData);
+            }
+        }
+    }
+}

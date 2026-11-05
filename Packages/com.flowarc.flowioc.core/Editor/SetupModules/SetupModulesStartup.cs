@@ -1,0 +1,284 @@
+#if UNITY_EDITOR
+
+using System;
+using System.IO;
+using System.Linq;
+using FlowIoC.Editor.Addressables;
+using FlowIoC.Editor.AgentRules;
+using FlowIoC.Editor.CodeGenerator.Detector;
+using FlowIoC.Editor.ModuleScanner;
+using FlowIoC.Editor.ModuleInstall;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+
+namespace FlowIoC.Editor.SetupModules
+{
+    /// <summary>
+    /// Holds the one instance Unity's load callback needs. Unity forces this entry point to be
+    /// static; everything it does lives on <see cref="SetupModulesStartup"/>.
+    ///
+    /// EditorApplication.update rather than delayCall: delayCall never fires while the Editor
+    /// sits unfocused, and an assistant drives this Editor from a terminal with Unity behind it.
+    /// </summary>
+    [InitializeOnLoad]
+    internal static class SetupModulesStartupHook
+    {
+        static SetupModulesStartupHook() => Schedule();
+
+        private static void Schedule()
+        {
+            EditorApplication.update -= RunOnce;
+            EditorApplication.update += RunOnce;
+        }
+
+        private static void RunOnce()
+        {
+            if (EditorApplication.isUpdating || EditorApplication.isCompiling) return;
+
+            EditorApplication.update -= RunOnce;
+            new SetupModulesStartup().Run();
+        }
+    }
+
+    /// <summary>
+    /// Installs the modules a FlowIoC game starts with, the first time the Editor opens on a
+    /// project that has none of its own.
+    ///
+    /// The set is not reference material: it is where the game's code will live. So unlike the
+    /// agent skills, which come back when deleted, this runs once and records that it has. A game
+    /// that deletes one of the modules has decided something, and the next session respects it.
+    /// </summary>
+    internal class SetupModulesStartup
+    {
+        private const string MainScenePath = "Assets/Modules/MainModule/Scenes/MainScene.unity";
+
+        private readonly string _projectRoot;
+        private readonly SetupState _state;
+        private readonly SetupModulesInstaller _installer;
+
+        internal SetupModulesStartup() : this(new ProjectRoot().Resolve(), PackageRoot())
+        {
+        }
+
+        /// <summary>The same startup over a project and a package handed in, which a test does.</summary>
+        internal SetupModulesStartup(string projectRoot, string packageRoot)
+            : this(projectRoot, packageRoot, new ProjectAsmdefs(projectRoot))
+        {
+        }
+
+        /// <summary>
+        /// The same startup sharing one walk of the project's asmdefs with whoever hands it in -
+        /// the Help window, whose five setup pages each ask what of the set is installed.
+        /// </summary>
+        internal SetupModulesStartup(string projectRoot, string packageRoot, ProjectAsmdefs asmdefs)
+        {
+            _projectRoot = projectRoot;
+            _state = new SetupState(projectRoot);
+            _installer = new SetupModulesInstaller(
+                projectRoot, new ModulesSource(packageRoot, ModulesSource.SetupModulesFolder), asmdefs);
+        }
+
+        internal void Run()
+        {
+            SetupInstallDecision decision = new SetupInstallRule().For(
+                _state.IsInstalled(), Application.isBatchMode, AnyModulePresent());
+
+            switch (decision)
+            {
+                case SetupInstallDecision.Stop:
+                    return;
+
+                case SetupInstallDecision.MarkOnly:
+                    _state.MarkInstalled(PackageVersion());
+                    return;
+
+                case SetupInstallDecision.Install:
+                    InstallNow();
+                    return;
+            }
+        }
+
+        /// <summary>
+        /// The install itself, without the rule in front of it. The Help window's button calls
+        /// this: pressing it is somebody asking for the set, and the marker only records whether
+        /// the automatic install has had its turn.
+        /// </summary>
+        internal void InstallNow()
+        {
+            SetupInstallReport report = _installer.Install();
+
+            if (!report.Succeeded)
+            {
+                Debug.LogWarning($"<color=cyan>[FlowIoC]</color> The setup modules were not installed: {report.Blocked}");
+                _state.MarkInstalled(PackageVersion());
+                return;
+            }
+
+            foreach (string name in report.Installed)
+                Debug.Log($"<color=cyan>[FlowIoC]</color> Setup module installed: {SetupModulesInstaller.TargetFolder}/{name}");
+
+            RegisterWithUnity();
+            RegisterAddressables(report.Installed);
+            OpenTheScene();
+
+            _state.MarkInstalled(PackageVersion());
+        }
+
+        /// <summary>
+        /// What turns copied folders into modules the rest of the Editor knows about, done once for
+        /// the whole set. The order matters: the index has to know the modules before the namespace
+        /// settings can be written from them.
+        /// </summary>
+        private void RegisterWithUnity()
+        {
+            // On a project this hook has never run on there is no settings asset for the index to
+            // be rebuilt through; the rebuild inside RescanModules makes it, the same one the
+            // generator menus would.
+            AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+            ModuleAutoDetector.RescanModules();
+            new ModuleRepair().FixAll();
+
+            // Here, and not from inside RescanModules: the repair above writes the settings files
+            // that a scan taken a line earlier would have reported as missing.
+            new ModuleScannerStartupReport().Report();
+        }
+
+        /// <summary>
+        /// Every screen the set brought, made addressable the way Create Module makes one it wrote,
+        /// and every file in a screen module's Art folder beside it, under its own name in the
+        /// screen's group - the loading screen's background is one. The assets are found by
+        /// convention rather than from a list in the payload: a list would be one more file to keep
+        /// in step with the modules beside it. A screen prefab under Resources is passed over: its
+        /// context loads it by path, and an entry would ship the prefab a second time.
+        ///
+        /// Only the folders this run wrote are walked. The automatic install happens in a project
+        /// with no modules at all, but the Help window's button does not, and a game's own screens
+        /// are none of this method's business.
+        /// </summary>
+        private void RegisterAddressables(string[] installedModules)
+        {
+            var entries = new ScreenAddressableEntries();
+            var addressables = new ScreenAddressables();
+            var registered = false;
+
+            foreach (string moduleFolderName in installedModules)
+            {
+                string module = _installer.TargetOf(moduleFolderName);
+
+                if (!Directory.Exists(module))
+                    continue;
+
+                foreach (string prefab in Directory.GetFiles(module, "*Screen.prefab", SearchOption.AllDirectories))
+                {
+                    if (!entries.IsAddressable(prefab))
+                        continue;
+
+                    ScreenAddressableEntry entry = entries.For(Path.GetFileNameWithoutExtension(prefab));
+                    entry.AssetPath = AssetPath(prefab);
+
+                    addressables.Register(entry);
+                    registered = true;
+                }
+
+                foreach (string artFolder in Directory.GetDirectories(module, "Art", SearchOption.AllDirectories))
+                {
+                    string screen = entries.ScreenOfArtFolder(artFolder);
+
+                    if (screen == null)
+                        continue;
+
+                    foreach (string art in Directory.GetFiles(artFolder))
+                    {
+                        if (art.EndsWith(".meta", StringComparison.OrdinalIgnoreCase))
+                            continue;
+
+                        addressables.Register(entries.ForArt(screen, AssetPath(art)));
+                        registered = true;
+                    }
+                }
+            }
+
+            // ScreenAddressables leaves saving to its caller, so the whole set is written back out
+            // once rather than after each of the entries above.
+            if (registered)
+                AssetDatabase.SaveAssets();
+        }
+
+        private string AssetPath(string fullPath)
+        {
+            string assets = Path.Combine(_projectRoot, "Assets");
+
+            return "Assets" + fullPath.Substring(assets.Length).Replace(Path.DirectorySeparatorChar, '/');
+        }
+
+        /// <summary>
+        /// The scene goes to the front of the build list and is opened, so pressing Play shows the
+        /// flow the set brought. Whatever is open is offered for saving first.
+        /// </summary>
+        private void OpenTheScene()
+        {
+            if (!File.Exists(Path.Combine(_projectRoot, MainScenePath)))
+                return;
+
+            string[] existing = EditorBuildSettings.scenes.Select(scene => scene.path).ToArray();
+            string[] wanted = new BuildSceneList().WithSceneFirst(existing, MainScenePath);
+
+            if (wanted.Length != existing.Length)
+            {
+                EditorBuildSettings.scenes = wanted
+                    .Select(path => new EditorBuildSettingsScene(path, true))
+                    .ToArray();
+            }
+
+            if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                EditorSceneManager.OpenScene(MainScenePath, OpenSceneMode.Single);
+        }
+
+        /// <summary>
+        /// True when the project already has a module of its own. Asked of Assets/Modules
+        /// specifically - the only place FlowIoC puts a module - because a third party plugin with
+        /// an asmdef elsewhere under Assets is not a module and should not suppress the install.
+        /// </summary>
+        private bool AnyModulePresent()
+        {
+            string modules = Path.Combine(_projectRoot, "Assets", "Modules");
+
+            if (!Directory.Exists(modules))
+                return false;
+
+            foreach (string folder in Directory.GetDirectories(modules))
+            {
+                if (Directory.GetFiles(folder, "*.asmdef", SearchOption.TopDirectoryOnly).Length > 0)
+                    return true;
+            }
+
+            return false;
+        }
+
+        internal bool IsInstalled() => _installer.IsInstalled();
+
+        internal bool OthersInstalled(string moduleFolderName) => _installer.OthersInstalled(moduleFolderName);
+
+        /// <summary>The Addressables registration for one module put back on its own.</summary>
+        internal void RegisterAddressablesOf(string moduleFolderName) => RegisterAddressables(new[] {moduleFolderName});
+
+        private static string PackageRoot()
+        {
+            var info = UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(SetupModulesStartup).Assembly);
+
+            return info != null
+                ? info.resolvedPath
+                : Path.Combine(new ProjectRoot().Resolve(), "Packages", "FlowIoC");
+        }
+
+        private static string PackageVersion()
+        {
+            var info = UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(SetupModulesStartup).Assembly);
+
+            return info == null ? "unknown" : info.version;
+        }
+    }
+}
+
+#endif

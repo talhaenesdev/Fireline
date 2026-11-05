@@ -17,6 +17,7 @@ namespace Modules.EnemyModule.ViewsMediators
             _view.StructurePlaceRequested += OnStructurePlaceRequested;
             _view.RepairRequested += OnRepairRequested;
             _view.AllyOrderRequested += OnAllyOrderRequested;
+            _view.SkipBreakRequested += OnSkipBreakRequested;
             _view.AllyOrderAnnounced += OnAllyOrderAnnounced;
             _view.WaveCleared += OnWaveCleared;
             _view.BossChanged += OnBossChanged;
@@ -37,6 +38,7 @@ namespace Modules.EnemyModule.ViewsMediators
             _view.StructurePlaceRequested -= OnStructurePlaceRequested;
             _view.RepairRequested -= OnRepairRequested;
             _view.AllyOrderRequested -= OnAllyOrderRequested;
+            _view.SkipBreakRequested -= OnSkipBreakRequested;
             _view.AllyOrderAnnounced -= OnAllyOrderAnnounced;
             _view.WaveCleared -= OnWaveCleared;
             _view.BossChanged -= OnBossChanged;
@@ -71,6 +73,8 @@ namespace Modules.EnemyModule.ViewsMediators
         }
 
         private void OnAllyOrderRequested(ulong clientId) => _internalSignals.AllyOrderRequested.Dispatch(clientId);
+
+        private void OnSkipBreakRequested() => _internalSignals.SkipBreakRequested.Dispatch();
 
         private void OnAllyOrderAnnounced(bool isFollowing) => _signals.Outgoing.AllyOrderChanged.Dispatch(isFollowing);
 

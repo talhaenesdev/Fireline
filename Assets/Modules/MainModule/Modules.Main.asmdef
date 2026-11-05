@@ -4,7 +4,8 @@
     "FlowIoC",
     "Modules.Loading",
     "Modules.Loading.Shared",
-    "Modules.Main.Signals"
+    "Modules.Main.Signals",
+    "Unity.InputSystem"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

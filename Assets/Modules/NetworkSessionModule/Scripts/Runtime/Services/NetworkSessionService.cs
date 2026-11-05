@@ -42,6 +42,7 @@ namespace Modules.NetworkSessionModule.Services
                 {
                     _session.Changed += OnSessionChanged;
                     _session.SessionPropertiesChanged += OnSessionChanged;
+                    _session.PlayerPropertiesChanged += OnSessionChanged;
                 }
 
                 return _session;
@@ -59,7 +60,7 @@ namespace Modules.NetworkSessionModule.Services
                 // Ready means everybody who is in, however many that is; a full lobby is not required.
                 bool allReady = session.Players.Count > 0 && session.Players.All(IsReady);
                 return new SessionStateVO(true, session.IsHost, session.Code, session.Players.Count,
-                    session.MaxPlayers, IsReady(session.CurrentPlayer), allReady);
+                    session.MaxPlayers, IsReady(session.CurrentPlayer), allReady, session.Players.Select(IsReady).ToArray());
             }
         }
 
@@ -132,6 +133,7 @@ namespace Modules.NetworkSessionModule.Services
 
             session.Changed -= OnSessionChanged;
             session.SessionPropertiesChanged -= OnSessionChanged;
+            session.PlayerPropertiesChanged -= OnSessionChanged;
             _session = null;
 
             try

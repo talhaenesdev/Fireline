@@ -1,0 +1,79 @@
+using System;
+using System.Collections.Generic;
+
+namespace FlowIoC.BaseModule.Injectable.Utils
+{
+    /// <summary>
+    /// Works out which slots of a dispatched signal payload can supply a value for a
+    /// given property type, in payload order.
+    /// </summary>
+    internal sealed class SignalParamCandidateFinder
+    {
+        private readonly List<int> _exact = new List<int>();
+        private readonly List<int> _assignable = new List<int>();
+
+        /// <summary>
+        /// Exact type matches win outright; the assignable pass is consulted only when
+        /// nothing matched exactly. A null counts in both passes for any type that can
+        /// hold null, so a dispatched null does not shift the slots that follow it.
+        /// </summary>
+        public List<int> Find(Type type, object[] values)
+        {
+            var candidates = new List<int>();
+            Find(type, values, candidates);
+            return candidates;
+        }
+
+        /// <summary>
+        /// The same answer written into a list the caller owns, so a resolver that runs on every
+        /// command execution can keep its lists rather than allocate one per property type.
+        /// </summary>
+        public void Find(Type type, object[] values, List<int> candidates)
+        {
+            candidates.Clear();
+            if (type == null || values == null)
+                return;
+
+            _exact.Clear();
+            _assignable.Clear();
+
+            // A boxed int arrives as Int32, never as Nullable<Int32>, so an int?
+            // property has to be matched against its underlying type.
+            Type effective = Nullable.GetUnderlyingType(type) ?? type;
+            bool acceptsNull = CanHoldNull(type);
+            bool hasNonNullExact = false;
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                object value = values[i];
+
+                if (value == null)
+                {
+                    if (acceptsNull)
+                    {
+                        _exact.Add(i);
+                        _assignable.Add(i);
+                    }
+                    continue;
+                }
+
+                if (value.GetType() == effective)
+                {
+                    _exact.Add(i);
+                    hasNonNullExact = true;
+                }
+
+                if (effective.IsInstanceOfType(value))
+                    _assignable.Add(i);
+            }
+
+            // A null joins both passes, so _exact can be non-empty while holding nothing
+            // but nulls. Preferring it there would hide a real value the assignable pass
+            // found later in the payload.
+            candidates.AddRange(hasNonNullExact ? _exact : _assignable);
+        }
+
+        public bool CanHoldNull(Type type)
+            => !type.IsValueType || Nullable.GetUnderlyingType(type) != null;
+    }
+}

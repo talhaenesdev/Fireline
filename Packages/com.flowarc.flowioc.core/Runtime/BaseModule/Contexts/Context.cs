@@ -1,0 +1,209 @@
+using System.Collections.Generic;
+using FlowIoC.BaseModule.Controller.Binders;
+using FlowIoC.BaseModule.Controller.CommandGroup;
+using FlowIoC.BaseModule.Function.Provider;
+using FlowIoC.BaseModule.Injectable;
+using FlowIoC.BaseModule.Injectable.Binders;
+using FlowIoC.BaseModule.Injectable.CrossContext;
+using FlowIoC.BaseModule.Injectable.Utils;
+using FlowIoC.BaseModule.Provider.Coroutine;
+using FlowIoC.BaseModule.Provider.Update;
+using UnityEngine;
+
+namespace FlowIoC.BaseModule.Contexts
+{
+    public class Context : IContext
+    {
+        private GameObject _gameObject;
+        private bool _boundGameObjectAcross;
+        private SignalParamResolver _signalParamResolver;
+        public bool IsStarted { get; set; }
+        public MediationBinder MediationBinder { get; set; }
+        public InjectionBinder InjectionBinder { get; set; }
+        public InjectionBinderCrossContext InjectionBinderCrossContext { get; set; }
+        public ICommandBinder CommandBinder { get; set; }
+        public List<IContext> SubContexts { get; set; }
+        public List<IContext> AllContexts { get; set; }
+        public bool IsTest { get; set; }
+
+        public int InitializeOrder { get; set; }
+
+        public void Initialize(GameObject contextGameObject, int initializeOrder, InjectionBinderCrossContext injectionBinderCrossContext,
+            List<IContext> subContexts, bool isTest = false)
+        {
+            _gameObject = contextGameObject;
+            InitializeOrder = initializeOrder;
+            InjectionBinderCrossContext = injectionBinderCrossContext;
+            SubContexts = subContexts;
+            IsTest = isTest;
+
+            // A list of its own. AllContexts used to be the same object as SubContexts with this
+            // context pushed onto the front, so a context appeared among its own sub-contexts and
+            // anything walking SubContexts met the parent as well.
+            AllContexts = new List<IContext>(subContexts.Count + 1) {this};
+            AllContexts.AddRange(subContexts);
+        }
+
+        public void Start()
+        {
+            IsStarted = true;
+
+            CoreBindings();
+        }
+
+        /// <summary>
+        /// Every cross-context object is walked here, once per context - N Roots by M objects at
+        /// startup - and that repetition is deliberate rather than waiting to be optimised away.
+        ///
+        /// It is what resolves a forward reference between modules that bind in any order. A module
+        /// whose dependency is bound by a Root later in Initialize Order is filled when that later
+        /// Root reaches this method, and the only way to know which pass will be the one that
+        /// completes an object is to make every pass. Per-type entries and the setter delegates
+        /// already made a pass cheap; what is left is the count of passes, and the count is the
+        /// feature.
+        /// </summary>
+        void IContext.InjectAllInstances()
+        {
+            Inject(InjectionBinder.GetAllInjectionBindings());
+            Inject(InjectionBinderCrossContext.GetAllInjectionBindings());
+        }
+
+        /// <summary>
+        /// Fills what this binder made, and only that. A binding with no context is an instance
+        /// handed in with <c>BindInstance</c>: nobody created it here, so nobody here fills it.
+        ///
+        /// It used to be filled against whichever context happened to be running - and the shared
+        /// binder is walked by every context in turn, so the last Root in Initialize Order decided
+        /// what a handed-in object's [Inject] members resolved to. Nothing bound that way has any
+        /// today, which is the only reason it was never seen. Whoever hands an object in fills it,
+        /// with <c>context.TryToInjectObject</c>, the same way it belongs to them at teardown.
+        /// </summary>
+        private void Inject(List<InjectionBinding> bindings)
+        {
+            for (int i = 0; i < bindings.Count; i++)
+            {
+                InjectionBinding binding = bindings[i];
+
+                if (binding?.BoundContext == null)
+                    continue;
+
+                binding.TryToInjectObject();
+            }
+        }
+
+        SignalParamResolver IContext.SignalParamResolver
+            => _signalParamResolver ??= new SignalParamResolver();
+
+        void IContext.ExecutePostConstructMethods()
+        {
+            InjectionBinder.RunPostConstructs();
+            InjectionBinderCrossContext.RunPostConstructs();
+        }
+
+        protected virtual void CoreBindings()
+        {
+            InjectionBinder = new InjectionBinder();
+            InjectionBinder.SetBoundContext(this);
+
+            InjectionBinderCrossContext.SetBoundContext(this);
+
+            // Shared by every context in the run, so whichever context starts first binds them and
+            // the rest find them there. Asking to bind them again used to answer with a warning per
+            // context, three of them, for the framework doing what it always does.
+            if (!InjectionBinderCrossContext.HasBinding<InjectionBinderCrossContext>())
+                InjectionBinderCrossContext.BindInstance(InjectionBinderCrossContext);
+
+            MediationBinder = InjectionBinder.Bind<MediationBinder>();
+
+            CommandBinder = InjectionBinder.Bind<ICommandBinder, CommandBinder>();
+            ((CommandBinder) CommandBinder).Context = this;
+
+            // A context listed on two Roots - a pool sub-context on every module with pools - has
+            // one name for two GameObjects. The first binds it and the rest leave it, rather than
+            // each warning of a same injection; only the one that bound it takes it back.
+            if (!InjectionBinderCrossContext.HasBinding<GameObject>(GetType().Name))
+            {
+                InjectionBinderCrossContext.BindInstance<GameObject>(_gameObject, GetType().Name);
+                _boundGameObjectAcross = true;
+            }
+
+            InjectionBinder.BindInstance<GameObject>(_gameObject, nameof(IContext));
+
+            if (!InjectionBinderCrossContext.HasBinding<IUpdateProvider>())
+                InjectionBinderCrossContext.BindMonoBehaviorInstance<IUpdateProvider, UpdateProvider>();
+
+            // One watch over retained steps for the run, beside the update provider that ticks it.
+            if (!InjectionBinderCrossContext.HasBinding<OpenStepWatch>())
+            {
+                var openSteps = new OpenStepWatch();
+                openSteps.Hook(InjectionBinderCrossContext.GetInstance<IUpdateProvider>());
+                InjectionBinderCrossContext.BindInstance(openSteps);
+            }
+
+            ((CommandBinder) CommandBinder).OpenSteps = InjectionBinderCrossContext.GetInstance<OpenStepWatch>();
+
+            if (!InjectionBinderCrossContext.HasBinding<ICoroutineProvider>())
+                InjectionBinderCrossContext.BindMonoBehaviorInstance<ICoroutineProvider, CoroutineProvider>();
+
+            FunctionProvider functionProvider = (FunctionProvider) InjectionBinder.Bind<IFunctionProvider, FunctionProvider>();
+            functionProvider.Context = this;
+        }
+
+        public virtual void SignalBindings()
+        {
+        }
+
+        public virtual void InjectionBindings()
+        {
+        }
+
+        public virtual void MediationBindings()
+        {
+        }
+
+        public virtual void CommandBindings()
+        {
+        }
+
+        public virtual void Setup()
+        {
+        }
+
+        public virtual void Launch()
+        {
+        }
+
+        /// <summary>
+        /// Tears the context down. Its own binder goes first, then what it bound across: a
+        /// Deconstruct above may still dispatch through the holder, so the holder is the last
+        /// thing to go. Taking the cross-context bindings back is what makes a module's public
+        /// surface live exactly as long as its Root - a scene's module goes with the scene and is
+        /// bound fresh when the scene comes back, and a persistent Root's Service lives for the
+        /// run. What was handed in with BindInstance belongs to the run and stays.
+        /// </summary>
+        public virtual void DestroyContext()
+        {
+            IsStarted = false;
+
+            MediationBinder?.UnBindAll();
+            CommandBinder?.UnBindAll();
+            InjectionBinder?.UnBindAll();
+
+            if (_boundGameObjectAcross)
+            {
+                InjectionBinderCrossContext?.UnBind<GameObject>(GetType().Name);
+                _boundGameObjectAcross = false;
+            }
+
+            InjectionBinderCrossContext?.UnBindAllBoundBy(this);
+        }
+
+        public virtual void PauseContext()
+        {
+        }
+
+        public virtual void ResumeContext()
+        {
+        }
+    }
+}

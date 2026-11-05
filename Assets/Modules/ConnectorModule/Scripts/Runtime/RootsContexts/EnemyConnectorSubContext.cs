@@ -49,6 +49,7 @@ namespace Modules.ConnectorModule.RootsContexts
             _playerSignals.Outgoing.RepairInput.Connect(_enemySignals.Incoming.RequestRepair, GROUP);
             _playerSignals.Outgoing.AllyOrderInput.Connect(_enemySignals.Incoming.ToggleAllyOrder, GROUP);
             _hudScreenSignals.Outgoing.OrderClicked.Connect(_enemySignals.Incoming.ToggleAllyOrder, GROUP);
+            _hudScreenSignals.Outgoing.SkipWaveClicked.Connect(_enemySignals.Incoming.SkipWaveBreak, GROUP);
             _enemySignals.Outgoing.AllyOrderChanged.Connect(_hudScreenSignals.Incoming.ApplyAllyOrder, GROUP);
         }
 

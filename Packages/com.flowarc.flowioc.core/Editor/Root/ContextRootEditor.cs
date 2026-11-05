@@ -1,0 +1,622 @@
+#if UNITY_EDITOR
+using System;
+using System.Collections.Generic;
+using FlowIoC.BaseModule.Attributes;
+using FlowIoC.BaseModule.Root;
+using FlowIoC.Editor.Inspector;
+using FlowIoC.ScreenModule.Data;
+using FlowIoC.ScreenModule.Enums;
+using UnityEditor;
+using UnityEngine;
+
+namespace FlowIoC.Editor.Root
+{
+    [CustomEditor(typeof(RootBase), true)]
+    public class ContextRootEditor : UnityEditor.Editor
+    {
+        private RootBase _root;
+
+        private ScreenSubContextDeclarations _declarations;
+        private ScreenOverrideSeed _seed;
+        private ScreenOverrideSummary _summary;
+        private SubContextFoldouts _foldouts;
+        private RootDirtyMarker _dirtyMarker;
+        private SubContextEntryStates _entryStates;
+        private SubContextNameSync _nameSync;
+        private SubContextSettingsTypes _settingsTypes;
+        private SubContextBadge _badge;
+
+        private FlowPalette _palette;
+        private FlowRoleResolver _roles;
+        private FlowHelpSource _help;
+        private FlowHelpState _helpState;
+        private FlowHeaderBar _bar;
+        private FlowInspectorGUI _gui;
+
+        /// <summary>Only for the warn and error colours the two broken entry states wear.</summary>
+        private FlowRowPainter _painter;
+
+        /// <summary>
+        /// The rows the bar's help button opens and closes together. They are the fields of
+        /// RootBase, which is where the lifecycle lives whatever the Root is called.
+        /// </summary>
+        private static readonly string[] LifecycleMembers =
+        {
+            nameof(RootBase.initializeOrder),
+            nameof(RootBase.AutoBindInjections),
+            nameof(RootBase.AutoBindMediations),
+            nameof(RootBase.AutoInitialize),
+            nameof(RootBase.AutoSetup),
+            nameof(RootBase.AutoLaunch),
+            nameof(RootBase.IsTest)
+        };
+
+        private void OnEnable()
+        {
+            _root = target as RootBase;
+
+            // Rebuilt here rather than kept alive, so a recompile cannot serve a stale declaration.
+            _declarations = new ScreenSubContextDeclarations();
+            _seed = new ScreenOverrideSeed();
+            _summary = new ScreenOverrideSummary();
+
+            // The fold state itself lives in SessionState, so rebuilding this loses nothing.
+            _foldouts = new SubContextFoldouts();
+
+            _dirtyMarker = new RootDirtyMarker();
+
+            // Rebuilt with the declarations above and for the same reason: both ask what the project
+            // compiled, and a recompile must not be answered from a cache taken before it.
+            _entryStates = new SubContextEntryStates();
+            _nameSync = new SubContextNameSync();
+            _settingsTypes = new SubContextSettingsTypes();
+
+            _painter = new FlowRowPainter();
+            _palette = new FlowPalette();
+            _roles = new FlowRoleResolver();
+            _help = new FlowHelpSource(new MonoScriptText());
+            _helpState = new FlowHelpState();
+            _bar = new FlowHeaderBar(_palette, new FlowHelpPageMap());
+            _gui = new FlowInspectorGUI(_palette, _roles, _help, _helpState);
+            _badge = new SubContextBadge(_declarations, _roles, _palette, _settingsTypes);
+        }
+
+        /// <summary>
+        /// Only while the game runs: the lifecycle badges read fields that change without the
+        /// inspector being touched, and a repaint is the only way they can say so.
+        /// </summary>
+        public override bool RequiresConstantRepaint() => Application.isPlaying;
+
+        public override void OnInspectorGUI()
+        {
+            DrawFlowHeader();
+
+            GUIDisableScript();
+
+            GUI_Lifecycle();
+            GUI_SubContexts();
+        }
+
+        /// <summary>The role the bar and the card action wear. A Root that resolves to nothing is still a Root.</summary>
+        private FlowRole RoleOf()
+        {
+            return _roles.TryResolve(_root.GetType(), out FlowRole role) ? role : FlowRole.Root;
+        }
+
+        private void DrawFlowHeader()
+        {
+            Type type = _root.GetType();
+            FlowRole role = RoleOf();
+
+            bool open = _helpState.IsOpen(type, FlowHelpParser.TypeKey);
+
+            _bar.Draw(role, _roles.TitleFor(type), type.Assembly.GetName().Name, _roles.LabelFor(type, role),
+                _help.Summary(type), open,
+                () =>
+                {
+                    bool next = !open;
+                    _helpState.SetOpen(type, FlowHelpParser.TypeKey, next);
+                    _helpState.SetAll(type, LifecycleMembers, next);
+                });
+        }
+
+        private void GUIDisableScript()
+        {
+            serializedObject.Update();
+
+            // The sub-context list is drawn by GUI_SubContexts, entry by entry.
+            DrawPropertiesExcluding(serializedObject, "m_Script", nameof(RootBase.SubContextTypes));
+
+            serializedObject.ApplyModifiedProperties();
+        }
+
+        /// <summary>
+        /// Every phase of the Root's life in one table: whether it happens on its own, whether it
+        /// has happened, and - while the game runs - a way to make it happen now. The separate
+        /// status box this replaces said the same things a second time.
+        /// </summary>
+        private void GUI_Lifecycle()
+        {
+            Type type = _root.GetType();
+
+            _gui.BeginCard("LIFECYCLE");
+
+            EditorGUI.BeginChangeCheck();
+
+            int order = _gui.IntField(type, nameof(RootBase.initializeOrder), "Initialize Order", _root.initializeOrder);
+
+            bool injections = _gui.Phase(type, nameof(RootBase.AutoBindInjections), "Bind Injections",
+                _root.AutoBindInjections, _root.injectionsBound,
+                Application.isPlaying && !_root.injectionsBound, out bool runInjections);
+
+            bool mediations = _gui.Phase(type, nameof(RootBase.AutoBindMediations), "Bind Mediations",
+                _root.AutoBindMediations, _root.mediationsBound,
+                Application.isPlaying && !_root.mediationsBound, out bool runMediations);
+
+            bool initialize = _gui.Phase(type, nameof(RootBase.AutoInitialize), "Initialize",
+                _root.AutoInitialize, _root.hasInitialized,
+                Application.isPlaying && !_root.hasInitialized, out bool runInitialize);
+
+            bool setup = _gui.Phase(type, nameof(RootBase.AutoSetup), "Setup",
+                _root.AutoSetup, _root.hasSetUp,
+                Application.isPlaying && _root.hasInitialized && !_root.hasSetUp, out bool runSetup);
+
+            bool launch = _gui.Phase(type, nameof(RootBase.AutoLaunch), "Launch",
+                _root.AutoLaunch, _root.hasLaunched,
+                Application.isPlaying && _root.hasInitialized && !_root.hasLaunched, out bool runLaunch);
+
+            bool isTest = _gui.Toggle(type, nameof(RootBase.IsTest), "Is Test", _root.IsTest);
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                Undo.RecordObject(_root, "root-lifecycle");
+
+                _root.initializeOrder = order;
+                _root.AutoBindInjections = injections;
+                _root.AutoBindMediations = mediations;
+                _root.AutoInitialize = initialize;
+                _root.AutoSetup = setup;
+                _root.AutoLaunch = launch;
+                _root.IsTest = isTest;
+
+                if (!Application.isPlaying)
+                    MarkDirty();
+            }
+
+            if (runInjections)
+                _root.BindInjections(true);
+
+            if (runMediations)
+                _root.BindMediations(true);
+
+            if (runInitialize)
+                _root.StartContext(true);
+
+            if (runSetup)
+                _root.Setup(true);
+
+            if (runLaunch)
+                _root.Launch(true);
+
+            _gui.EndCard();
+        }
+
+        private void GUI_SubContexts()
+        {
+            if (_root.SubContextTypes == null)
+                _root.SubContextTypes = new List<SubContextData>();
+
+            SyncDriftedNames();
+
+            if (_root.SubContextTypes.Count != 0)
+            {
+                _gui.BeginCard("SUB CONTEXTS", true);
+
+                for (var ii = 0; ii < _root.SubContextTypes.Count; ii++)
+                {
+                    EditorGUILayout.BeginVertical(_gui.CardEntry);
+
+                    SubContextData contextData = _root.SubContextTypes[ii];
+                    bool wasExpanded = _foldouts.IsEntryExpanded(_root, contextData.ContextFullName);
+
+                    EditorGUILayout.BeginHorizontal();
+
+                    bool expanded = EditorGUILayout.Foldout(wasExpanded, new GUIContent(HeaderFor(contextData)), true);
+
+                    if (expanded != wasExpanded)
+                        _foldouts.SetEntryExpanded(_root, contextData.ContextFullName, expanded);
+
+                    GUI_SubContextKind(contextData);
+
+                    if (GUILayout.Button("-", _gui.EntryAction, GUILayout.Width(24)))
+                    {
+                        // Recorded, because a mis-click here used to destroy an entry with no way back.
+                        Undo.RecordObject(_root, "remove-sub-context");
+                        _root.SubContextTypes.RemoveAt(ii);
+                        MarkDirty();
+
+                        // The layout groups this loop opened have to be closed before leaving, or
+                        // the rest of the inspector draws inside them.
+                        EditorGUILayout.EndHorizontal();
+                        EditorGUILayout.EndVertical();
+                        _gui.EndCard();
+                        return;
+                    }
+
+                    EditorGUILayout.EndHorizontal();
+
+                    GUI_SubContextLink(ii, contextData);
+
+                    if (expanded)
+                    {
+                        EditorGUI.indentLevel++;
+
+                        EditorGUI.BeginChangeCheck();
+
+                        contextData.AutoSetup =
+                            EditorGUILayout.Toggle(new GUIContent("AutoSetup"), contextData.AutoSetup);
+
+                        contextData.IsTest =
+                            EditorGUILayout.Toggle(new GUIContent("IsTest"), contextData.IsTest);
+
+                        if (EditorGUI.EndChangeCheck())
+                            WriteSubContext(ii, contextData);
+
+                        GUI_ScreenOverride(ii, contextData);
+                        GUI_Settings(ii, contextData, _declarations.ResolveType(contextData.ContextFullName));
+
+                        EditorGUI.indentLevel--;
+                    }
+
+                    EditorGUILayout.EndVertical();
+                }
+
+                _gui.EndCard();
+            }
+
+            if (_gui.AccentButton(RoleOf(), "Add Sub Context"))
+                AddSubContextWindow.ShowWindow(_root, RoleOf());
+        }
+
+        /// <summary>
+        /// Brings the entries' names back in step with the scripts they point at, before the list is
+        /// drawn from them.
+        ///
+        /// A class renamed inside its file is the case this is here for, and it is the one the
+        /// entry's other half cannot report: the script reference follows the file, so the entry
+        /// stays Linked and nothing is drawn under it, while ContextFullName - the only half runtime
+        /// reads - still says the old name and resolves to nothing. Left to Resolve alone this never
+        /// happened, because Resolve is offered on an Unlinked entry and a rename does not produce
+        /// one.
+        ///
+        /// Running it before the loop rather than inside it is what lets the fold state and the kind
+        /// badge be looked up under the name the entry has now. Nothing drifting writes nothing, so
+        /// a repaint neither records an Undo step nor dirties the Root.
+        /// </summary>
+        private void SyncDriftedNames()
+        {
+            foreach (int index in _nameSync.DriftedIn(_root.SubContextTypes))
+                WriteSubContext(index, _nameSync.Applied(_root.SubContextTypes[index]));
+        }
+
+        /// <summary>
+        /// The badge that says what kind of sub-context a folded entry is: a screen in the screen
+        /// colour, a connector in the connector's. A sub-context is not a component, so this list
+        /// is the only place those two colours are ever seen. The badge is always laid out, blank
+        /// when it says nothing, so the remove button beside it keeps the same place on every row.
+        /// </summary>
+        private void GUI_SubContextKind(SubContextData contextData)
+        {
+            Type contextType = _declarations.ResolveType(contextData.ContextFullName);
+
+            _badge.TryGet(contextType, out string badge, out Color color);
+
+            Color previous = GUI.color;
+            GUI.color = color;
+
+            EditorGUILayout.LabelField(badge ?? string.Empty, EditorStyles.miniBoldLabel, GUILayout.Width(68));
+
+            GUI.color = previous;
+        }
+
+        /// <summary>
+        /// The header a folded entry shows: the context's name, and the override's manager and
+        /// layer when the Root deviates from what the context declares.
+        /// </summary>
+        private string HeaderFor(SubContextData contextData)
+        {
+            string summary = _summary.For(contextData);
+
+            return string.IsNullOrEmpty(summary)
+                ? contextData.ContextName
+                : $"{contextData.ContextName}  ({summary})";
+        }
+
+        /// <summary>
+        /// A screen context's entry says how that screen is configured, and lets the Root override
+        /// it. With the override off the values come from the context's own code and are shown
+        /// read-only, so a Root always tells the truth about the screens it lists. It folds on its
+        /// own, because a Root listing several screens is otherwise a wall of fields.
+        /// </summary>
+        private void GUI_ScreenOverride(int index, SubContextData contextData)
+        {
+            Type contextType = _declarations.ResolveType(contextData.ContextFullName);
+            if (!_declarations.IsScreenContext(contextType))
+                return;
+
+            string summary = _summary.For(contextData);
+            string label = string.IsNullOrEmpty(summary) ? "Screen" : $"Screen  ({summary})";
+
+            bool wasExpanded = _foldouts.IsScreenExpanded(_root, contextData.ContextFullName);
+            bool expanded = EditorGUILayout.Foldout(wasExpanded, new GUIContent(label), true);
+
+            if (expanded != wasExpanded)
+                _foldouts.SetScreenExpanded(_root, contextData.ContextFullName, expanded);
+
+            if (!expanded)
+                return;
+
+            EditorGUI.indentLevel++;
+            GUI_ScreenOverrideBody(index, contextData, contextType);
+            EditorGUI.indentLevel--;
+        }
+
+        private void GUI_ScreenOverrideBody(int index, SubContextData contextData, Type contextType)
+        {
+            bool read = _declarations.TryRead(contextType, out ScreenCVO declaration, out string error);
+
+            if (read)
+                EditorGUILayout.LabelField("Load", $"{declaration.Load.Kind}: {declaration.Load.Key}");
+            else
+                EditorGUILayout.HelpBox(error, MessageType.Warning);
+
+            ScreenSubContextSettingsCVO screen = contextData.Settings as ScreenSubContextSettingsCVO;
+            bool overridden = screen != null && screen.Override;
+
+            EditorGUI.BeginChangeCheck();
+            bool overrideScreen = EditorGUILayout.Toggle(new GUIContent("Override Screen"), overridden);
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                // A new instance rather than the entry's own, so Undo records the entry as it was.
+                ScreenSubContextSettingsCVO edited = overrideScreen && read
+                    ? _seed.Apply(screen, declaration)
+                    : screen?.Copy() ?? new ScreenSubContextSettingsCVO();
+
+                edited.Override = overrideScreen;
+                contextData.Settings = edited;
+
+                WriteSubContext(index, contextData);
+                return;
+            }
+
+            if (!overridden)
+            {
+                if (read)
+                    GUI_DeclaredScreenValues(declaration);
+
+                return;
+            }
+
+            EditorGUI.BeginChangeCheck();
+
+            int managerId = EditorGUILayout.IntField("Manager Id", screen.ManagerId);
+            int layer = EditorGUILayout.IntField("Layer", screen.Layer);
+            ScreenTag tag = (ScreenTag) EditorGUILayout.EnumPopup("Tag", screen.Tag);
+            bool show = EditorGUILayout.Toggle("Has Show Animation", screen.HasShowAnimation);
+            bool hide = EditorGUILayout.Toggle("Has Hide Animation", screen.HasHideAnimation);
+
+            if (!EditorGUI.EndChangeCheck())
+                return;
+
+            ScreenSubContextSettingsCVO values = screen.Copy();
+            values.ManagerId = managerId;
+            values.Layer = layer;
+            values.Tag = tag;
+            values.HasShowAnimation = show;
+            values.HasHideAnimation = hide;
+            contextData.Settings = values;
+
+            WriteSubContext(index, contextData);
+        }
+
+        /// <summary>
+        /// The settings of any other configurable sub-context - a module's pool groups - drawn from
+        /// their serialized fields. An entry with none, or with another context's, offers to create
+        /// the right ones rather than drawing nothing: its context would otherwise run unconfigured.
+        /// </summary>
+        private void GUI_Settings(int index, SubContextData contextData, Type contextType)
+        {
+            Type settingsType = _settingsTypes.For(contextType);
+
+            if (settingsType == null || _declarations.IsScreenContext(contextType))
+                return;
+
+            bool carries = contextData.Settings != null && contextData.Settings.GetType() == settingsType;
+
+            SerializedProperty settings = null;
+
+            if (carries)
+            {
+                serializedObject.Update();
+
+                settings = serializedObject.FindProperty(nameof(RootBase.SubContextTypes))
+                    .GetArrayElementAtIndex(index)
+                    .FindPropertyRelative(nameof(SubContextData.Settings));
+            }
+
+            // Folds on its own, the way the screen block does, and says how much it holds while
+            // folded.
+            string summary = carries ? SettingsSummary(settings) : string.Empty;
+            string title = _settingsTypes.Title(settingsType);
+            string label = string.IsNullOrEmpty(summary) ? title : $"{title}  ({summary})";
+
+            bool wasExpanded = _foldouts.IsSettingsExpanded(_root, contextData.ContextFullName);
+            bool expanded = EditorGUILayout.Foldout(wasExpanded, new GUIContent(label), true);
+
+            if (expanded != wasExpanded)
+                _foldouts.SetSettingsExpanded(_root, contextData.ContextFullName, expanded);
+
+            if (!expanded)
+                return;
+
+            EditorGUI.indentLevel++;
+            GUI_SettingsBody(index, contextData, contextType, settingsType, settings);
+            EditorGUI.indentLevel--;
+        }
+
+        private void GUI_SettingsBody(int index, SubContextData contextData, Type contextType, Type settingsType,
+            SerializedProperty settings)
+        {
+            if (settings == null)
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.HelpBox("This entry carries no " + settingsType.Name + ".", MessageType.Warning);
+
+                if (GUILayout.Button("Create", _gui.EntryAction, GUILayout.Width(60)))
+                {
+                    contextData.Settings = _settingsTypes.NewFor(contextType);
+                    WriteSubContext(index, contextData);
+                }
+
+                EditorGUILayout.EndHorizontal();
+                return;
+            }
+
+            SerializedProperty field = settings.Copy();
+            SerializedProperty end = settings.GetEndProperty();
+
+            if (field.NextVisible(true))
+            {
+                do
+                {
+                    if (SerializedProperty.EqualContents(field, end))
+                        break;
+
+                    EditorGUILayout.PropertyField(field, true);
+                }
+                while (field.NextVisible(false));
+            }
+
+            if (serializedObject.ApplyModifiedProperties() && !Application.isPlaying)
+                MarkDirty();
+        }
+
+        /// <summary>
+        /// How many the settings' first list or dictionary holds - "2 groups" - so a folded block
+        /// still says whether it is empty. Settings with no collection say nothing.
+        /// </summary>
+        private string SettingsSummary(SerializedProperty settings)
+        {
+            SerializedProperty field = settings.Copy();
+            SerializedProperty end = settings.GetEndProperty();
+
+            if (!field.NextVisible(true))
+                return string.Empty;
+
+            do
+            {
+                if (SerializedProperty.EqualContents(field, end))
+                    break;
+
+                SerializedProperty keys = field.FindPropertyRelative("m_Keys");
+                int? count = keys != null ? keys.arraySize
+                    : field.isArray && field.propertyType != SerializedPropertyType.String ? field.arraySize
+                    : (int?) null;
+
+                if (count.HasValue)
+                {
+                    // "Groups" names the list; one of them is a group.
+                    string noun = ObjectNames.NicifyVariableName(field.name).ToLowerInvariant();
+                    if (count.Value == 1 && noun.EndsWith("s"))
+                        noun = noun.Substring(0, noun.Length - 1);
+
+                    return $"{count.Value} {noun}";
+                }
+            }
+            while (field.NextVisible(false));
+
+            return string.Empty;
+        }
+
+        private void GUI_DeclaredScreenValues(ScreenCVO declaration)
+        {
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.IntField("Manager Id", declaration.ManagerId);
+                EditorGUILayout.IntField("Layer", declaration.Layer);
+                EditorGUILayout.EnumPopup("Tag", declaration.Tag);
+                EditorGUILayout.Toggle("Has Show Animation", declaration.HasShowAnimation);
+                EditorGUILayout.Toggle("Has Hide Animation", declaration.HasHideAnimation);
+            }
+        }
+
+        /// <summary>
+        /// What an entry's script reference amounts to, drawn only when it amounts to a problem.
+        ///
+        /// A Linked entry says nothing: the reference is there, and a row of green ticks under every
+        /// sub-context would be noise. The other two are what deleting or renaming a module used to
+        /// look like from here, which was nothing at all - the name stopped resolving, the
+        /// sub-context was quietly not built, and the only report came at play time.
+        ///
+        /// Unlinked offers Resolve, because the context is still in the project and one press mends
+        /// it. Unresolved offers nothing to press: the context is gone, and whether this Root should
+        /// still list it is a decision rather than a repair.
+        /// </summary>
+        private void GUI_SubContextLink(int index, SubContextData contextData)
+        {
+            SubContextEntryStatus status = _entryStates.Of(contextData);
+
+            if (status == SubContextEntryStatus.Linked)
+                return;
+
+            bool unlinked = status == SubContextEntryStatus.Unlinked;
+            bool mendable = _entryStates.CanResolve(status);
+
+            Color previous = GUI.color;
+            GUI.color = unlinked ? _painter.Warn : _painter.Error;
+
+            // Nothing to press means nothing to leave room for, so the line is drawn on its own and
+            // takes the entry's whole width. It has to: what it names is a namespaced type, and at a
+            // docked Inspector's width the sentence used to run off the edge mid-name - taking the
+            // half that says what happened with it.
+            if (!mendable)
+            {
+                EditorGUILayout.LabelField(
+                    "Nothing compiles to " + contextData.ContextFullName + ". Its module is gone or renamed.",
+                    _gui.EntryNote);
+
+                GUI.color = previous;
+
+                return;
+            }
+
+            EditorGUILayout.BeginHorizontal();
+
+            EditorGUILayout.LabelField(
+                "No script reference. Resolve links it to " + contextData.ContextName + ".", _gui.EntryNote);
+
+            GUI.color = previous;
+
+            if (GUILayout.Button("Resolve", _gui.EntryAction, GUILayout.Width(60)))
+            {
+                contextData.ContextScript = _entryStates.ScriptFor(contextData);
+                WriteSubContext(index, _nameSync.Applied(contextData));
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void WriteSubContext(int index, SubContextData contextData)
+        {
+            Undo.RecordObject(_root, "screen-override");
+            _root.SubContextTypes[index] = contextData;
+
+            if (!Application.isPlaying)
+                MarkDirty();
+        }
+
+        private void MarkDirty() => _dirtyMarker.Mark(_root);
+    }
+}
+#endif

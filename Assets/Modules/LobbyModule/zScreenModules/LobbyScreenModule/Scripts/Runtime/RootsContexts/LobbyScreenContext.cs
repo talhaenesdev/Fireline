@@ -11,6 +11,7 @@ namespace Modules.LobbyModule.LobbyScreenModule.RootsContexts
     public class LobbyScreenContext : ScreenSubContext<LobbyScreenView, LobbyScreenMediator>
     {
         private LobbyScreenSignals _signals;
+        private LobbyScreenInternalSignals _internalSignals;
 
         protected override ScreenCVO Screen => new()
         {
@@ -26,6 +27,7 @@ namespace Modules.LobbyModule.LobbyScreenModule.RootsContexts
         {
             base.SignalBindings();
             _signals = InjectionBinderCrossContext.Bind<LobbyScreenSignals>();
+            _internalSignals = InjectionBinder.Bind<LobbyScreenInternalSignals>();
         }
 
         public override void InjectionBindings()
@@ -39,6 +41,7 @@ namespace Modules.LobbyModule.LobbyScreenModule.RootsContexts
             base.CommandBindings();
             CommandBinder.Bind(_signals.Incoming.Toggle).ToSequence<ToggleLobbyScreenCommand>();
             CommandBinder.Bind(_signals.Incoming.ApplyState).ToSequence<RememberLobbyStateCommand>();
+            CommandBinder.Bind(_internalSignals.SwitchLanguage).ToSequence<SwitchLanguageCommand>();
         }
     }
 }

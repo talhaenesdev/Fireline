@@ -1,4 +1,5 @@
 using Modules.EconomyModule.Enums;
+using Modules.LocalizationModule.Entities;
 using UnityEngine;
 
 namespace Modules.EconomyModule.Entities
@@ -17,5 +18,8 @@ namespace Modules.EconomyModule.Entities
         /// <summary>A door: takes its blocker away.</summary>
         void ShowOpen(bool isOpen);
         float Radius { get; }
+
+        /// <summary>The sign over the zone is translated through this.</summary>
+        TextLocalizer Localizer { get; }
     }
 }

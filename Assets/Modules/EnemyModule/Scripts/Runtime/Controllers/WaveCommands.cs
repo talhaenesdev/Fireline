@@ -141,14 +141,39 @@ namespace Modules.EnemyModule.Controllers
             _model.Board.SetBloodMoonServer(false);
             _model.Board.SetCountdownServer(_model.Wave + 1, delay);
 
+            // Over when the time is up, or sooner when a player asks for the next wave.
             IEnemyModel model = _model;
-            _coroutineProvider.WaitForSeconds(delay, () =>
+            float endTime = Time.time + delay;
+            model.IsInBreak = true;
+            model.IsBreakSkipped = false;
+            _coroutineProvider.WaitUntil(() => !model.IsRunning || model.IsBreakSkipped || Time.time >= endTime, () =>
             {
+                model.IsInBreak = false;
                 if (model.IsRunning)
                     Release();
                 else
                     Stop();
             });
+        }
+    }
+
+    /// <summary>Client: the local player asks the server for the next wave now.</summary>
+    internal class RequestSkipBreakCommand : Command
+    {
+        [Inject] private IEnemyModel _model { get; set; }
+
+        public override void Execute() => _model.Board?.RequestSkipBreak();
+    }
+
+    /// <summary>Server: a player asked for the next wave; taken only during a break.</summary>
+    internal class SkipBreakCommand : Command
+    {
+        [Inject] private IEnemyModel _model { get; set; }
+
+        public override void Execute()
+        {
+            if (_model.IsRunning && _model.IsInBreak)
+                _model.IsBreakSkipped = true;
         }
     }
 

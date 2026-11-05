@@ -1,0 +1,301 @@
+#if UNITY_EDITOR
+using System;
+using System.Collections.Generic;
+using System.IO;
+using FlowIoC.Editor.CodeGenerator.Menus.Module;
+using FlowIoC.Editor.Config.ModuleConfig;
+using FlowIoC.Editor.Migration;
+using FlowIoC.Editor.Modules;
+using UnityEditor;
+using UnityEditorInternal;
+using UnityEngine;
+using UnityEngine.Rendering;
+
+namespace FlowIoC.Editor.CodeGenerator
+{
+    [CreateAssetMenu(menuName = "FlowIoC/Editor/CodeGenerator/ED_CodeGenerator", fileName = "ED_CodeGenerator", order = 1)]
+    public class ED_CodeGenerator : ScriptableObject
+    {
+        public List<AssemblyDefinitionAsset> AssemblyDefinitions;
+
+        [HideInInspector] [SerializeField] public SerializedDictionary<FolderEVO.FolderType, string> DirectoryStructureConfigMap =
+            CreateDefaultDirectoryStructureConfigMap();
+
+        [HideInInspector] [SerializeField] public SerializedDictionary<string, string> DirectoryStructureConfigPaths =
+            CreateDefaultDirectoryStructureConfigPaths();
+
+        private static SerializedDictionary<FolderEVO.FolderType, string> CreateDefaultDirectoryStructureConfigMap()
+        {
+            var map = new SerializedDictionary<FolderEVO.FolderType, string>();
+
+            foreach (KeyValuePair<FolderEVO.FolderType, string> entry in new CodeGeneratorDefaults().FolderNames)
+                map[entry.Key] = entry.Value;
+
+            return map;
+        }
+
+        private static SerializedDictionary<string, string> CreateDefaultDirectoryStructureConfigPaths()
+        {
+            var configPaths = new SerializedDictionary<string, string>();
+
+            foreach (KeyValuePair<string, string> entry in new CodeGeneratorDefaults().ConfigPaths)
+                configPaths[entry.Key] = entry.Value;
+
+            return configPaths;
+        }
+
+        /// <summary>
+        /// A dictionary that comes back with nothing in it is an asset serialized by a FlowIoC old
+        /// enough to have written these two under different field names, which Unity drops on load
+        /// rather than reporting. Refilling from the defaults is safe because empty is the one
+        /// state the inspector does not leave behind: it removes entries one at a time, and
+        /// removing one is deliberate. So the heal is all or nothing - a map still holding
+        /// anything is the reader's, entry by entry, and is left exactly as it is.
+        /// </summary>
+        public bool RestoreDefaultsIfEmpty()
+        {
+            bool restored = false;
+
+            if (DirectoryStructureConfigMap == null || DirectoryStructureConfigMap.Count == 0)
+            {
+                DirectoryStructureConfigMap = CreateDefaultDirectoryStructureConfigMap();
+                restored = true;
+            }
+
+            if (DirectoryStructureConfigPaths == null || DirectoryStructureConfigPaths.Count == 0)
+            {
+                DirectoryStructureConfigPaths = CreateDefaultDirectoryStructureConfigPaths();
+                restored = true;
+            }
+
+            return restored;
+        }
+
+        private void OnEnable()
+        {
+            bool changed = RestoreDefaultsIfEmpty();
+
+            changed |= RemoveRetiredFolderTypes();
+
+            if (changed)
+                EditorUtility.SetDirty(this);
+        }
+
+        /// <summary>
+        /// Drops the entries for folder types that no longer exist. The heal above is all or
+        /// nothing because a reader removing an entry is deliberate; a retired type is the one case
+        /// that cannot be - the value is gone from the enum, so nothing reads the entry and nothing
+        /// ever will. Deleting the asset would clear them too, since a fresh instance is built from
+        /// the defaults, but that also throws away whatever folder names the project renamed.
+        /// </summary>
+        internal bool RemoveRetiredFolderTypes()
+        {
+            if (DirectoryStructureConfigMap == null) return false;
+
+            bool removed = false;
+
+            foreach (FolderEVO.FolderType retired in FolderEVO.RetiredFolderTypes)
+                removed |= DirectoryStructureConfigMap.Remove(retired);
+
+            return removed;
+        }
+
+        /// <summary>
+        /// The folder name for a type, falling back when the settings asset predates it.
+        /// This asset lives in the consuming project and is serialized once, so a folder type
+        /// added in a later FlowIoC version is simply absent from every existing project's
+        /// copy. Indexing the dictionary directly throws there and takes module creation down
+        /// with it, so every newly added type must be read through here.
+        /// </summary>
+        public string FolderNameFor(FolderEVO.FolderType folderType, string fallback)
+        {
+            return DirectoryStructureConfigMap.TryGetValue(folderType, out string folderName)
+                   && !string.IsNullOrEmpty(folderName)
+                ? folderName
+                : fallback;
+        }
+
+        public static void CreateConfig()
+        {
+            new FlowIoCPathMigrator().MigrateIfNeeded();
+            new CodeGeneratorSettingsProvider().LoadOrCreate();
+        }
+
+        public void ApplyConfiguredFolderNames()
+        {
+            string modulesPath = Path.Combine(Application.dataPath, "Modules");
+            if (!Directory.Exists(modulesPath)) return;
+
+            var folderOperations = new List<(string oldPath, string newPath, FolderEVO.FolderType type)>();
+            CollectFolderOperations(folderOperations);
+            AssetDatabase.Refresh();
+
+            foreach (var operation in folderOperations)
+            {
+                try
+                {
+                    if (Directory.Exists(operation.oldPath))
+                    {
+                        string assetOldPath = ConvertAbsolutePathToAssetPath(operation.oldPath);
+                        string newName = Path.GetFileName(operation.newPath);
+
+                        if (!string.Equals(Path.GetFileName(operation.oldPath), newName, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            string renameResult = AssetDatabase.RenameAsset(assetOldPath, newName);
+                            if (!string.IsNullOrEmpty(renameResult))
+                            {
+                                continue;
+                            }
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    // Exception handling if necessary
+                }
+            }
+
+            EditorUtility.SetDirty(this);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+        }
+
+        private string ConvertAbsolutePathToAssetPath(string absolutePath)
+        {
+            absolutePath = absolutePath.Replace("\\", "/");
+            return "Assets" + absolutePath.Substring(Application.dataPath.Length);
+        }
+
+        /// <summary>
+        /// A folder's type used to be decided by probing it for a marker file. Now every module
+        /// in the index is asked directly: for each FolderType, a recorded FolderGuid is resolved
+        /// through the AssetDatabase and compared to the configured name, because a GUID is the
+        /// one thing that survives a rename a name lookup cannot follow. When no GUID has been
+        /// recorded yet, or the one on record no longer resolves, this falls back to finding the
+        /// folder by its configured name - which cannot detect a pending rename, only heal the
+        /// map for the next one - and records what it finds so the same module never needs the
+        /// fallback again.
+        /// </summary>
+        private void CollectFolderOperations(List<(string oldPath, string newPath, FolderEVO.FolderType type)> operations)
+        {
+            ED_ModuleIndex index = new ModuleIndexProvider().LoadOrCreate();
+            IAssetPaths assetPaths = new AssetDatabasePaths();
+            ModuleRegistry registry = new ModuleRegistry(index, assetPaths);
+            ModuleAssetPathResolver pathResolver = new ModuleAssetPathResolver();
+            FolderRenamePlanner renamePlanner = new FolderRenamePlanner();
+            DirectoryStructureConfigProvider configProvider = new DirectoryStructureConfigProvider();
+
+            string dataPath = Application.dataPath.Replace('\\', '/');
+            bool indexDirty = false;
+
+            foreach (ModuleDescriptorEVO module in registry.Modules)
+            {
+                string moduleAssetPath = registry.PathOf(module);
+                if (string.IsNullOrEmpty(moduleAssetPath)) continue;
+
+                string modulePath = pathResolver.ToAbsolutePath(moduleAssetPath);
+                if (string.IsNullOrEmpty(modulePath)) continue;
+
+                DirectoryStructureConfig directoryConfig = configProvider.ConfigFor(module.Kind);
+
+                foreach (KeyValuePair<FolderEVO.FolderType, string> kvp in DirectoryStructureConfigMap)
+                {
+                    FolderEVO.FolderType type = kvp.Key;
+                    string configuredName = kvp.Value;
+                    if (string.IsNullOrEmpty(configuredName)) continue;
+
+                    bool guidWentStale = false;
+
+                    if (module.TryGetFolderGuid(type, out string guid))
+                    {
+                        string currentAssetPath = assetPaths.PathOf(guid);
+                        if (!string.IsNullOrEmpty(currentAssetPath))
+                        {
+                            string currentAbsolutePath = pathResolver.ToAbsolutePath(currentAssetPath);
+                            if (renamePlanner.TryPlanRename(currentAbsolutePath, configuredName, out string newAbsolutePath))
+                            {
+                                operations.Add((currentAbsolutePath, newAbsolutePath, type));
+                            }
+
+                            continue;
+                        }
+
+                        // A recorded GUID that no longer resolves - the folder deleted, or moved out
+                        // of the project outside Unity - used to skip this type outright, which took
+                        // the fallback below with it and left the map dead for good. Falling through
+                        // instead lets the name lookup find the folder again and RecordFolderGuid
+                        // overwrite the dead entry.
+                        guidWentStale = true;
+                    }
+
+                    if (directoryConfig == null) continue;
+
+                    string expectedAbsolutePath = directoryConfig.FindFullFolderPathByID(type, modulePath, out bool isOptional);
+                    if (string.IsNullOrEmpty(expectedAbsolutePath)) continue;
+
+                    if (!Directory.Exists(expectedAbsolutePath))
+                    {
+                        // About half the tracked folder types are optional, and a module that never
+                        // had one is the normal case rather than a fault. Warning for each of them on
+                        // every pass would bury the misses that do mean something.
+                        if (isOptional) continue;
+
+                        LogFallbackMiss(module, type, guidWentStale
+                            ? "its recorded GUID no longer resolves to a folder and nothing exists at " +
+                              $"'{expectedAbsolutePath}' either, so the folder cannot be found again."
+                            : $"expected at '{expectedAbsolutePath}' but nothing exists there. A later rename of " +
+                              "this folder type will not follow it until it is found - if it was never created " +
+                              "for this module, this can be ignored.");
+                        continue;
+                    }
+
+                    // NamespaceUtility.GetUnityAssetPath only resolves paths under Assets/. An
+                    // embedded-package module (ModuleIndexRebuilder also scans Packages/*/Modules)
+                    // would otherwise be misread as the Assets root and have that folder's GUID
+                    // recorded by mistake, so skip healing it here rather than risk corrupting the
+                    // index over it.
+                    if (!expectedAbsolutePath.Replace('\\', '/').StartsWith(dataPath, StringComparison.Ordinal))
+                    {
+                        LogFallbackMiss(module, type,
+                            $"'{expectedAbsolutePath}' sits outside the Assets folder (an embedded package " +
+                            "module), which this fallback does not resolve.");
+                        continue;
+                    }
+
+                    string expectedAssetPath = NamespaceUtility.GetUnityAssetPath(expectedAbsolutePath);
+                    string foundGuid = assetPaths.GuidOf(expectedAssetPath);
+                    if (string.IsNullOrEmpty(foundGuid))
+                    {
+                        LogFallbackMiss(module, type,
+                            $"the AssetDatabase has no GUID yet for '{expectedAbsolutePath}'. Try again after " +
+                            "an AssetDatabase.Refresh().");
+                        continue;
+                    }
+
+                    module.RecordFolderGuid(type, foundGuid);
+                    indexDirty = true;
+                }
+            }
+
+            if (indexDirty)
+            {
+                EditorUtility.SetDirty(index);
+                AssetDatabase.SaveAssets();
+            }
+        }
+
+        /// <summary>
+        /// The fallback exists to heal a module whose GUID was never recorded, and a heal that
+        /// silently never happens is indistinguishable from one that had nothing to do. This is
+        /// unconditional (not FlowLogger, which compiles out) so the gap is visible by default -
+        /// which is also why the caller keeps quiet about folder types marked optional, whose
+        /// absence is ordinary rather than a gap.
+        /// </summary>
+        private void LogFallbackMiss(ModuleDescriptorEVO module, FolderEVO.FolderType type, string detail)
+        {
+            Debug.LogWarning($"<color=cyan>FlowIoC:</color> could not record a GUID for the '{type}' folder of " +
+                             $"module '{module.Name}' - {detail}");
+        }
+    }
+}
+#endif

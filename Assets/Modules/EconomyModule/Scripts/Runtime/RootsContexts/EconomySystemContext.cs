@@ -41,7 +41,9 @@ namespace Modules.EconomyModule.RootsContexts
             CommandBinder.Bind(_internalSignals.Started).ToSequence<StartFrameTickCommand>();
             CommandBinder.Bind(_internalSignals.PoolRequested).ToSequence<ConfigureBoardPoolCommand>();
             CommandBinder.Bind(_internalSignals.BoardRegistered).ToSequence<StoreBoardCommand>();
-            CommandBinder.Bind(_internalSignals.ZoneRegistered).ToSequence<StoreZoneCommand>();
+            CommandBinder.Bind(_internalSignals.ZoneRegistered)
+                .ToSequence<StoreZoneCommand>()
+                .ToSequence<LocalizeZoneCommand>();
             CommandBinder.Bind(_internalSignals.WalletsChanged)
                 .ToSequence<PublishLocalWalletCommand>()
                 .ToSequence<SaveLocalXpCommand>();

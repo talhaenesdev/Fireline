@@ -1,0 +1,138 @@
+#if UNITY_EDITOR
+using System.Collections.Generic;
+using FlowIoC.ConsoleModule;
+using UnityEditor;
+using UnityEditor.Compilation;
+using UnityEngine;
+
+namespace FlowIoC.Editor.Console
+{
+    /// <summary>
+    /// Everything Unity writes, on its way into Flow Console. Hooked at editor load rather than
+    /// when the window opens, so a log written before anybody opened it is still recorded.
+    ///
+    /// The hook is the threaded event, through UnityLogRelay: logMessageReceived alone misses
+    /// every line a Task or a thread writes, and Unity's own console shows those.
+    ///
+    /// Nothing here reflects into UnityEditor.LogEntries. Compiler messages come from
+    /// CompilationPipeline, which is public and has not moved, and the rest come from
+    /// Application.logMessageReceivedThreaded. An internal API that breaks silently on a Unity
+    /// upgrade would be worse than a feature never promised.
+    /// </summary>
+    [InitializeOnLoad]
+    internal static class UnityLogBridge
+    {
+        private const string PENDING_COMPILER_LOGS_KEY = "FlowIoC.Console.PendingCompilerLogs";
+
+        private static readonly UnityLogIntake Intake = new();
+        private static readonly CompilerLogStore Store = new();
+        private static readonly UnityLogRelay Relay = new(OnUnityLog, () => FlowLogger.IsWritingToUnityConsole);
+
+        static UnityLogBridge()
+        {
+            Relay.Hook();
+
+            // A line from another thread waits in the relay until the editor's next update.
+            EditorApplication.update -= Relay.Drain;
+            EditorApplication.update += Relay.Drain;
+
+            CompilationPipeline.assemblyCompilationFinished -= OnAssemblyCompiled;
+            CompilationPipeline.assemblyCompilationFinished += OnAssemblyCompiled;
+
+            CompilationPipeline.compilationStarted -= OnCompilationStarted;
+            CompilationPipeline.compilationStarted += OnCompilationStarted;
+
+            DrainPendingCompilerLogs();
+        }
+
+        /// <summary>
+        /// Each compile starts its round clean. Without this, messages parked by a compile that
+        /// failed - and so was never followed by a domain reload to drain them - would be drained
+        /// after the *next* compile and report errors the developer has already fixed.
+        /// </summary>
+        private static void OnCompilationStarted(object context)
+        {
+            SessionState.EraseString(PENDING_COMPILER_LOGS_KEY);
+        }
+
+        private static void OnUnityLog(string condition, string stackTrace, LogType type, bool isEcho)
+        {
+            if (!Intake.ShouldRecord(type, isEcho)) return;
+
+            // The compile error Unity is printing is the one CompilationPipeline already handed
+            // over, with the file and the line this copy does not carry.
+            if (Intake.IsCompilerMessage(condition)) return;
+
+            // Same again for a shader, with one difference: the shader bridge is asked whether it
+            // really recorded this error. It reads them off the asset at import, so an error a
+            // variant only hits at play time never reached it - and dropping this copy on the
+            // strength of the wording alone would lose that error altogether.
+            if (Intake.IsShaderMessage(condition) && ShaderLogBridge.Intake.WasReported(condition)) return;
+
+            // Unity's forwarding of a player's line, while that player's rows are already coming
+            // in over FlowIoC's own message with their channel and flow.
+            if (Intake.IsPlayerEcho(condition, stackTrace, PlayerLogBridge.IsFlowPlayerPresent)) return;
+
+            FlowLogger.AddExternalLog(LogSource.Unity, Intake.ToLogType(type), condition,
+                stackTrace, null, 0);
+        }
+
+        /// <summary>
+        /// Fires while the compile is running, and a domain reload follows it, so the messages
+        /// are parked in SessionState and read back on the other side.
+        /// </summary>
+        private static void OnAssemblyCompiled(string assemblyPath, CompilerMessage[] messages)
+        {
+            if (messages == null || messages.Length == 0) return;
+
+            List<CompilerLogRecord> pending =
+                Store.Deserialize(SessionState.GetString(PENDING_COMPILER_LOGS_KEY, null));
+
+            for (int i = 0; i < messages.Length; i++)
+            {
+                CompilerMessage message = messages[i];
+
+                if (message.type != CompilerMessageType.Error && message.type != CompilerMessageType.Warning)
+                    continue;
+
+                var record = new CompilerLogRecord
+                {
+                    Message = message.message,
+                    File = message.file,
+                    Line = message.line,
+                    IsError = message.type == CompilerMessageType.Error
+                };
+
+                pending.Add(record);
+
+                // Recorded now as well as parked. A compile that fails is not followed by a
+                // domain reload, so the parked copy would never be drained - and a failed
+                // compile is exactly when somebody needs to read the error.
+                Record(record);
+            }
+
+            SessionState.SetString(PENDING_COMPILER_LOGS_KEY, Store.Serialize(pending));
+        }
+
+        private static void Record(CompilerLogRecord record)
+        {
+            FlowLogger.AddExternalLog(LogSource.Compiler,
+                record.IsError ? LogType.Error : LogType.Warning,
+                record.Message, null, record.File, record.Line);
+        }
+
+        private static void DrainPendingCompilerLogs()
+        {
+            List<CompilerLogRecord> pending =
+                Store.Deserialize(SessionState.GetString(PENDING_COMPILER_LOGS_KEY, null));
+
+            if (pending.Count == 0) return;
+
+            SessionState.EraseString(PENDING_COMPILER_LOGS_KEY);
+
+            for (int i = 0; i < pending.Count; i++)
+                Record(pending[i]);
+        }
+    }
+}
+#endif

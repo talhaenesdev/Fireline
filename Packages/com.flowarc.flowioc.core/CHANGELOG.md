@@ -1,0 +1,3419 @@
+# Changelog
+
+All notable changes to this package are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.28.0] - 2026-09-28
+
+### Added
+
+- **A retained step left unresolved is reported** after 10 s, naming the Command; Play's end
+  lists the steps still waiting past it. `[LongRetain(seconds)]` and `[LongRetain]` mark deliberate waits.
+- **A pooled Command or Function holds none of its injections** in the Editor and a Development
+  Build, so a callback that outlived its step fails on its own line, with a hint naming the Command.
+
+### Changed
+
+- **Commands, command groups and Functions no longer log their return to the pool.**
+- **The shipped ads, permission, download and loading steps carry `[LongRetain]`.**
+- **Module Help pages show the module**: its test scene, its panel, its Root in the scene and its
+  config on the adapter; a bar parts each topic.
+- **UI that moves every frame goes on one layer, `Layer_3`.**
+- **WorldPointer 1.2.3**: its test scene gives only `Layer_3` a canvas of its own.
+
+### Fixed
+
+- **A Function called from a `hideCommandLog` run is as quiet as the run.**
+- **The Module Scanner's project-files Fix deletes a `.csproj` no solution lists**, which
+  regenerating left behind, so the finding clears.
+
+## [1.27.3] - 2026-09-27
+
+### Added
+
+- **A shut category in the Help sidebar wears UPDATE and NEW** for the modules inside it.
+- **A module panel's number is dragged by its label**, as in the Inspector, inside its `[Min]` or
+  `[Range]`; `Property(..., dragPace: 0.1f)` sets the value moved per pixel.
+
+### Fixed
+
+- **`ComponentReference<T>` is marked `[Serializable]`**, as Unity 6.7's analyzer asks.
+
+### Removed
+
+- **The `1.26.0` migration of a sub-context's flat screen override.** A Root saved before `1.26.0`
+  and never resaved since loses its override; open and save it on `1.27.x` first.
+- **The `CD_Screen` migration and the editor-only `CD_Screen` type.** A leftover `CD_Screen` asset
+  is no longer turned into a screen context.
+
+## [1.27.2] - 2026-09-27
+
+### Added
+
+- **Module Scanner reports screen art addressed under another name than its file**; *Fix* sets the
+  address to the file name.
+
+### Fixed
+
+- **A module update that renames a screen's art moves its address with it.** Loading 1.0.4 left
+  `SPR_LoadingBackground` addressed as `T_LoadingBackground`; an update now also registers new art.
+- **The Pool Service Help page shows the group as `Pool_PointerSample`.**
+
+## [1.27.1] - 2026-09-26
+
+### Changed
+
+- **`hideCommandLog: true` hides the whole run**: every step and sub group, not only the dispatch;
+  a warning or an error inside it names the step and the steps before it. `[HideCommandLog]` on
+  each step of a tick is no longer needed.
+- **The frame-tick example keeps an `IsHooked` flag beside `IsTicking`**, so a stop and a start in
+  one frame no longer add a second callback that ticks twice.
+- **Counter 1.0.3**: its tick steps carry no `[HideCommandLog]`; the tick signal hides them.
+- **Loading 1.0.4**: the loading screen art is `SPR_LoadingBackground`, its address too; the overlay's
+  test scene is a plain screen test scene that opens the overlay with a sample set.
+
+### Fixed
+
+- **The setup install, a pending module install, a module rename, the module index and the update
+  notice run with the Editor unfocused**; they waited for Unity to be focused again.
+- **FlowIoC.Editor compiles on Unity 6.5 and later.** The Root and View Injector inspectors keyed
+  their folds by `GetInstanceID`, which 6.5 made a compile error; from 6.2 they ask for
+  `GetEntityId`, and 6.0 and 6.1 keep the instance ID.
+- **No `FindObjectsSortMode` deprecation warnings on Unity 6.4 and later.** Scene searches use the
+  `FindObjectsByType` overloads without a sort mode there; 6.0 to 6.3 have only the ones with it.
+
+## [1.27.0] - 2026-09-26
+
+### Added
+
+- **A module panel's section can fold**: `painter.HeadingFoldable(text, actions)` draws the heading
+  with a triangle and returns whether it is open; its buttons work while it is shut.
+
+### Changed
+
+- **Agent rules:** an agent playing an unfocused Editor sets `Application.runInBackground` at
+  runtime, never in `PlayerSettings` or the auto-tick.
+
+### Fixed
+
+- **A package update writes the agent rules, the skills, the solution code style and the module
+  cards** even with the Editor unfocused and without a restart; they used to stay on the old version.
+
+## [1.26.1] - 2026-09-26
+
+### Added
+
+- **`Pool_` is the asset prefix of a pool group** (`Pool_Forest`); a new `CD_PoolGroup` asset is
+  created as `Pool_New`.
+
+### Changed
+
+- **`PD_` is now `SD_` (saveable data), and `PVO` is now `SVO`.** The code style, the agent rules,
+  the skills and Help use the new names; rename a game's `PD_` assets and classes to match.
+- **Help's Scene Switcher page moved to Editor Tools**, after Folder Painter.
+- **Module Scanner comes before Screen Scanner**, in the Tools/FlowIoC menu and in Help.
+- **Local Save 1.0.4 and World Pointer 1.2.2** use the new names: `SD_LocalSaveProbe`,
+  `Pool_PointerSample`.
+
+## [1.26.0] - 2026-09-26
+
+### Added
+
+- **A `SerializedDictionary` is drawn as key and value pairs**, added and removed together, every
+  other pair on a darker band; a key already in the dictionary is refused.
+- **Help's FlowIoC Features has Screen Service and Pool Service pages.**
+- **Help has a FlowIoC Features section**, after MVCS Structure (was Structure), with a Scene
+  Switcher page: what it lists and how to turn it on in the toolbar.
+
+### Changed
+
+- **A module's pool groups are a `PoolSubContext` entry on its own Root.** `PoolAdapterRoot`,
+  `PoolConfigAdapterView` and the adapter on `PoolServiceRoot` are gone.
+- **A sub-context entry carries settings of its context's own class.** A screen's override moved
+  there; scenes saved with the old fields are read as before.
+- **The Scene Switcher lists scenes in tabs** - Frequent, Modules, Screens, Tests - with the game's
+  own scenes pinned above them, each row in its module's Root colour.
+- **The setup set's Main module no longer ships a `PoolServiceRoot` variant**; its scenes use the
+  package's own.
+- **World Pointer 1.2.1**: its test scene registers its pool group with `PoolSubContext`. **Asset
+  Delivery 1.0.3 and Loading 1.0.3**: their test scenes use the package's `PoolServiceRoot`.
+
+### Fixed
+
+- **A context listed on two Roots no longer warns of a same injection**, and the first one torn
+  down no longer unbinds the other's name.
+- **The `CD_PoolGroup` inspector** no longer draws an item's arrow over its drag handle or its
+  section headings twice.
+
+## [1.25.0] - 2026-09-26
+
+### Added
+
+- **Module Scanner reports a screen whose address has no Addressables entry**; *Fix* registers the
+  prefab of the same name.
+- **Module Scanner reports an Addressables simulated load delay above 0**; *Fix* sets it to 0, and
+  settings FlowIoC creates start at 0.
+
+### Changed
+
+- **A warning always reaches Unity's console**, as an error does. A forced screen open is now a
+  plain log.
+- **Create Module on a module that exists only adds its missing folders.**
+- **The setup set's main screen offers Play** instead of Easy, Medium and Hard, and Gameplay ships
+  no `DifficultyType`. The screens skill shows a screen filled from shared data instead.
+- **Counter 1.0.2 re-enters its tick with `SignalDispatchCommand`**; the group step it used kept
+  every second's group alive.
+- **Agent rules:** read the flow in the Flow Console; a test scene's state is a copy of the data
+  asset with `IsTest` on; `Retain()` comes first to stop as well; work that runs every frame is a
+  Command sequence.
+
+### Fixed
+
+- **A view the `ViewInjector` list does not name registers with the defaults**, and an entry whose
+  view is gone is skipped.
+- **A Mediator's `HideCompleted` runs after its screen is back in the pool** on every opening.
+- **Local Save 1.0.3 and A/B Test 1.0.2 start each Editor run from the asset's file.**
+- **Local Save 1.0.3 no longer throws on a pause before its bindings.**
+- **Audio 1.0.1 plays nothing through a disabled source.**
+- **A view whose Root binds no Mediator for it** is reported naming that Root's context.
+- **Create Module reads a parent path with backslashes or another casing.**
+- **`GetInstance` with a null name** finds the binding with no name.
+
+## [1.24.0] - 2026-09-25
+
+### Changed
+
+- **WorldPointer 1.2.0: indicators come from the FlowIoC pool.** `WorldPointerLayer` is gone; a
+  screen registers a `WorldPointerPoolDisplay` built from the pool, an item key and a
+  RectTransform, and `WorldPointerIndicator` is a `PoolableItem`.
+- **WorldPointer's targets are found in one step** by channel and Transform, and
+  `RD_WorldPointer` is written in place instead of rebuilt on every change.
+- **WorldPointer's registers return nothing.** A refused call is an error naming its line;
+  `UnregisterDisplay` takes the channel.
+
+### Removed
+
+- **WorldPointer's two screen test scenes.** Both screens are seen in `WorldPointerTestScene`.
+
+## [1.23.1] - 2026-09-24
+
+### Changed
+
+- **The ScreenManager prefab is one canvas again.** A canvas of its own for `Layer_3` and
+  `Layer_4` is an override the game adds in its scene; the WorldPointer Help page shows how.
+- **WorldPointer 1.1.2:** the sample's arrow sits outside its label, in the label's colour, and
+  the Help page shows the modes in screenshots.
+
+### Fixed
+
+- **Rename Module reaches an Editor-only screen's prefab** and its Resource path.
+
+## [1.23.0] - 2026-09-24
+
+### Added
+
+- **Audio is a ready-made module.** Effects, music with crossfade and 3D sound from banks the
+  playing modules own, and the player's music and sound settings.
+- **A module panel's list can be dragged wider**, and keeps its width.
+- **An overlay canvas exists only through the ScreenManager** - a new rule in the agent rules, the
+  README and the Help window.
+- **`Layer_3` and `Layer_4` of the ScreenManager have a canvas of their own**, for UI that moves
+  every frame.
+
+### Changed
+
+- **WorldPointer 1.1.1: UI over the world is drawn by a screen.** The world side registers a
+  Transform under an id and sends requests; a screen registers as that id's display.
+  `Register(target, indicator)` is gone. `RD_WorldPointer` shows what is registered, and a clamped
+  indicator stays whole on screen.
+
+### Fixed
+
+- **Create Module no longer makes a Resource screen addressable**, and saves its prefab under
+  Resources.
+- **Installing or updating a module reaches files past Windows' 260 characters.**
+- **The data types docs no longer show `GetMonoBehaviour<Canvas>`**, which does not compile.
+
+## [1.22.5] - 2026-09-24
+
+### Added
+
+- **Asset file prefixes.** Every asset file carries a prefix that says what it is - `TX_`, `SPR_`,
+  `MT_`, `Shader_`, `PB_`, `SND_` and the rest. The table is in the agent rules, the data types
+  skill, the README and a new Asset Files tab on the Data Types Help page.
+
+## [1.22.4] - 2026-09-23
+
+### Fixed
+
+- **Create Module no longer stops on a reload prompt.** The new module's scene is saved beside the
+  open scene and closed, and the open scene is left as it is.
+- **Module Scanner keeps FlowIoC's own `.csproj.DotSettings`** in a project that installs the
+  package from the registry.
+
+## [1.22.3] - 2026-09-22
+
+### Added
+
+- **BotBar is a ready-made module.** The hub's bottom tab bar: tabs and their behaviour from
+  `CD_BotBar`, each tab announced by its key for the game's Connector to wire. Installed once, a
+  starter the game rewrites.
+
+## [1.22.2] - 2026-09-22
+
+### Added
+
+- **The Module Scanner checks that a Root and its Context are named alike**: `PlayerSystemRoot`
+  roots `PlayerSystemContext`. A pair that disagrees is reported for a person.
+- **A signal created per config key** is in the agent rules and the connectors skill, with the
+  BotBar Help page.
+
+### Changed
+
+- **Gameplay's context is `GameplaySystemContext`**, named like its Root, and its prefab is
+  `GameplaySystemRoot`. New installs only.
+- **A Root prefab is named after the Root it carries**: `CameraSystemRoot` and
+  `LocalSaveServiceRoot` with their next versions.
+- **The camera in a scene Create Module makes clears to a solid colour** rather than the skybox.
+- **The ready-made modules are republished with that camera**: Ads, Analytics, Camera, Counter,
+  Device Debugger, World Pointer and Loading at 1.0.1; Asset Delivery, Local Save and Mobile
+  Notification at 1.0.2.
+
+### Fixed
+
+- **The generator writes a Test or a Screen module plain whatever role it is handed**, the way the
+  window always did. The scaffolding skill says so, and that a test module has no card.
+
+## [1.22.1] - 2026-09-17
+
+### Changed
+
+- **The module pages in the Help window are rearranged.** Every page says Module in its title,
+  wears the colour its Root wears in the inspector, names the role and the version in its banner,
+  and the setup pages explain the set: the boot, the ScreenManager, the crossings, the Root order.
+- **A/B Test, Asset Delivery, Local Save and Mobile Notification are 1.0.1**: their panels open
+  the Help pages by the new titles.
+
+### Fixed
+
+- **The Help window no longer stutters with the Module Library open.** What a page reads of the
+  project is read once and kept until the project changes.
+- **The Module Scanner opens faster and no longer rescans on focus.**
+- **Add Shared or Signals references the assembly it made**, so the module compiles at once.
+- **Create Module puts the Test or Screen suffix on the name itself** and no longer resets the
+  parent's `.csproj.DotSettings`.
+- **The Module Scanner accepts a plug behind a define** the project does not meet, instead of
+  reporting it broken.
+- **A card's Root line names the context the Root actually roots.**
+
+## [1.22.0] - 2026-09-17
+
+### Added
+
+- **Ads is a ready-made module.** A rewarded or an interstitial ad shown on request from any
+  module, the answer - rewarded, dismissed, not ready, failed, skipped - handed to whoever asked,
+  and the game never knowing which SDK did the showing. The mediation SDK is a plug on
+  `AdsServiceRoot`, one at a time: AppLovin MAX ships as `AppLovinMaxAdsServiceContext` in its
+  own assembly behind the `FLOWIOC_APPLOVIN_MAX` version define, with `CD_AppLovinMaxAds` for the
+  four ad unit ids; another SDK fits behind `IAdsProvider`. The module owns the policy the SDK
+  leaves to the app - one ad of each format kept loaded, a failed load retried with backoff, the
+  next ad loaded after every close, interstitials paced and skipped once ads are removed, a show
+  nobody answers failed after `ShowTimeoutSeconds`. Five steps a game binds in its own sequences:
+  `IAdsService.Commands.ShowRewarded` releases only when the reward was earned,
+  `ShowInterstitial` releases on every outcome with the result handed on, `SetConsent`,
+  `SetAdsRemoved` and `Initialize`. Outgoing `ReadyChanged`, `Opened`, `Closed`, `Failed` and
+  `RevenuePaid` for the audio and analytics modules to follow. A Help page with the setup steps
+  that fail silently when skipped, and an Ad icon.
+
+### Fixed
+
+- **A value released inside a step's own `Execute` reaches the next step.** A Service step whose
+  callback answered at once - a refused show - called `Release(result)` while its `Execute` was
+  still on the stack, and the driver started the next step in the same turn with the parameters
+  the turn began with, so the released value was lost and the next typed step reported a
+  signature mismatch. The pump now re-reads the pending parameters after each step.
+
+## [1.21.0] - 2026-09-17
+
+### Added
+
+- **A ready-made module updates from the Module Library.** Every module under `Modules~` carries a
+  version - the `Version:` line on its card - and a record of what shipped, `.flowioc-shipped.json`
+  beside the card. The version sits in the banner beside the button; an installed module whose
+  package ships a newer version reads **Update to X** on its page and `UPDATE` on its sidebar
+  row, and a module that arrived with this package version reads `NEW`; one console line at
+  startup names the modules with updates. The update keeps what the game changed: a file only the
+  package changed is overwritten, a file only the game changed stays, and a file both changed is
+  listed before anything is written and resolved one way for all of them - keep mine, or take the
+  package's. A module installed before it kept a record lists every differing file as a conflict,
+  because nobody can say who changed it.
+- **The setup set has a page per module.** `Module Library` → `Setup Modules` holds an Overview with
+  **Install All Setup** and a page each for Main, Loading, Screen, Gameplay and Connector. A module the
+  game removed comes back on its own from its page while the rest of the set is here; Loading carries a
+  version and updates like any service. A module whose card says `Update: never` - the rest of the set,
+  and a starter module a game takes over - is published on every change but never versioned: one
+  installation, no update, and a new install always gets the latest copy.
+
+### Fixed
+
+- **A first open no longer warns that the code generator settings could not be loaded.** The
+  startup rebuild of the module index runs before anything has made the settings asset, and it
+  reported the asset missing twice; the rebuild now makes it, the same asset the setup install
+  made a few seconds later.
+- **The What's New tab notices a release the day-old answer never heard of.** The latest release
+  is still asked of the registry once a day, but a project updated to a version newer than the
+  cached answer asks again at once instead of reading "ahead of the latest release" until the
+  day is up. That ask is spent for the version it was made from, so a checkout ahead of every
+  release asks once and not on every repaint.
+
+## [1.20.0] - 2026-09-16
+
+### Added
+
+- **Device Debugger is a ready-made module.** An on-device debug panel in the shape of SRDebugger,
+  for a development build - in a release build the Root stays, `IsAvailable` is false and every
+  call is a no-op. Five tabs behind a corner trigger (a pill, three taps in a zone, or the red
+  badge that comes up after an error): a Console drawn as the Flow Console's two-line row - the
+  severity icon, the message, the channel tag in its colour and the source - with kind filters,
+  a search, the Flow Console's channel switches behind Filters, a detail sheet a third of the
+  screen high with the stack trace and its own Copy, and Copy all logs; Options found by
+  reflection, never registered by code - `[DebugOption("Gameplay", "Win level")]` on a public
+  signal field is a button, `Signal<bool>` a toggle, a number a field or a slider with `Min`/`Max`,
+  `Signal<string>` a text field, an enum a dropdown, `Argument` a button carrying a constant,
+  the same attribute on an `Outgoing` field a value row that feeds the control sharing its
+  label, and on a shipped step a button running it; Signals, every public signal of every holder
+  in the scene with a typed payload field and Fire; Stats, a frame-time graph against the 60 fps
+  line with fps, the worst frame, allocated and reserved memory, the Mono heap and GC runs; Info,
+  the device's facts with Copy. `IDeviceDebuggerService` with `Show`,
+  `Hide`, `Toggle`, and `Commands.Show(DebugTab)` / `Commands.Hide` as steps for a settings
+  screen's hidden button. UI Toolkit over a `PanelSettings` scaled by physical size, so a panel
+  unit is a density-independent pixel on every phone; the safe area and a bottom inset keep the
+  content off a notch and a rounded corner; a press on any control answers under the finger
+  even inside a scrolling page, where UI Toolkit's own `:active` is taken off at once. Proved on a
+  phone. `CD_DeviceDebugger` on the Root's adapter sets the trigger, the corner, the log capacity,
+  the badge and the fps on the pill.
+- **`[DebugOption]`.** The attribute the panel reads, in the package so a holder or a Service's
+  shipped step can carry it without referencing the module: `Category`, `Label`, `Order`,
+  `Argument`, `Min`/`Max`/`Step`, more than one on a step when the argument differs -
+  `IHapticService.Commands.Play` carries Play Success, Play Failure and Play Heavy impact,
+  `ILocalSaveService.Commands.SaveAll`, `IMobileNotificationService.Commands.RequestPermission`
+  and `CancelAll`, and `IScreenService.Commands.HideAll` carry theirs; a step whose Service is
+  not bound in the scene is left off the panel.
+- **Analytics is a ready-made module.** A Service with a socket: an event - a name and its
+  parameters, `AnalyticsEventVO` - reaches `IAnalyticsService` from the module that decided it,
+  and the service hands it to every SDK plugged in, queueing for one still coming up until it
+  reports ready and dropping the queue for one that fails; the game never learns which SDKs those
+  are and nothing about analytics sits in a Connector. `Log`, `SetUserProperty`, `SetUserId`,
+  `SetConsent` on the interface, `Commands.Log` / `SetUserProperty` / `SetConsent` as steps -
+  `.ToSequence<IAnalyticsService.Commands.Log>(new AnalyticsEventVO("settings_opened"))` for a
+  fixed event, a game Command injecting the service for one with a value. A plug is an
+  `IAnalyticsProvider` behind a hosted `[AllowAsSubContext]` context listed on
+  `AnalyticsServiceRoot`'s Sub Context Types; `FirebaseAnalyticsModule` and
+  `FacebookAnalyticsModule` ship under `zSubModules/`, compiling only under their SDK's define.
+  Consent is handed on, never resolved here. Initialize Order -85.
+- **Four doors in the package for a panel like the Device Debugger.** `FlowLogger.OnLogRecorded`
+  raised for every recorded row - a development player records while it is set, attached to the
+  Flow Console or not; untyped access on `ISignalBody` - `Name`, `PayloadTypes`, `DispatchUntyped`
+  and untyped listeners - for a signal found by reflection; and
+  `ICommandBinding.ToSequence(Type, params object[])` for a step whose type is known only at
+  runtime, refusing anything that is not a concrete Command.
+- **Help pages for the two modules, and two icons for the set.** *Device Debugger* with Setup,
+  Options and Tabs; *Analytics* with two screenshots on its Setup tab - the Root in the Hierarchy
+  and its inspector with a plug listed - wearing a new `Chart` icon; the Haptic page wears a
+  `Vibrate` icon, a phone between two motion bars, instead of the broadcast rings.
+
+### Changed
+
+- **The Flow Console docks itself on an update too.** The tab beside Unity's Console went only to
+  a project meeting FlowIoC for the first time, so every project that was on FlowIoC before there
+  was a tab to hand out never got it. It now goes with What's New as well, focused, once per
+  project and reader - `FlowConsoleDockRecord` in EditorPrefs - so a tab that was closed stays
+  closed and the menu item is the door after that.
+- **No Debug rule in the Folder Painter's defaults.** The rule painted every folder whose path
+  contains "Debug" red, which now includes the Device Debugger module. A fresh install gets the
+  list without it; a project's own `ED_FolderPainter` asset is its own to edit.
+
+### Fixed
+
+- **No red line on the first launch.** Every fresh Editor session opened with "MessageHandler not
+  registered" from `PlayerLogBridge`: the player-connection handlers were taken off before they went
+  on, and on the first launch there was nothing to take off. The domain that registers them now
+  takes them off just before it unloads, so the next one registers onto a clean connection.
+- **Add Sub Context ticks AutoSetup on a new entry.** A Root runs a hosted context's Setup and
+  Launch only when its entry says so, and the window left the flag off, so a context added by
+  hand never ran until someone found the tick; `RootPrefabSubContexts` already wrote it on.
+
+## [1.19.0] - 2026-09-16
+
+### Added
+
+- **The Flow Console's settings are on the tab's menu.** Right-click the tab, or press the `⋮` at
+  its corner, and the bar the gear opens is there as a menu - Time, Row Lines, Flow, Pinned, Source
+  and Export, the choice in force ticked - the way Unity's Console keeps its line count there. A
+  right-click on the list below the last row shows the same menu. A menu has no width, so a
+  control the bar dropped for want of room is still one click away.
+- **Rider's namespace inspection is quiet inside the package.** Rider derives the namespace it
+  expects from the folders above a file, and a registry install sits under
+  `Library/PackageCache/com.flowarc.flowioc.core@<hash>/`, so every file in the package was told
+  to move to a namespace with the cache folder's name in it. On every Editor start FlowIoC writes
+  `FlowIoC.csproj.DotSettings` and `FlowIoC.Editor.csproj.DotSettings` at the project root, the
+  folders above each assembly marked as no namespace provider, from wherever the package resolved
+  - the hash changes with every version, so the files are written rather than shipped, and an
+  earlier version's keys are dropped as the new ones go in. Whatever else the files hold is kept.
+  Written on an update tick rather than a delayCall, which does not fire with the Editor unfocused.
+
+### Fixed
+
+- **A skipped folder is spelt the way Rider reads it.** Rider matches the invariant lowercase of a
+  folder's path, and the `.csproj.DotSettings` a module got carried the path as typed plus a Turkish
+  lowercase - so a module with a capital I in its name was never matched on the machine that wrote
+  it. Every spelling goes in now, and the Module Scanner's check wants all of them before it calls a
+  file current.
+
+- **Create Module never writes to somebody's open scene.** A main module created with *Create
+  Scene* unticked, after a run whose second half never ran, was read after the reload as one that
+  wanted a scene: the generator put an empty Root into whatever scene was open and saved that
+  scene to disk, under the path an earlier run had left in EditorPrefs. The two halves of a run now
+  talk through one record - `ModuleGenerationHandoffEVO` in `SessionState`, written whole at the
+  end of the first half and consumed first thing in the second - so nothing an earlier run wrote is
+  read as this run's answer, and a scene is saved before the reload and edited after it by its
+  path: the second half never saves the active scene, and when something else is active it opens
+  the generated scene beside it, edits, saves and closes it. The second half runs on the record
+  alone, not on the Create Module window being open and focused, which was what left the record
+  behind. Before a scene is made, the user is asked about whatever is open and unsaved, and a
+  cancelled ask is a run that never started. `ModuleIndexRegistrar` and the addressable step save
+  the assets they changed rather than every dirty asset in the Editor.
+
+### Removed
+
+- **The package ships no tests.** `Tests/Editor` and the `FlowIoC.Tests` assembly are gone from the
+  package, so a project that installs it from the registry no longer sees 261 test files under
+  `Library/PackageCache`. The tests live on in the framework's own workspace, and the internals the
+  Runtime and Editor assemblies expose for testing are granted to `FlowIoC.Dev.Editor.CoreTests`.
+
+## [1.18.0] - 2026-09-16
+
+### Added
+
+- **Mobile Notification is a ready-made module.** Local notifications on iOS and Android through
+  `com.unity.mobile.notifications`, a Service in the Haptic shape: the texts, channels, icons and
+  come-back reminders in one `CD_MobileNotifications` catalogue asset rather than in code. The
+  permission ask is a step - `IMobileNotificationService.Commands.RequestPermission` holds the
+  sequence until the OS answers, bound wherever the game decides to ask - and `Commands.Schedule`,
+  `Cancel` and `CancelAll` are steps too, a template key at binding time; a computed time is a
+  call, `Schedule("ChestReady", chest.Remaining, slot, chest.Name)`, with `{0}` placeholders in
+  the template filled from the arguments. A scheduled notification is a template key and an
+  optional tag, `Return#1440`, and the same identity scheduled again replaces. The return
+  reminders in the catalogue go out by themselves when the app is left and are taken back when
+  it returns; which notification the player tapped to open the app is read from the interface,
+  never announced, because a listener would come up too late. A template may name a picture
+  under `Assets/StreamingAssets` - Android's `BigPictureStyle` under the text, iOS's attachment
+  as the thumbnail - copied to the device once at initialize. `AndroidNotificationGateway` and
+  `IosNotificationGateway` speak to the two centers directly, so a channel and an icon per
+  notification survive, and the Editor's gateway logs every call and an arrival when a time
+  passes. `Tools/FlowIoC-Modules/Mobile Notification/Panel` edits the catalogue with the tests
+  down its sidebar, previews each template as the Android and iOS trays draw it - sample
+  arguments in the placeholders, the picture included - flags the three Mobile Notifications
+  settings that fail silently, and lists what the service scheduled while the game runs. Proved
+  on a phone: the permission dialog, delivery, tap-to-open, the tray cleared on resume, the three
+  reminders set and taken back, the picture in the expanded card. The iOS half is written against
+  the package source and awaits its first Xcode build.
+- **A module panel can carry a list down its left side.** `ModulePanel.HasSidebar` and
+  `DrawSidebar(ModulePanelSidebarPainter)` split the window under the bar: the list on the left -
+  a heading drawn like the bar's strip, with an optional square `+` at its edge, items that
+  light up under the pointer and wear the panel's colour when selected, a marker word at the
+  right of an item, a button under a group - and the panel's rows on the right, each in a
+  scroll view of its own. `ModulePanel.BarAction` puts one button on the bar beside the help
+  icon, for what is done to the panel as a whole. In the row painter every labelled mark takes a
+  `help` text that hides behind the `?` a Root's inspector gives its fields and opens under the
+  row when pressed; `Popup` picks one of a list, `PropertyWithAside` draws a narrow second field
+  at the end of a row, `Properties` can carry square `+`/`-` buttons at its end and flag a cell
+  red, `Error` is the red row beside `Warning`'s amber, `Custom` hands a row's rect to a panel
+  that has to draw something no mark describes, and a heading - drawn like the bar's strip, two
+  rows tall - can carry buttons at its right edge, a one-glyph label as a square. A
+  `ModulePanelAction` has a kind: the plain ones stay in line, `Confirm` green and `Caution` amber
+  stay in line too, `Add` stands apart at the right edge larger and green, `Remove` beside it mini
+  and red - `ModulePanelAction.Add("+", …)` for the one that makes more. `FlowPalette.ActionCaution`
+  is the amber. A wrapped text is measured at the row's real width and centred in its row.
+- **`HelpPainter.Table`.** A Help page draws a table - `painter.Table(headers, rows...)` - with the
+  header row on the band a heading wears, a hairline under every row, each column as wide as its
+  widest cell and the last taking what is left. Four listings that were tables typed into a code
+  block now are one: the loading sets on the Setup Modules page, the indicator's fields on World
+  Pointer, the injection order on Root & Context, the stored entries on A/B Test. The folder
+  sketch on the Signals page is drawn as a tree, the way Folder Layout draws one. Twelve bullet
+  lists that were name-and-meaning rows are tables as well: the haptic presets, the Module
+  Scanner checks, the Initialize Order bands, a View's Context Source, the two binders, the
+  five data prefixes and the shared-asset reports, the two adapter assets of A/B Test, what the
+  Camera module lands, the three kinds of module and where data lives, a command's three doors,
+  and the Create Module toggles. A table's header row is grey, not the heading violet, and the
+  table keeps a margin above and below. A screenshot sits in a dark well five pixels wider than
+  itself, sunk into the page - shadow along the top and left, light along the bottom and right.
+- **Asset Delivery is a ready-made module.** Store-delivered content lands on the device before the
+  boot needs it - Play Asset Delivery on Android, Apple-hosted managed Background Assets on iOS,
+  which begin at iOS 26 - and the boot draws what is still missing on the loading bar instead of
+  loading into a bundle that is not there. One setting per Addressables group, Unity's own Play
+  Asset Delivery schema, is read by both platforms: Install Time is Apple's essential, Fast Follow
+  its prefetch, On Demand its onDemand. `IAssetDeliveryService.Commands.EnsurePromised`, bound
+  after `Begin`, asks the store for every pack it promised - all but the on-demand ones - and
+  reports the `Content` step in megabytes, skipping it when nothing is missing and failing it, with
+  the sequence stopped, when a pack will not come; `Commands.Ensure("Pack")` holds a flow until
+  one on-demand pack is there. The service - `GetPacksAsync`, `GetPendingSizeAsync`,
+  `EnsureAsync` with a progress, `RemoveAsync` - sits over a gateway per platform:
+  `AndroidAssetPacks` on Android, an Objective-C++ bridge to `BAAssetPackManager` on iOS, a
+  stand-in in the Editor that answers that everything is on the device. The Addressables build
+  hook writes `FlowAssetPacks.json` beside the catalog with the pack names the Android build gave
+  the groups, and on iOS moves each pack's bundles out of the app into
+  `ServerData/iOS/AssetPacks/<Pack>/` with a `Manifest.json` each, running `xcrun ba-package`
+  on a Mac and writing `package-asset-packs.sh` on Windows; it reports Play Asset Delivery not
+  initialised, App Bundle off, Split Application Binary off and an iOS pack-id collision as errors.
+  The iOS player build adds an ExtensionKit downloader extension with one Swift file, the App Group
+  and the three Background Assets keys, idempotently; `ED_AssetPackInitialization` is listed under
+  Addressables' Initialization Objects so that the runtime transform points every bundle in a pack
+  at the file Background Assets holds it in. `Tools/FlowIoC-Modules/Asset Delivery/Panel` shows what
+  the next build sends. The module requires `com.unity.addressables.android`; the iOS half is
+  written against Apple's reference and unverified on a device, and the Help page says which parts
+  to check first.
+- **What's New says whether a newer release is out.** One line above the notes names the newest
+  release a registry has - asked of the registry the package was installed from, or of OpenUPM for
+  a Git, local or embedded install, at most once a day and only while the tab is drawn, never on
+  Editor start - and how this install is updated: the Package Manager offers an update for a
+  registry install and for nothing else, so a Git install is told to change the tag on its URL and
+  an embedded copy that the folder under `Packages/` wins over the manifest and is replaced or
+  removed by hand. On the latest release the line is quiet; a checkout ahead of it says so. It is a
+  line and not a button: taking an update is the developer's call, made in the Package Manager. The
+  answer lives in EditorPrefs, a failed ask counts as the day's, and a copy the Package Manager does
+  not resolve draws nothing.
+
+### Changed
+
+- **A row's tag sits on its source line, and every module's lines carry its name.** `[Signal]`,
+  `[Command]`, `[Player]` are still written at the front of the message when the line is logged -
+  search, copy and the detail panel see them there - but the Flow Console draws them on the second
+  line, before the file and line, so the first line is the message alone; a one-line row keeps the
+  tag where it was written. A framework row carries its tag on a faint plate of the channel's colour
+  with the stripe down its edge, a module's row carries the tag bare with no stripe, which is what
+  tells `[Screen]` the framework wrote from `[Screen]` a module of that name wrote. Every module's
+  lines carry its name as a tag from the day it is made, in the module's colour; a `Profile:` line
+  on its card replaces the tag, `Profile: none` takes it away, and **Reset** in the style window
+  drops both lines. A framework error carries its tag as a warning does while the message that
+  reaches Unity's console stays as written. Unity's own channels keep their icon and no colour, and
+  Asset shares Pool's.
+
+- **An A/B test is a matrix, and one test runs at a time.** In `CD_AbTests` a group is a name and
+  a list of assets: the first group is the control and its list names the game's own assets, the
+  originals themselves, and every other group lists at the same index the asset that replaces
+  each - no original/variant pair repeated per group, and a column shorter than the control's is
+  a validation error. `TestUserPercent` replaces `RolloutPercent`, saying which side of the split
+  the number is; `CD_AbTests.ActiveTestId` names the one test that runs, where a switch per test
+  used to let two write over the same asset, and an empty name runs none. `OnValidate` no longer
+  logs. The `AB Test Editor` lists every test down the panel window's sidebar, the active one
+  marked, opens the clicked one and says each validator message under the row it is about, the
+  cell washed red; its Help page follows.
+- **The Help window's three entries sit directly under `Tools > FlowIoC`.** `Welcome`, `Wiki` and
+  `Module Library` - the third renamed from `Modules`, on the menu and on the sidebar - where a
+  `Help` submenu used to fold them away and the module library was the entry nobody found. Each
+  still opens the window on its section, and `Module Library` is also the first entry of
+  `Tools > FlowIoC-Modules`, above a line and the panels the installed modules add there. Inside the window the sidebar is brighter at the top and
+  each level under a category is a wider step darker than before: the deepest rows had reached the
+  page's own grey, and now the range has room. A heading inside a page sits on a band of the
+  window's violet, the tint the sidebar gives a featured topic, where bold alone left it in the
+  paragraph's grey; and a row or a tab under the pointer lights up violet rather than grey, the
+  colour the selection it promises will be. The Code Generators pages sit in the order the
+  `Tools > FlowIoC` menu lists the panels.
+- **The generators are two entries on the `Tools > FlowIoC` menu.** `Create New Module`, and
+  `Edit Module` folding everything done to a module that exists: `Delete Module` and `Rename
+  Module`, then `Create View`, `Create Model`, `Create Command` and `Create Function`, then `Add
+  Shared or Signals`, a separator between each three. The panels keep their names - only the
+  menu paths moved, and every page and document that spelt one out now spells the new one.
+- **A ready-made module may reference the setup set's Loading module for its Service.** The
+  delivery module's boot step injects `ILoadingService` to draw the bar itself rather than handing
+  the game a Command to paste; `Modules.AssetDelivery` references `Modules.Loading` the way
+  `Modules.Main` does. The first ready-made module to do so.
+
+### Fixed
+
+- **A module installs without a warning per empty folder.** A module's skeleton travels as the metas of
+  folders git never stores, and Unity recreated each with "A meta data file (.meta) exists but its
+  folder ... can't be found, and has been created" - 109 of them after the setup set landed on a
+  fresh `1.17.1` consumer. `PayloadCopier` creates the folder for every `folderAsset` meta it copies,
+  before the import sees it; both installers copy through it.
+
+## [1.17.1] - 2026-09-15
+
+### Fixed
+
+- **The tarball on OpenUPM is the signed one.** OpenUPM published `1.17.0` through its git tracker
+  three minutes after the switch to release tracking merged - packed from the tag, unsigned - and a
+  published version is never replaced, so the first signed release is this one. The release
+  workflow also fetched the UPM CLI installer into the checkout, where `upm pack` took it along as
+  an `install.sh` with no `.meta`; it is fetched outside the package now, and a tarball with any
+  untracked file fails the run instead of shipping.
+
+## [1.17.0] - 2026-09-15
+
+### Added
+
+- **Releases are signed.** A pushed version tag runs `.github/workflows/release.yml`, which packs
+  the package with Unity's UPM CLI - signed for the FlowArc organization, the signature at
+  `package/.attestation.p7m` inside the tarball - and attaches the `.tgz` to a GitHub Release of
+  the same tag. OpenUPM publishes that asset rather than packing the tag itself, so the tarball a
+  consumer installs is the signed one. Unity 6.3's Package Manager reads it as *Limited signature*
+  for anyone outside the organization - the package is verified unchanged and its signer named,
+  which is as far as a third-party signature goes - where every release up to 1.16.0 reads
+  *Missing*.
+
+### Fixed
+
+- **The package declares URP and the Input System.** The setup set's `MainScene` carries
+  `UniversalAdditionalCameraData`, `UniversalAdditionalLightData` and `InputSystemUIInputModule`, so
+  a project without `com.unity.render-pipelines.universal` and `com.unity.inputsystem` opened it to
+  three "The referenced script (Unknown) on this Behaviour is missing!" warnings - found on a bare
+  consumer of `1.16.0`. Both are dependencies now, at `17.0.0` and `1.11.0`, the way the render
+  pipeline core already was.
+- **Two empty-folder metas gone.** `Runtime/PoolModule/Enums.meta` and `Extensions.meta` stood for
+  folders git does not store, so every fresh install logged "A meta data file (.meta) exists but
+  its folder ... can't be found" twice and created the folders.
+
+## [1.16.0] - 2026-09-15
+
+### Added
+
+- **Local Save is a ready-made module of the core package.** It used to sit in the private addons
+  package because it was built on Easy Save 3, a paid asset. It now keeps a file of its own -
+  `SaveFile.flowsave` under `Application.persistentDataPath`, one JSON object with a member per
+  asset, written to a temporary file and moved over the old one - and Easy Save is gone with the
+  setup step it needed and the `ES3Defaults` asset that rewrote itself on every assembly change.
+  `ILocalSaveService.BeginSession(password)`: a password on `LocalSaveRoot`'s adapter encrypts the
+  file with AES-256, the key derived from it over a fresh salt and IV; empty, the file is plain. A
+  plain file is read whatever the password says and the next write encrypts it, so turning
+  encryption on later loses nothing; an encrypted file read with no password or the wrong one is
+  an error and an empty session. Install it from **Help ▸ Modules ▸ FlowModules ▸ Local Save**.
+- **`com.unity.nuget.newtonsoft-json` is a dependency of the package**, for the save module's
+  serializer.
+- **A module can ship a panel, and Local Save does.** `ModulePanel` in `FlowIoC.Editor.ModulePanels`
+  declares a window - title, module, role colour, Help page, rows drawn through
+  `ModulePanelPainter`'s marks - and `ModulePanelWindow.Open<T>()` draws it in the house style, one
+  window per panel; the module ships the class and a `[MenuItem]` under
+  **Tools ▸ FlowIoC-Modules ▸ <Module>**, a root of its own beside `Tools ▸ FlowIoC`, which a module
+  still adds nothing to. Local Save's panel shows the file, reads it with the password off the
+  `LocalSaveRoot` in the open scene, resets it, clears PlayerPrefs and rewrites it under another
+  password; it never edits the contents.
+- **A/B Test ships two panels.** **AB Test Selector**, `Tools ▸ FlowIoC-Modules ▸ AB Test ▸ Selector`:
+  every test of every `CD_AbTests` with the group this machine's player is in, *Force <group>* and
+  *Force outside* writing the assignment the way a roll does, *Reset* forgetting it - used before
+  pressing Play to see one variant. **AB Test Editor**, `▸ AB Test ▸ Editor`: the tests authored
+  without hunting for the asset - every `CD_AbTests` in the project, each test's fields, groups and
+  override pairs as the asset's own serialized properties, the validator's word under the test it
+  names, *Add test* / *Add group* / *Add override* / *Raise version* / the removes.
+  `ModulePanelPainter` gained `Property` and `Properties` for it: a panel that authors an asset
+  draws the asset's `SerializedProperty`s, so undo and save stay Unity's. The agent rules, the
+  scaffolding skill and the Creating a Module page say where a panel goes and what it may do: it
+  reads files and prefs and resets them, and edits what the Inspector would edit, never a Model's
+  values.
+
+### Changed
+
+- **The Help window lists modules by the package that ships them.** *Private Modules* is gone.
+  FlowIoC's own ready-made modules sit under **FlowModules**, and every other package that ships
+  modules gets a category of its own, named after the package - `FlowIoC-addons Modules` - or
+  after the title its editor assembly declares with `[assembly: ModuleGroup("...")]`. The pages
+  are found through `TypeCache`, FlowIoC's included: the five hand-listed pages are gone from the
+  catalogue and the installer block each of them carried is written once, in the adapter.
+- **`PrivateModulePage` is `ModulePage`**, and a package's modules ship under `Modules~`, the same
+  folder FlowIoC uses, rather than `PrivateModules~`. The page gained `BodyHeadline`, `BodyTagline`
+  and `InstalledHint` - the sentence the install dialog adds after the generic one.
+- **The settings file of a solution that is gone is deleted when the Editor opens.** A project
+  folder renamed once - a game cloned from a template repository under its own name - leaves the
+  old `<Old>.sln.DotSettings` beside the new one, and Rider goes on reading whichever it opens.
+  The startup that writes `<Solution>.sln.DotSettings` now sweeps every `.sln.DotSettings` at the
+  root that matches no `.sln` there, once per Editor session, and logs each file it deleted. The
+  Module Scanner's `code-style` check reported and swept the same file on Fix; it still does.
+- **A sub-context is launched.** A screen context or a Connector listed on a Root went through
+  the binding phases and `Setup` with it, and `Launch` stopped at the Root's own context; now the
+  Root launches each sub-context whose entry has Auto Setup on, after its own, so a screen
+  context's `Launch` is where it dispatches what it loads for itself.
+- **The setup set's loading screens come from Resources.** `LoadingScreen` and
+  `LoadingOverlayScreen` declare `ScreenLoadCVO.Resource`, their prefabs sit in their modules'
+  `Resources/` folders, and neither is addressable: both carry the tag the boot loads before its
+  first set, and a screen that shows the loads cannot wait on Addressables' own initialisation -
+  seconds on a remote catalogue, with nothing on stage. The art behind the bar is what stays
+  addressable: `T_LoadingBackground`, bundled on the prefab as the fallback and loaded again
+  through `IAssetService` from the screen context's `Launch`, so a remote catalogue changes it
+  between releases without a build. A game replaces the asset and keeps the address.
+- **The setup installer registers a screen module's `Art/` folder.** Every file in it is
+  addressable under its own name in the screen's group, with no label, and a screen prefab under
+  `Resources/` is passed over. Delete Module takes every entry under the module's folder out and
+  removes a group that empties with it; Rename Module finds a screen's prefab under `Resources/`
+  as well as `Prefabs/`, so the path in `ScreenLoadCVO.Resource` is rewritten with the file.
+
+## [1.15.3] - 2026-09-15
+
+### Changed
+
+- **A signal bound to one step is bound on one line.** `CommandBinder.Bind(x).ToSequence<X>();`; only a
+  chain of two or more steps breaks, one step per line. The shipped Contexts, the Help pages, the
+  README, the controllers skill and Create Command's binding snippet all say it that way now, and the
+  rule is in the Code style section of the agent rules.
+
+## [1.15.2] - 2026-09-15
+
+### Added
+
+- **The IDE's project files follow a package update on their own.** The Package Manager puts an
+  updated package in a new folder under `Library/PackageCache`, and the Rider integration's
+  incremental sync does not count that as a change: the solution and the modules' projects are
+  rewritten, the package's own `.csproj` keeps the old folder, and Rider reports every FlowIoC
+  type unresolved while Unity compiles fine - 614 errors on the template project the evening
+  `1.15.0` landed. Now the first time a version of FlowIoC runs in a project on a machine,
+  `ProjectFilesStartupSync` calls the code editor's `SyncAll` - the Regenerate project files
+  button in Preferences - once, and records the version in EditorPrefs per project. Rider, Visual
+  Studio and VS Code all implement it; a batch run and an Editor with no external editor do nothing.
+- **The Module Scanner reports stale project files.** `project-files`: a `.csproj` at the root
+  whose sources sit in a `PackageCache` folder that is gone, or a `.sln` listing a `.csproj` that
+  is gone, is reported by name, and Fix regenerates the project files. The row is where the state
+  shows when the startup sync could not run.
+
+## [1.15.1] - 2026-09-14
+
+### Fixed
+
+- **`1.15.0` does not compile in the Editor; take this one instead.** The Controllers Help page's
+  Ready-made tab gained a code sample whose string literals were split across lines, so
+  `FlowIoC.Editor` failed to build - and with it the Help window, the setup installer, the
+  scanners and the generators. The runtime assembly was untouched. Found the moment the template
+  project took `1.15.0`.
+
+## [1.15.0] - 2026-09-14
+
+### Added
+
+- **Every Service ships its fixed steps under `Commands`.** Twelve more, a partial file each
+  beside the interface, so typing the interface and pressing `.` lists them. Screen:
+  `LoadAll`, `HideAll`, `HideByTag(tag)`, `UnloadAll`, `UnloadByTag(tag)`. Pool:
+  `InitializeAll`, `InitializeGroup(group)` - both wait on the fill, through the new
+  `IPoolService.InitializeAllAsync()`, and stop the sequence when it throws. Asset:
+  `LoadGroupByLabel<T>(label, groupId)`, `ReleaseGroup(groupId)`,
+  `DownloadDependencies(keyOrLabel)` - a download that answers `false` stops the sequence.
+  Counter: `Stop(id)`. World Pointer: `UnregisterAll`. What did not become a step, and why,
+  is on each interface's `Commands` doc: a call that takes a runtime object or the callbacks
+  the caller keeps (`Register`, `CountDownFrom`), one that answers a question (`GetGroup`,
+  `LoadAsset<T>`), and `ITimeSource.Prepare`, whose service is bound inside its module.
+  `CommandDisplayName` prints a generic step with its arguments -
+  `IAssetService.Commands.LoadGroupByLabel<Sprite>` - rather than the compiler's arity.
+- **`IScreenService.Commands.LoadByTag`, a step a game binds with the tag given at the binding.**
+  `.ToSequence<IScreenService.Commands.LoadByTag>(ScreenTag.GroupA)` loads every screen registered
+  under the tag into the pool and holds the sequence until the last of them is in, so the step
+  after it can open one of those screens as a pooled open - no load, on stage the same frame. It
+  is `Load.ByTag` as a sequence step, the way `SignalDispatchCommand` is a dispatch as one.
+
+### Changed
+
+- **A step a Service ships is nested in the Service's interface, under `Commands`.**
+  `PlayHapticCommand` is `IHapticService.Commands.Play`, `SetHapticsEnabledCommand` is
+  `IHapticService.Commands.SetEnabled`, `BeginLoadingCommand` and `AwaitLoadingCommand` are
+  `ILoadingService.Commands.Begin` and `.Await`, and the ScreenModule's new `LoadByTag` step is
+  `IScreenService.Commands.LoadByTag`. The one name a game knows - the interface it injects - is
+  now also where its steps are found: type the interface, press `.`, and `Commands` lists every
+  step it ships and nothing else. The path carries no module name, so a Rename Module never
+  touches a consumer's Context, and a module with two interfaces splits its steps by itself. The
+  step is a normal class in a file of its own beside the interface -
+  `IHapticService.Commands.Play.cs`, the interface and its `Commands` class `partial`, so the
+  interface file stays the contract alone; the module's own steps -
+  `PlayPresetCommand`, `BeginSetCommand` - stay top-level in `Controllers/`, internal, verb-first.
+  A diagnostic prints the nested path (`IHapticService.Commands.Play executed as Sequence`),
+  through `CommandDisplayName`, and the Flow Console opens the step's own file for it.
+  `DispatchSignalCommand` is `SignalDispatchCommand`; `RetryCommand` is a base class a game
+  derives from, not a step it binds, and keeps its name. A project on the old names gets a
+  compile error at each binding that uses one.
+- **A Command a module binds only for itself is `internal`.** `RegisterPoolConfigCommand` and
+  `UnregisterPoolConfigCommand` in the Pool module, and the Camera, A/B test and test-module
+  Commands in the ready-made modules, were `public` while nothing outside their module was meant
+  to bind them - they answer a signal the module owns, or a step of its own boot. Now the
+  compiler says so, and `public` on a Command means what the naming rule above says it means.
+- **The setup set's boot loads the loading screens before the Boot set begins.** `MainContext`'s
+  chain starts with `.ToSequence<IScreenService.Commands.LoadByTag>(LoadingConstants.SCREEN_TAG)`, so the
+  `Begin` that follows opens the loading screen from the pool and every later load - the screen
+  preload, the pools - is drawn on the bar. Before, `Begin` started the loading screen's own
+  addressable load and the preload ran beside it, off screen. The Loading module's two screens
+  carry the tag from `LoadingConstants.SCREEN_TAG` in its Shared assembly, `ScreenTag.GroupA`,
+  and `Modules.Main` references `Modules.Loading.Shared` to bind it.
+- **The services sit on the tens of the Initialize Order band, in the order the boot reads.**
+  `-100` and `-90` stay the seats of the two modules that put data in place in `PostConstruct` -
+  `LocalSaveRoot` and `AbTestFlowServiceRoot` - and every other shipped service moves onto a ten
+  after them: `AssetServiceRoot` `-80`, the door every Addressables load goes through;
+  `ScreenServiceRoot` `-70` and `PoolServiceRoot` `-60`, which load through it;
+  `HapticServiceRoot` `-50` as before; `WorldPointerServiceRoot` `-30`; `LoadingServiceRoot` `-10`,
+  last because it opens a screen. The seats the numbers replace were an accretion - `-99`, `-98`,
+  `-2`, `-1` and `-1` again, the asset service at `-1` or `-100` depending on the prefab, the pool
+  service at `-2` in the package and `-98` in the setup set - and the setup set's `-98` sat the
+  pool service above the A/B module, so `PoolConfigModel.PostConstruct` read `CD_PoolGroup` before
+  the variant was written over it. A game's own service takes a free ten, or a unit below the ten
+  it leans on. The Ordering Roots page, the README, the root-order skill and `AssetConstants`
+  say the same numbers, and `OrderingRootsPageTests` now checks every shipped service's prefab
+  against the page: on a ten, negative, and the config readers after `-90`.
+
+### Fixed
+
+- **A screen an `Open` is loading when a preload reaches its entry is loaded once, and stays on
+  stage.** `LoadSubService` shares one load per entry: a second caller that arrives while the
+  first's load is out awaits the same task instead of starting another. After the await the
+  preload passes over an instance that is in use or already parked, and an `Open` whose instance
+  a preload parked first takes it out of the pool before showing it. Before, the setup set's boot
+  hit this on every run: `Begin` started the loading screen's load, `Load.All` reached the same
+  entry two milliseconds later, and when the shared asset landed the preload's continuation
+  parked the very screen the `Open` had just put on `Layer_9` - re-parented into `[Screen_Pool]`,
+  which has no Canvas, so the loading screen was never drawn during the preload, and the hide at
+  the end logged `LoadingScreenView is already pooled at manager 0`. A Resource screen in the same
+  race was instantiated twice. `ScreenLoadInFlightTests` drives both orders through the real
+  models with the asset service held open.
+- **The generator no longer writes a part into a module that is gone.** The module index can be a
+  scan behind the disk - a module folder deleted outside the tools is still listed, and
+  `GUIDToAssetPath` still answers with the folder it used to be at - and the generator wrote the
+  part and its asmref there, a ghost module of nothing else, which the setup installer then refused
+  to write over ("already exists"). Found upgrading the template project to `1.14.0` with its
+  `Assets/Modules` deleted by hand: the index listed six modules, the generator wrote six ghosts,
+  and the setup set did not install. A module whose folder is not on disk is skipped now.
+
+## [1.14.0] - 2026-09-14
+
+### Added
+
+- **The Module Scanner reports a channel named by hand.** `log-channels`, a check per module:
+  every `FlowLogger` call whose first argument is a string typed by hand, `FlowModule.Default`, or
+  the constant of the very module the file sits in is listed with its file and line, because a log
+  names no channel - the module is read off the file. Fix cuts the channel where only the message
+  follows and writes the module's constant where a profile or a context follows; a literal that is
+  exactly another module's name becomes that module's constant. A Connector naming the module it
+  wires is left alone, a test module's own channel is its parent's, and `LogError("Word", value)` -
+  a bare word and then something that is no string, which is either a typed channel with a
+  variable message or the channel-less overload with its context - is neither reported nor
+  repaired. The calls are read by `LogCallReader`, which tokenises the source rather than matching
+  it: a comma inside the message, a quote inside an interpolation hole and a call commented out are
+  read as what they are.
+- **A Haptic module, ready-made.** `HapticModule` plays the nine presets iOS names - Selection,
+  Success, Warning, Failure and the Light, Medium, Heavy, Rigid and Soft impacts - through
+  `IHapticService.Play(preset)`, called from the Command that decided the event; it has no signals.
+  `PlayHapticCommand` is also a step a game binds with the preset given at the binding -
+  `.ToSequence<PlayHapticCommand>(HapticPreset.Success)`, the way `DispatchSignalCommand` takes its
+  signal - so a fixed haptic reads from the Context, and `SetHapticsEnabledCommand` binds to a
+  settings toggle's `Signal<bool>`.
+  iOS plays UIKit's feedback generator of the same name through a 60-line `FlowHaptics.mm` that
+  ships inside the module; Android plays an envelope as one `VibrationEffect.createWaveform`
+  through the Vibrator over JNI, no native library, an off/on pattern where there is no amplitude
+  control and nothing where there is no vibrator. The envelopes are Nice Vibrations' nine tables
+  (Lofelt, MIT) with its 25 ms interpolation reproduced in `float`, so a game moving off that asset
+  feels the same - except Medium, which runs 120 ms rather than 80 after a device run showed a
+  OnePlus firmware performing every step of about 100 ms or under as its own 45 ms click; the Help
+  page carries the table and the measurements. `IsEnabled` and `SetEnabled` keep the player's
+  choice in PlayerPrefs, on by default, and turning off stops a vibration in progress. The
+  `VIBRATE` permission is written into the generated `unityLibrary` manifest by the module's own
+  `IPostGenerateGradleAndroidProject`. The Editor never vibrates: a `SilentHapticPlayer` logs
+  `Play - <preset>` on the module's channel, and `HapticTestScene` ships beside the module with
+  nine buttons and the toggle. The iOS file has not been through an Xcode build yet; the first
+  one is its test. Installed from the Help window like the other ready-made modules.
+- **The asset service is the package's one door to Addressables.** `ScreenModule` and `PoolModule`
+  load their addressable prefabs through `IAssetService`, each under an owner of its own -
+  `Screen/<managerId>`, `Pool/<groupKey>` - so a prefab both touch is loaded once and released when
+  the last of them lets go, and a label preloaded under a silent loading set is what the pool's
+  `GetAsync` later finds in memory. Group loads take `AssetLoadOptions`: `Progress`, the mean of
+  the loads in flight reported once per frame and `1f` at the end, and `Background`, which holds
+  `Application.backgroundLoadingPriority` at `Low` for as long as any background load runs.
+  `GetDownloadSizeAsync` and `DownloadDependenciesAsync` serve a remote catalogue; a download is
+  not a claim. Every Addressables call sits behind an internal `IAddressablesGateway`, and the
+  registry, the ownership, the in-flight sharing, the progress and the priority are proved in
+  `FlowIoC.Tests` through a fake of it. `AssetServiceRoot` is therefore required wherever a screen
+  or a pool item is addressable: the first load without it reports the Root by name, and the
+  Create Module panel puts it in the test scene it builds for a screen.
+- **The setup set boots through a Loading module.** `LoadingModule` is a Service that shows, waits
+  and times the game's loading and loads nothing itself: steps are named in `CD_LoadingSets`,
+  grouped into sets with a presentation - `Fullscreen`, `Overlay`, `Silent` - and the Command doing
+  the work reports its step by name, `_loadingService.Report("Pools").Start()/Progress/Detail/
+  Complete/Skip/Fail`. A set completes itself when every step it lists has ended, a step may stand
+  for a child set drawn on a second bar, a running set that hears nothing for `StallWarningSeconds`
+  is reported once naming the steps it waits for, and a failed set reopens when its failed step
+  reports again. `MainContext` ships the boot as one chain - `BeginLoadingCommand`, `BootStarted`
+  for what runs beside the boot, the screen preload and the pool fill in parallel,
+  `AwaitLoadingCommand`, `Started` - with `LoadingScreenModule` and `LoadingOverlayScreenModule`
+  as the two presentations and `LoadingConnectorSubContext` joining them to the service. The Help
+  window documents it as a tab on the Setup Modules page. `MainScreen`, `LoadingScreen` and
+  `LoadingOverlayScreen` ship the test scene the Create Module panel builds for a screen.
+- **A device's rows reach the Flow Console.** `Editor ▾` in the toolbar is Unity's attach-to-player
+  picker, on the connection the Console and the Profiler share. A development player sends every
+  row FlowLogger would have recorded - channel, flow, frame, source - and its own Unity lines with
+  their trace, over FlowIoC's own message (`PlayerLogEnvelope`, JSON, one row per message, sent
+  with `TrySend`); `PlayerLogBridge` receives them and `FlowLogger.AddPlayerLog` files them, the
+  device's flow ids moved out of the editor's range. A session line names the device where its rows
+  begin, each row carries a dim tag with its name, and the detail panel says it. While a FlowIoC
+  player is attached, Unity's own forwarding of the same lines is dropped as an echo. `ConsoleLog`
+  gains `Player`; `FlowLogger.AddExternalLog` now serves the player's Unity lines as well as the
+  editor's. Needs a Development Build, and `ENABLE_LOG` in the build's defines to see the flow.
+- **A shared asset is filed once and read anywhere.** `RootAdapter` has a third map, *Shared
+  Scriptables*: a ScriptableObject other modules read is filed there, on one Root, and any
+  injectable reads it through `ISharedDataModel.GetScriptable<T>()` - the adapter's verb, the
+  adapter's two overloads. `RootsManager` owns the registry for the run and binds it for every
+  context; a Root files its slot when it registers, at `Awake`, so what is shared is readable
+  before the first binding phase, and takes it back when its context goes. The slot says the asset
+  is common, not who produces it - a test Root files a ready-made `RD_` asset when the producer is
+  not in the scene. A second filing of a name is reported at the Root that made it, a warning for
+  the same asset and an error for a different one, and the first filing answers; an asset nobody
+  filed is an error naming it. The adapter's own `GetScriptable` looks in both slots, so a module
+  reads its own asset the same way whichever slot it sits in. `IRoot` gains `SharedScriptables`.
+- **Scene components are shared the same way.** A fourth map on `RootAdapter`, *Shared Monos*,
+  filed into the same registry and read through `ISharedDataModel.GetMonoBehaviour<T>()`, by type
+  name or by the name it was filed under. `IRoot` gains `SharedMonoBehaviours`.
+- **`RootAdapter.GetMonoBehaviour<T>()`**, the type-name overload the scriptable side already had.
+- **A Root Adapter tab on the Data Types Help page**: the four slots, the Model that reads the
+  module's own two and the Command that asks it, the Command that reads another module's through
+  `ISharedDataModel`, and what each report looks like.
+- **Rename Module.** `Tools/FlowIoC/Rename Module` picks a module from the tree, takes a new name,
+  and carries it to everything the name reaches: the folder and the folders of the nested modules
+  that carry its name, the assemblies and every asmdef that references them, the namespaces in every
+  source file, the `.csproj.DotSettings` files, the Flow Console channel with its number and colour
+  kept, the generated `FlowLogType` part and its uses, the Root, Context and signal holders Create
+  Module wrote from the name, a screen's View, Mediator, prefab and Addressables address, the prefabs
+  and scenes in the module's own folders named after it, the card heading, the index, and the
+  `ContextFullName` of every Root in every scene and prefab that lists one of its contexts - a prefab
+  written, a closed scene opened and saved, an open scene left dirty for its owner. The preview lists
+  each change and a reason for each thing kept; a name that collides with a type elsewhere is skipped
+  with a warning, and a folder, assembly or class already taken blocks the press. Renaming back
+  restores everything: every GUID is kept. `CD_FlowConsole.RenameLogType`,
+  `AssemblyDefinitionReferences.Rename` and `ScreenAddressables.Rename` are the pieces it is made of.
+- **One bar over every module tree.** The Parent Module bar of Create Command, Create Function,
+  Create Model and Create View, and the bar Delete Module and Rename Module now put over their
+  lists, are one `ModuleTreeBar`: the label, the pick after it, and at the right edge a search over
+  the tree - a match with everything inside it, and the modules above a match - through one
+  `ModuleTreeSearch`. Delete Module's own Search and Refresh row is gone with it; the list rescans
+  on every reload.
+
+### Changed
+
+- **`CD_FlowConsole.asset` is gone; a module's colour lives in the module.** The asset held four
+  things with four owners in one committed file, so every module added, every field renamed and
+  every switch flipped landed in the same diff. Each part lives with its owner now. The framework's
+  channels - their colours, their `[Tag]`s, which are on by default - are `SystemLogChannelTable`
+  in the package; `Signal`, `Command`, `Unity`, `Compiler` and `Shader` are on, the machinery
+  underneath is off. What one developer switches on and off stays in EditorPrefs, and
+  `IsLoggingEnabled`, `SendLogsToUnityConsole`, `StackTraceCapture`, `MaxLogCount` and
+  `DeepAnalysis` join it as `FlowConsolePreferences`, edited under **Edit ▸ Preferences ▸ FlowIoC ▸
+  Flow Console**; a player reads the defaults. The module channel list is nowhere: the generator
+  writes a part for every module in the index, and `FlowLogChannels` reads every `const string` on
+  `FlowLogType` back by reflection, so nothing keeps a second list. A module's colour is written
+  beside its channel in the generated part - `PlayerModule` and `PlayerModuleColor` - picked from a
+  palette of twelve tones by the module's name, so every module is coloured from day one; a
+  `Colour: #RRGGBB` line directly above the generated block of the module's `MODULE.md` overrides
+  the pick, and a `Profile:` line beside it declares the tag on the front of the module's lines,
+  written into the part as `PlayerModuleProfile`. Right-clicking a module's channel in the Filters
+  panel opens the window that edits both lines. `FlowLogger.Settings` is `FlowLogger.Preferences`
+  and `FlowLogger.Channels`; `FlowLogChannel` replaces `CD_FlowConsole.FlowConsoleLogTypeCVO`;
+  `FlowLogTypeManager`, `FlowLogProfileData`, `LogTypeSettingsGuard`, `LogTypeCheck` and the
+  asset's inspector are gone with the asset, and Delete Module and Rename Module no longer touch a
+  channel list, because the part goes and comes with the folder. **Presets ▸ Project defaults** is
+  **Presets ▸ Defaults**. On the next Editor load the migrator deletes the asset under every name
+  it ever had and the empty `Resources` folder with it; a project upgrading loses nothing but the
+  file - its channel switches carry over, and a channel that was off by default in the asset is on
+  now until it is switched off again in the panel.
+- **`FlowLogType` is `FlowModule`.** The constant names the module, not a log type - the Flow
+  Console reads it as the channel today, and anything that keys something by module reads the same
+  one tomorrow - so `FlowLogType.PlayerModule` is `FlowModule.PlayerModule`, the parts are
+  `Scripts/Generated/FlowModule.<Module>.cs`, and `FlowModule.Default`, the one name that belongs to
+  no module, is declared by the package; `Assets/Plugins/FlowIoC/Generated` and its asmref are gone,
+  and so are the `FlowIoCProjectPaths` entries that named them. The rename is also what makes the
+  upgrade land on its own: the package's `FlowModule.Default` compiles beside a project's old
+  `FlowLogType.Default`, so the migrator gets to run - it rewrites every whole-word `FlowLogType` in
+  the sources under `Assets` and the embedded module roots to `FlowModule`, deletes the old shared
+  file, and the generator writes the new parts and sweeps the old ones on the same locked pass,
+  before assemblies reload. A generated part is skipped by the rewrite, because it is about to go.
+  `FlowLogTypeGenerator` is `FlowModuleGenerator`, `LogTypePartCheck` is `FlowModulePartCheck`
+  (id `module-part`), and the generator no longer runs on its own delayed call: the migration
+  bootstrap runs it on the first update tick, which fires with the Editor unfocused.
+- **A log names no channel.** `FlowLogger.Log("…")`, `LogWarning`, `LogError` and `LogLong` take
+  the message alone: the compiler writes the caller's file into the call through
+  `[CallerFilePath]`, and `CallerModuleResolver` reads the module off the path - the innermost
+  folder named `*Module` above the file, so a Command under `Modules/PlayerModule/…` logs on
+  `PlayerModule`, a screen under `zScreenModules/MainScreenModule/…` on `MainScreenModule`, a test
+  module's files on the module they test, and a file outside any module on `Default`. The same
+  call carries `[CallerLineNumber]`, so a plain log knows its file and line without a stack being
+  walked whatever the capture setting says; an error keeps its stack and uses the two only where the
+  capture found nothing. A line copied from one module into another lands on the right module by
+  itself. The channel-first overloads stay for the one place the file is not the module the line is
+  about - a Connector reporting on the module it wires - and two strings are still channel then
+  message. The shipped modules log this way, as the example; the framework's own lines keep the
+  `SystemLogType` overloads, which stay `internal`. A channel-less `LogError` embeds the file's
+  path as a literal, in a release build too - name the channel at an error site that must not.
+- **Logging compiles only in the Editor and in a Development Build.** Every plain log and warning
+  carries `[Conditional("UNITY_EDITOR")]` and `[Conditional("DEVELOPMENT_BUILD")]` in place of
+  `[Conditional("ENABLE_LOG")]`; the two are OR'd, so the calls stay wherever either symbol is
+  defined and a release build removes them and the messages they would have built. Unity defines
+  both symbols itself, so FlowIoC no longer writes `ENABLE_LOG` into every platform's
+  PlayerSettings and no longer fights a build tool that strips it: `FlowConsoleDefineChecker` and
+  `AutoAddEnableLogDefine` are gone, and the device console needs one setup step rather than two.
+  An `ENABLE_LOG` a project still carries is harmless and can be removed.
+- **A sub-module reads its parent's Shared assembly, never its Signals.** A screen or sub module
+  may reference the parent's `.Shared` and use what it publishes there; what a parent and its
+  child say to each other crosses a Connector like any other traffic. The Module Scanner's
+  reference check no longer allows a parent's `.Signals` on a screen or sub module, and a test
+  module is exempt from the check, because it may reference anything.
+- **A module's internal signal holder is bound with `InjectionBinder.Bind`, never across
+  contexts.** Create Module used to emit `InjectionBinderCrossContext.Bind` for both holders; the
+  generator, the shipped modules and the rule text now bind only the public holder and a
+  Service interface where another module can reach them.
+- **`IAssetService.LoadGroupByLabelAsync` and `LoadAssetsAsync` take an `AssetLoadOptions`.** The
+  old calls compile unchanged; the parameter defaults to no progress and foreground priority.
+- **A line Unity wrote carries an icon instead of a `[Unity]`, `[Compiler]` or `[Shader]` tag.**
+  The Flow Console draws it on the row where the framework channels' tag begins - the Unity logo
+  the Hierarchy draws beside a scene, the C# script icon, the shader icon, each at the 16 pixels
+  the Project window draws them at - and the three profiles write nothing into the message, so a
+  line Unity wrote is recorded, searched, collapsed and copied exactly as Unity wrote it.
+- **The gear opens a bar of its own, and Flow, Pinned and Time moved onto it.** Pressed, the gear
+  no longer grows the strip leftwards over the rows: it opens a second toolbar row across the top
+  of the list, in the toolbar's own grey, and the rows start under it. Time, the line count, Flow
+  and Pinned sit at its left end; Source, Export and the gear keep the right. Closed, the gear
+  floats over the list's corner as before, with the filters switch beside it while its panel is
+  closed. The toolbar keeps the console's actions: Clear, Collapse, Error Pause, the player
+  picker, the search.
+- **A narrow window drops controls whole instead of drawing them half.** The toolbar used to let
+  the search hold its 200 pixels and push the severity counts off the right edge - the one thing a
+  console must never lose - while the bar clipped Flow, Pinned and Time to slivers. Both now do
+  what Unity's console does: a control the window has no room for is left out, in a fixed order.
+  Toolbar: the search first, then `Editor ▾`, then Error Pause; Clear, Collapse and the counts
+  always stay, and so does a search with something typed in it. Bar: Source, then Export, then
+  Pinned, Flow, the line count and Time; the gear and the filters switch always stay.
+- **`Time ▾` replaces the Timing switch, with three formats.** *Classic* leads a row with the clock
+  to the second, `13:05:23`, the way Unity's console does; *Extended*, the default, adds the
+  milliseconds; *Frame* is what Timing was - the frame the row was written in and the gap since
+  the row above. `FlowConsoleTimeFormat` is the choice, saved in EditorPrefs as before.
+- **The filters panel's edge drags.** The panel was 220 pixels wide and nothing else; now its left
+  edge is a splitter, from half that width up to whatever leaves the list 200 pixels, and the width
+  is kept in EditorPrefs with the reader's other switches. Below 200 pixels the counts on the
+  headers are not drawn, so they never land on the words.
+- **Model Viewer is one window, and it reads only.** One tree in the house style: a row per Root
+  in Initialize Order, in its role's colour; under it everything the module bound - Models,
+  Services, Systems, sub services, each badged - and under each the members it chose to show,
+  read only while the row is open and ten times a second. A dictionary opens to its entries, a
+  list to its items, fifty at a time; a `UnityEngine.Object` pings when clicked; a getter that
+  throws is a red row and not a broken window; a value already open on the same path says so
+  instead of opening again. The last row, Shared, is what the RootsManager bound before any Root.
+  `[ShowInModelViewer]` and `[HideInModelViewer]` mean what they did, and base classes now count.
+  Editing a value from the window is gone with the floating `InspectWindow` per object and the
+  thirty drawer classes behind it: a value changed from a window skipped the rules the Model
+  exists to keep.
+
+### Fixed
+
+- **The mouse wheel did not scroll the Flow Console's rows while the detail panel was open.** The
+  list left the wheel to Unity's scroll view, which takes a notch on the event and hands the new
+  position back on the next pass - and with a row selected that hand-back never came: the notch
+  was used and the list stayed put, while the filters panel beside it scrolled. The list now takes
+  the wheel itself, in window space before the scroll view opens, by the step Unity's scroll views
+  move.
+- **The Flow Console toolbar dropped the search and the player picker with room to spare.** The
+  picker was judged by its connection name - `AndroidPlayer(Oneplus_CPH2747@ADB:…)`, wider than
+  the label Unity draws on it - and the search was chained to the picker, so at 709 px both went
+  while 300 px sat empty. The picker is now measured off the repaint that drew it - drawn once to
+  be measured when it has not been - and the search is dropped on its own account, only when what
+  is left after the drawn controls is under its narrowest width.
+- **A device row's source read as the whole trace, in one line.** An IL2CPP player's trace names
+  methods and no file, so no frame was picked, the source field kept the whole trace, and the
+  detail panel drew its two lines in a one-line field with the first under the Player row. The
+  game's frame is named now - `HapticDeviceProbe:OnGUI()`, its class for the navigator to open by
+  name - and text the panel cannot open is drawn wrapped.
+- **A recompile while a player was attached lost its name and let Unity's echo back in.** The
+  player stays connected through a domain reload and never says hello again, while the bridge's
+  intake started empty: every row after the reload carried the connection's name, and the
+  `<i>Player "name"</i>` copy Unity forwards of each line was recorded beside it. What the intake
+  learns from a Hello is now parked in `SessionState` and read back at load, for the players
+  still connected.
+- **A `Debug.Log` from a thread reaches the Flow Console.** The editor bridge and the player's
+  sender hooked `Application.logMessageReceived`, which Unity fires for the main thread only, so
+  a line a `Task` or a thread wrote showed in Unity's console and not in Flow Console - in the
+  editor and from a device alike. Both now listen through `UnityLogRelay` on the threaded event
+  and carry a line written off the main thread back onto it: the editor on its next update, the
+  player through its synchronization context. Whether a line is FlowLogger's own write coming
+  back is read on the thread that wrote it, and the flag that says so is per thread.
+- **The pool's addressable loader kept its handles in statics.** Two pool services shared one
+  cache reset from a `RuntimeInitializeOnLoadMethod`, and a screen loading the same prefab loaded
+  it again. Both loaders are gone; the asset service's registry is the one cache.
+- **Model Viewer never listed a module's own models.** Only the sub contexts were walked, so a
+  Service Root with two models and eleven sub services showed *Local Injected Objects* empty; what
+  it did list was the cross-context binder, the same for every Root.
+- **Model Viewer threw on every repaint for a get-only property**, wrote every value back into
+  the model on every frame, froze a dictionary's values at their first reading, threw when a list
+  shrank, and showed a value object inside a collection as its `ToString()` alone.
+
+- **`BindInstance` before any context exists no longer throws.** The binder's log line named the
+  bound context, and the run's first framework binding - the shared data model, handed in by the
+  `RootsManager` as it initialises - happens before there is one. The line now says `no context`.
+- **`RootAdapter.GetMonoBehaviour` reports a miss instead of throwing.** It indexed the map
+  directly, so a component that was never filed came back as a `KeyNotFoundException` from inside
+  the framework. It now logs the same error a missing asset gets - naming the component and the
+  Root - and answers null.
+- **A warning and an error show in the Flow Console whatever their channel's switch says.** The
+  switches, the group mute and the isolation applied to every row, reports included, while
+  `FlowLogger.LogError` reaches Unity's console whatever the switch says - so the shared data
+  reports, written on the `Context` channel that is off by default, showed in Unity's window and
+  not in Flow Console. A switch now hides a channel's plain logs; a warning and an error pass it,
+  the way a pinned row does, and the severity toggles on the bar are what hide them. The counters
+  on the bar count them too. `SendLogsToUnityConsole` follows the same rule, mirroring a warning
+  whatever the switch says. `FlowConsoleChannelRule` is the decision, asked by both.
+
+## [1.13.0] - 2026-09-10
+
+### Added
+
+- **A World Pointer module**, ready-made under `Modules~/WorldPointerModule`. A Service that moves
+  a UI element to a 3D object's screen position every frame - a health bar over a unit, a name over
+  a player, a "wave incoming" notice over a gate - and decides what happens when the object leaves
+  the frame: `Hide`, `ClampToEdge` with an arrow aimed at the target, or `Ignore`. The whole
+  surface is `IWorldPointerService`: `Register` hands back a disposable handle, `UnregisterAll`
+  clears, `TryProject` answers a one-shot point. The frame is the camera's pixel rect inset by
+  `ScreenMargins`, so a HUD bar is a margin rather than a special case; behind the camera the
+  projection is mirrored back before anything reads it; a destroyed target drops itself. A
+  `WorldPointerIndicator` component covers the ordinary prefab, and the module's test scene shows
+  the three modes side by side.
+
+### Changed
+
+- **`UpdateProvider` runs after the cameras.** Its `LateUpdate` and `CinemachineBrain`'s both sat
+  at execution order 0, so which moved first was undefined, and a module placing UI over the world
+  through `IUpdateProvider.AddLateUpdate` was one frame behind the camera whenever the brain went
+  second. The provider now carries `[DefaultExecutionOrder(UpdateProvider.EXECUTION_ORDER)]`,
+  `1000`, so a LateUpdate callback sees the camera and the animation where this frame left them. A
+  module that has to run before the camera has `AddUpdate` for that.
+
+## [1.12.0] - 2026-09-10
+
+### Added
+
+- **An A/B Test module**, ready-made under `Modules~/AbTestFlowModule` with a Help page under
+  *Modules* and an Install button. A test is an id, a version, a rollout percentage and its groups;
+  the first group is the control and carries nothing, every other group carries pairs of a config
+  asset another module owns and the variant to write over it, applied as a set. The service starts
+  the module from its `PostConstruct`, during the binding pass, by dispatching
+  `Incoming.ResolveAbTests`; `ReadStoredAbTestsCommand` files the decisions that still stand in
+  PlayerPrefs, `ProcessAbTestCommand` decides the rest with two dice and writes them, and
+  `ApplyOverridesCommand` copies each variant over its original with `JsonUtility` - so a Root at
+  `-90` has changed every config asset before any game module's own `PostConstruct` reads it.
+  Nothing is announced: the decision is made before any other module is listening, so where the
+  player stands is published in `RD_AbTestStatus` in the module's Shared assembly, and
+  `IAbTestFlowService` answers `GetGroup` and `IsInGroup` from code. Raising a test's version is
+  the only way to decide again, and it decides for everybody. In the Editor the originals are
+  captured before the first override and put back on quit. The module has no sub services - nobody
+  outside calls its work - and no Outgoing. It ships with a test module and the scene it runs in:
+  the group, the probe config after the override, and Clear, Raise version and Re-roll buttons.
+- **Every module list is the same tree, and a row's badge is the role its Root plays.** Module
+  Scanner, the parent picker of the five generators, Delete Module, Add Shared or Signals and the
+  folder preview draw a module under the module it lives in - sub modules, then screens, then
+  tests - hung from its parent's row by a guide line, with the modules folder as the row the whole
+  tree hangs from. The badge says what the module's Root roots - SYSTEM, SERVICE, CONNECTOR, CORE -
+  in the Root's inspector colour, and SCREEN or TEST for the two kinds whose kind is their role.
+  `ModuleTree` is generic over `IModuleTreeItem`, `FlowTreePainter` carries the guide geometry for
+  every window, and `ModulePicker` replaces the static `ModuleHierarchyDrawer`.
+- **The Help window draws FlowIoC's own icons.** Unity's built-in icons are 16 pixel point-filtered
+  bitmaps or 256 pixel mip chains, and either drawn into a 22 pixel box is jagged or smeared. The
+  sidebar and the cards now draw a set of the package's own: 32 drawings on one 16 grid, shipped at
+  16, 24, 32 and 48 pixels and tinted with the label beside them. `FlowIcon` names them,
+  `FlowIconImporter` keeps them imported as plain GUI textures, `FlowIconsTests` keeps every value
+  shipping every size, and the SVG sources sit in `Editor/Icons/Source~`.
+- **Flow Console's row settings float over the list.** The settings and their gear sit over the
+  list's top-right corner instead of taking a bar of their own; the Filters switch floats beside
+  the gear while its panel is closed and heads the panel when it is open; and the strip is painted
+  in the filters panel's bar grey with the panel's edge line, because the toolbar grey was four
+  levels off the rows and got lost on them.
+- **The detail panel wraps its text.** The box and its margins are gone, so is the *Details:*
+  heading, and the message, the source link and the trace lines wrap to the panel's width rather
+  than running off under a horizontal scrollbar.
+
+### Changed
+
+- **The channels you switch off in the Flow Console are yours, not the project's.** Clicking a
+  channel, an All row or a preset used to write `IsVisible` into `CD_FlowConsole.asset`, which is
+  committed - so one developer's filter turned up in everybody's diff and switched their channels
+  to match when they pulled. The window now writes the developer's own switches to EditorPrefs,
+  keyed by the project, through `FlowConsoleChannelVisibility`; the asset keeps only the project
+  default, renamed `IsVisibleByDefault` (the old name still reads), authored in its inspector as
+  *Default on* / *Default off*. Only the switches thrown are stored, so a channel nobody touched -
+  or one a module added later - follows the default, and **Presets > Project defaults** drops them.
+  `CD_FlowConsole.IsLogTypeVisible` answers the developer's switch in the Editor and the default in
+  a build, so `SendLogsToUnityConsole` follows the window as before. An empty list now says why it
+  is empty: *every channel is switched off*, or the count of rows the filters hold back.
+- **`RootAdapter` hands out one asset by name, and reports a miss itself.** `GetScriptable<T>` of
+  an asset that is not filed used to throw `KeyNotFoundException` from inside the framework; it now
+  logs an error naming the asset and the Root - double-click it to reach the Root - and answers
+  null, so a module only has to notice the null. `Scriptables`, the whole map, is gone from the
+  public surface: a module reads its own assets by name, and the one adapter that is a registry and
+  has to walk every entry derives from `RootAdapter` and reads the now-protected `_scriptableMap` -
+  the save module's `LocalSaveRootAdapter` is that adapter.
+- **The generators share Create Module's shape, and Create Command shows the binding instead of
+  writing it.** The name field of Create View, Model, Command and Function stands beside a preview
+  panel the way Create Module's does, and every list they hold sits under a green bar with a square
+  plus at its edge. Create Command's *Bind* toggle wrote a binding that no longer compiled, from two
+  names typed as text that nothing checked, and where a command sits in a sequence is a decision
+  about the flow; the window now shows the binding beside the file, spelled against the holder
+  field the picked module's Context declares, with a Copy button.
+- **A script generated into a test module is wrapped in `UNITY_EDITOR`.** Create Command, Create
+  Function and Create Model never wrapped what they wrote, and Create View wrapped only behind an
+  *IsTest* toggle that also gave the pair a `Test` suffix and a `.Tests.` namespace segment left
+  over from the layout before `zTestModules`. The picked module's kind decides now, the writers put
+  the directive above the usings, the toggle is gone, and the generators write into the picked
+  module's own folder rather than a sub folder chosen by kind.
+- **A row nobody can act on is shaded rather than blacked out**, and the folder preview shades what
+  will not be written. The modules folder carries the PROJECT badge Module Scanner gives its own
+  top row. Create Function puts the return or callback type beside the kind, and the note that an
+  async function takes no parameters is a warning where the parameters would have been.
+- **The shipped modules are published as they are in the workspace.** Every module under
+  `Modules~` and `SetupModules~` carries its `Scripts/Generated` part - the module's `FlowLogType`
+  channel - and none carries a `Functions` folder any more, because a Function lives in
+  `Controllers/` beside the Commands it is called from.
+- **The documentation says where things are.** The README leads with the agent rules as well as
+  the tooling, and the Editor README names the Folder Painter config asset as it is on disk. Two
+  shapes that were on a to-do list carry their own reason in the code: the signal payload array is
+  allocated per dispatch and will not be pooled (`SignalT1.Dispatch` says why), and
+  `Context.InjectAllInstances` walks every cross-context object once per context to resolve forward
+  references between modules binding in any order.
+
+### Fixed
+
+- **Flow headers came out black and stayed black.** A style copied from an editor style that was
+  not ready is a copy of nothing - every setter after the copy is lost and it reads back with no
+  name, no size and black text - and cached behind a null check it was never built again. A domain
+  reload then serialised the window's private fields and handed the placeholder straight back, so
+  closing and reopening the window was the only way out. `FlowConsoleStyleGuard` now takes the
+  style's name as the proof it was built, and every cached style the console derives from
+  `EditorStyles` - the flow header, the channel rows, the group counts, the toolbar label, the
+  empty-list hint - is built again on the next repaint when the name is not there.
+- **A generator window opens empty.** The inputs of Create View, Create Model, Create Command and
+  Create Function were static, so a closed window handed what was typed into it to the next one
+  opened. They are instance state now: a new window starts blank, and one that survives a domain
+  reload keeps what it had through serialization.
+- **The default test-module folder rule matches `TestModules`, not `Test`.** The word alone matched
+  too widely - an `AbTestFlowModule` is not a test module - so the Folder Painter rule names the
+  folder.
+
+## [1.11.1] - 2026-09-09
+
+### Added
+
+- **A shader that will not compile reaches Flow Console.** A window promising to be *the* console
+  rather than a second one showed nothing at all for a broken shader. There is no callback for it,
+  so `ShaderLogBridge` reads the messages off the asset with `ShaderUtil` after an import - a third
+  bridge beside the two `UnityLogBridge` holds open, and one that needs no parking in `SessionState`
+  because importing a shader does not reload the domain. `Shader` is a channel of its own rather
+  than part of `Compiler`: a C# error stops the domain reloading and nothing runs at all, while a
+  broken shader renders one material magenta and everything else carries on, so somebody filtering
+  to `Compiler` to ask whether they can press play would get the wrong answer.
+- **The same shader error is no longer shown twice.** It arrives once off the asset at import,
+  carrying the file and the line, and once as text when the variant actually compiles, carrying
+  neither - so the second row was one nobody could double-click. It is dropped, but only when the
+  first copy was really recorded: a variant that fails at play time was never imported, and Unity's
+  text is then the only copy there is.
+- **Delete Module draws the project's module tree**, a module under the module it lives in, each row
+  with its own Delete, and the confirmation naming what goes with the module being deleted.
+- **The Folder Structure Preview says which `Signals` folder is which.** A module has one under
+  `Scripts` and another under `Scripts/Runtime`, and read as names they are indistinguishable. They
+  share the name on purpose - the namespace segment is the folder name, so both holders land in
+  `Modules.Player.Signals` and one `using` reaches both. The public row now carries *the module's
+  public surface* and the Runtime row *what the module says to itself*, dimmed, beside the name. No
+  other folder gets a hint: a preview where every line carries prose is a preview nobody reads.
+
+### Changed
+
+- **`Scripts/Signals` is a tick in Create Module rather than a mandatory folder**, ticked by default
+  and beside Create Shared. The public holder was mandatory on every layout, so a module that owes
+  no public surface still got the folder and every tool afterwards had to explain it away as empty -
+  and a Service that answers the caller it was given, or a Connector that wires other modules and
+  owns no signals at all, is finished without one. A screen module still cannot decline it: it
+  generates no Context of its own, so the holder is the only way in. A test module is offered
+  neither. Where the folder is absent nothing asks about it and nothing puts it back, and a config
+  asset written while it was mandatory is healed to optional on load.
+- **The tick is named Create Public Signals.** *Public* is the word doing the work: a module has two
+  holders and only this one crosses a boundary.
+- **`MainModule`, `ConnectorModule` and `ScreenModule` have no Delete button**, each row saying which
+  part of the project is built on it. `GameplayModule` ships beside them and stays deletable - it is
+  the worked example a game replaces.
+
+### Removed
+
+- **The `Model` channel.** Nothing could ever write to it: every `FlowLogger` overload taking a
+  `SystemLogType` is `internal`, so a game reaches only the string-channel ones - which is the right
+  shape, since a Model is game code and logs on its module's channel. It was an empty column in the
+  Filters panel. `35` is retired and never reused, the way the enum rule says.
+
+### Fixed
+
+- **A retired channel's row leaves the settings asset.** `EnsureSystemLogTypesExist` and
+  `EnsureSystemProfilesExist` only ever added, so an asset written before a channel was retired kept
+  a mandatory row for it - and a mandatory row cannot be deleted from the Filters panel, leaving a
+  column nothing could fill and nobody could remove. Both healers now drop a mandatory entry whose
+  channel the enum no longer declares, and both clear their caches when they do. `Default` is named
+  explicitly in the profile prune: it is mandatory and is not a channel, so the enum cannot vouch
+  for it.
+- **Delete Module reaches a module nested inside another.** It worked out which modules it was
+  deleting two different ways: `RemoveReferencesToModule` and `RemoveProjectFiles` read every asmdef
+  under the folder, while `RemoveScreenAddressables` and `RemoveLogType` worked from the deleted
+  module's name alone - so a main module holding a screen module left the screen's Addressables
+  group behind, empty, and its `FlowLogType` channel in the settings. `ModuleNames` now answers the
+  module and every module nested inside it, read from the folder rather than the module index,
+  because the deleter runs before the index is rebuilt.
+- **Add Shared gives the new Shared assembly to the module's Signals assembly.** It reached the
+  module's asmdef and its direct children but not the Signals assembly, so a module that gained
+  Shared after Signals failed with CS0012 on the first public signal generic over a published type.
+  `SignalsSharedReferenceCheck` reports and repairs the modules the gap already reached.
+- **`WriteSignalHolders` no longer falls back to `Scripts/Runtime/Signals`** when the public folder
+  is absent. The fallback was invisible while the folder was mandatory and would now quietly write a
+  public holder into the module's own assembly, where nothing outside it can reach it.
+
+## [1.11.0] - 2026-09-09
+
+### Added
+
+- **A Help page per generator panel.** Six of the seven windows under `Tools > FlowIoC` shared one
+  seventy-line page with a sub-heading and a few lines each, while every other panel in the package
+  had a page of its own. Each now has one, in a *Code Generators* category inside Editor Tools, and
+  each window's Help button opens its own page rather than *Creating a Module*. Delete Module is
+  what forced it: its three-answer dialog about the Roots that list the module's sub-contexts, what
+  each answer does to a prefab, a closed scene and an open one, and the fact that cancelling leaves
+  the module whole, does not fit under a sub-heading. *Creating a Module* keeps why a module is
+  generated at all and hands the panel itself to *Create Module*.
+- **A *Ready-made* tab on the Controllers page.** The package ships commands a game binds without
+  writing them and nothing said so. `DispatchSignalCommand` and its four arities are there, and
+  `RetryCommand`, which needed the explaining: `base.Execute` retains the step and counts the
+  attempts but attempts nothing, so a subclass calls the first `Try` itself, and the last failure
+  calls `Stop` rather than `Release` - the step after a `RetryCommand` is what happens on success
+  only.
+- **A Code Style page**, under Wiki. Naming, prefixes, suffixes and spacing are declared in the
+  solution's DotSettings and written by Module Scanner, so the page carries the four rules a
+  settings file cannot express: alternatives share a verb prefix, `static` is kept to what the
+  engine forces, every enum value carries its number, and a log message spells names out rather
+  than using `nameof`.
+- **`HelpPainter.PageLink`**, a button that opens another page of the Help window. It draws for a
+  title the catalogue carries and draws nothing for one it does not, so a page may link to
+  something only a private package installs and a project without that package sees the paragraph
+  without the button.
+- **A `flowioc-controllers` skill**, so the Command and Function rules have somewhere to live. It
+  carries which of the two a piece of work is, binding a sequence, and resolving a `Retain`.
+
+### Changed
+
+- **`AgentRules.md` is 477 lines rather than 768.** The block is read in full in every session, and
+  it had reached 72 bullets in one list; a rule competing with 71 siblings is followed less
+  reliably than one among fifteen. What stays is what an agent needs before it knows which task it
+  is on, and a *Where the detail lives* table points at the seven skills that carry the rest.
+- **Three architecture rules were written down.** An error carries no `[Conditional]` and is logged
+  exactly once, so it reaches the console whether or not `ENABLE_LOG` is defined. A View sits on a
+  child of its Root and never on the Root's own GameObject, because a view finds its Context by
+  bubbling up from `view.transform.parent`. And a Connector sub-context is named for the one
+  counterpart module rather than for the pair, splitting its wiring into `IncomingSignals` and
+  `OutgoingSignals`.
+- **The code generator reference says what the windows actually do.** Create Command writes the
+  binding into the Context when `Bind` is ticked. Create View writes no prefab - the View class
+  carries `RequireComponent(typeof(ViewInjector))` instead, and only Create Module's screen path
+  builds one. Create Model writes its own `InjectionBinder.Bind` line rather than leaving it to the
+  reader, and its `Create Dummy Model` toggle - which nothing described anywhere - writes a dummy
+  beside the pair and binds all three through the overload that hands a test context the dummy.
+
+### Fixed
+
+- **A list's add and remove buttons are green and red rather than nearly black.**
+  `GUI.backgroundColor` multiplies the skin's button texture, so every component under 1 darkens
+  the button as it colours it: `Color.red` is (1, 0, 0) and came back as `#7F3E3E` filled and
+  `#580000` at the edge, and `Color.green` measured `#005800`. `FlowPalette.ActionAdd` and
+  `ActionRemove` carry the dominant channel past 1 instead, the way `ModulePanelTheme.Lifted`
+  already does for a panel bar. It covers the minus beside a row in Create Command, Create
+  Function, Create Model, Create View, Create Module's action list and the Model Viewer's list
+  drawer, Delete Module's Delete, and every Add button beside them.
+
+## [1.10.0] - 2026-09-08
+
+### Added
+
+- **Module Scanner reports a module whose log type part is missing.** `LogTypeCheck` answers
+  whether the channel is registered in `CD_FlowConsole`; nothing was watching the other half, the
+  generated part in the module and the asmref beside it. Either can go without the settings
+  changing at all - deleted by hand, lost in a merge, never written because the generator was
+  interrupted - and the first anyone hears of it is the module failing to compile against a
+  constant no longer declared anywhere. The missing asmref is reported on its own, because without
+  it the part still compiles: into the module's own assembly, where it is a second `FlowLogType`
+  sharing a name with the real one and nothing else. Both repair by running the generator, so there
+  is one writer and one shape.
+
+### Changed
+
+- **A log channel is a name, not a number, and a module declares its own.** `FlowLogType` used to be
+  one generated file listing every channel in the project as a `const int`, and the numbers were
+  handed out in order and reassigned whenever the list was sorted - so a module whose name sorted
+  early moved every channel after it onto a different number, taking every saved filter and every row
+  already recorded with it. There was also nobody to hand out the next number: two people adding a
+  module on two branches were each handed the same one, and they conflicted over the same lines of
+  the same file. Both problems are gone. A channel is identified by its name, and each module's
+  channel is a `const string` in a part of its own at
+  `<Module>/Scripts/Generated/FlowLogType.<Module>.cs`, with a `FlowIoC.Generated.asmref` beside it -
+  parts of a partial class must share an assembly, and each module has one of its own, so the asmref
+  is what makes the part possible. The shared file keeps only what belongs to no module: `Default`,
+  and any channel added by hand.
+
+  What this changes for a caller: `FlowLogger.Log`, `LogWarning`, `LogError` and `LogLong` take a
+  `string` channel where they took an `int`. Every call written as `FlowLogType.PlayerModule` goes on
+  compiling. `ConsoleLog.LogTypeValue` became `ConsoleLog.Channel`, saved filter presets store names,
+  and `GetModuleLogType<T>()` answers with a name or null rather than `-1`.
+
+- **A signal says which holder and which half it came from.** A signal is constructed knowing only
+  its own field name, which the compiler hands it through `[CallerMemberName]`, so the console said
+  `'Launch' dispatched` and left the reader to guess whose Launch that was, out of which holder.
+  The name is now qualified - `CameraSignals.Incoming.SwitchCamera`,
+  `CounterServiceInternalSignals.Tick` - and it costs nothing to dispatch: the walk that marks each
+  signal as the framework's or the game's already has the owner chain in hand, so the name is
+  composed there, once, when the holder is bound. A signal that is not a field of a stamped holder
+  keeps the short name it was constructed with. The `CommandBinder` lines and the "bound twice"
+  error read the same name and say more for it.
+- **The Filters panel lists the project's modules first**, then the framework, then Unity - the
+  order of how much a reader cares. The group ids behind the panel are unchanged, because they key
+  the mute snapshot and the saved panel state.
+
+### Fixed
+
+- **A context renamed inside its file reaches the Roots that list it.** A sub-context entry holds two
+  things about one context: the script it is declared in, and its full name, which is the only half
+  runtime reads. Renaming the class carried the script reference along with the file and left the
+  name behind - so the entry still read as linked, nothing was drawn under it, and the Root quietly
+  built nothing for a name that resolved to nothing. `SubContextNameSync` could already say whether
+  an entry had drifted and was called from nothing but its own tests; the Root inspector now runs
+  that pass before it draws the list. An entry that has not moved is not written, so a repaint
+  neither records an Undo step nor dirties the Root.
+
+- **A deleted module takes its sub-modules' assemblies with it.** Delete Module worked out which
+  assemblies belonged to a module from the module's name - the module's own, plus `.Shared` and
+  `.Signals` - and a module that holds sub-modules declares more than three. Deleting a screen module
+  left `Modules.<Name>.Screen.Test` named in every asmdef that referenced it, and its `.csproj` and
+  `.csproj.DotSettings` at the solution root pointing at an assembly that had gone; a main module
+  holding several screen modules left all of theirs. `ModuleAssemblies` reads the names out of the
+  asmdefs inside the folder instead, and both the reference unwiring and the project-file removal ask
+  it. The three the name implies are kept alongside what was found, so a module whose folder has
+  already been half removed still has its own assemblies unwired.
+
+- **An entry's warning wraps instead of running off the Inspector's edge.** What those lines name is
+  a namespaced type, and at a docked Inspector's width `Nothing compiles to <full name>. Its module
+  is gone or renamed.` ended mid-name - the half that says what happened was the half that went. The
+  line wraps now, and the unresolved one, having no button beside it, is drawn on its own and takes
+  the entry's whole width.
+
+- **Create Module keeps its button and its action list in view.** The form now scrolls, and the
+  module card and the Create Module button sit below it rather than inside it, so a screen module's
+  settings and its action list can no longer push the button past the window's floor. The parent and
+  folder-preview panels are drawn shorter on a screen module, and the action list takes whatever
+  height is left above the card, so widening the window lengthens the list instead of leaving it at a
+  fixed 60 pixels.
+
+## [1.9.1] - 2026-09-08
+
+### Changed
+
+- **A command group drives its steps from a loop rather than by recursion.** `CheckExecuteNextStep`,
+  `ExecuteCommandStep` and `HandleStepCompletion` formed a closed cycle, so a step did not return
+  before the next one started and a whole sequence's frames stayed on the stack until it had
+  finished. The group could therefore end and the resolver go back to the pool while frames of that
+  same run were still waiting to resume: a command that dispatched a signal took the instance out
+  again, `Initialize` reset the run, and those frames woke up on somebody else's steps. A single
+  `Pump()` now starts every step from one frame - a completion that lands while it is running says
+  so and returns - and the group is ended by the driver's exit, when nothing of the run is on the
+  stack. The two run-id guards that caught this after the fact are gone; the one in the sub-group
+  callback stays, because a retained sub group can still report after its parent was pooled and
+  re-initialised, and `RunToken` stays because that one belongs to the command pool. No public type
+  or signature changed.
+
+- **A sub group is told who to report to instead of being subscribed to.** Starting a group step
+  built a closure and hung it on the sub resolver's `GroupExecutionFinished`, which cost two
+  allocations every time - the delegate, and the display class that capturing the parent's run id
+  forced - and the shipped `CounterModule` runs one such step every second for as long as its
+  service is alive, because its tick re-enters itself through `ToGroupAsParallel`. The sub resolver
+  is pooled, so it carries the parent and that run id in two fields of its own now and reports
+  directly. The binder's own path was already allocation free with a cached delegate; this was the
+  one place that had not been given the same treatment. The run-id check did not go anywhere - it is
+  passed rather than captured - and a dispatch's own group is still finished through the listener
+  the binder subscribes, the two being exclusive. No public type or signature changed.
+
+- **A log line names the class and the method it came from.** `1.9.0` moved the framework's own
+  messages to prose that read subject-first, and what went with it was the one thing the old lines
+  were good at: saying where in the code they were written. The shape is now three parts - the
+  channel's tag from its profile, then `[Class.Method]`, then one bracket per variable:
+  `[Screen] [ScreenService.Hide.ScreensAtManager][manager(2)][force(True)]`. A sub service a caller
+  reaches through its parent is written as that call path, because the path is what the reader
+  typed; one that is private inside its owner is written as its class name. A message with no
+  variables ends at the bracket, with no verb after it. Forty-eight lines across Asset, Command,
+  Pool, Screen and Injection took the new shape.
+
+  The engine's own lines are the exception and stay subject-first, because the bracket would name a
+  framework class the reader has no use for: a signal dispatching, a command executing, the function
+  provider, and the Context, Root and RootsManager lines. Warnings and errors keep the bracketed
+  name of the guard that is speaking, which they already had.
+
+### Fixed
+
+- **The console colours a new project is given are the ones the console was tuned to.** A channel's
+  colour is read from `CD_FlowConsole`, and that asset belongs to the project rather than to the
+  package - so the colours picked while `1.9.0` was being finished lived only in the workspace they
+  were picked in, and a project installing the package got the older palette. `Signal` and `Asset`
+  had no entry at all and came out white. The defaults in code now carry what was chosen, and a
+  channel's profile takes its tag colour from the channel, so the tag follows.
+- **`Models`, `Services` and `Editor` are typed as themselves in a main module's layout.** The
+  folder list is declared twice - as the field initializer and again in
+  `InitializeDefaultFolderStructure`, which is the one a new project's asset is written from - and
+  the two had drifted: the initializer typed those three as a plain `Folder`. Nothing in a project
+  read it, because the method is what runs, but anything that creates a layout without initializing
+  it saw folders that `FindFullFolderPathByID` cannot find, since that lookup matches on
+  `FolderType` and nothing else. The screen layout's `Constants` had drifted the other way, mandatory
+  in the method and optional in the initializer, and is optional in all three layouts now. The test
+  that compares the two declarations missed both: it keyed folders by bare name, so the `Constants`
+  under `Shared` overwrote the one under `Runtime`, and it never compared the type at all. It keys
+  by path and compares the type now.
+- **A retained command is remembered against its step rather than against an index into a list.**
+  `StopCommand` read the step back out of `_steps` by index and returned when that index was out of
+  range - having already handed the command to the pool, and without reporting - which left the
+  group waiting on a step nobody would ever finish. The dictionary now carries the step itself, so
+  the lookup that could be answered wrongly is gone rather than guarded.
+
+## [1.9.0] - 2026-09-08
+
+### Added
+
+- **A row in Flow Console opens the code it is about.** A line that names a type carries the type
+  and captures no stack: a command executing opens the Command, a function running opens the
+  Function, a screen opening opens its View. The stack at that moment answers a different question -
+  a command's execute line is written while the Context that dispatched the signal is still below
+  it - and the type is the better answer for nothing. A signal the game dispatched from inside a
+  sequence points at the `Bind` line that declared the sequence, taken from the compiler at the call
+  and so free; one dispatched from a Mediator or a `Launch` still looks at the stack.
+- **A Connector says so.** A crossing had no line of its own - the target simply dispatched, and
+  nothing named the Connector or where to read the wiring. It now writes `[Connector] 'A' to 'B'`
+  and both that row and the dispatch it causes open the `Connect` call, whose file and line the
+  compiler wrote into it.
+- **The framework's own signals moved off the Signal channel**, onto `SignalOperation`, the way
+  `Command` and `CommandOperation` are already split - so `Signal` is the game's traffic and every
+  row on it is one the reader wrote and can open. Which a signal is comes from its holder's
+  assembly, read once when the holder is bound. Commands bound by the framework's own Contexts
+  moved to `CommandOperation` for the same reason, and the plumbing channels work out no source at
+  all: there is nowhere to take a reader that would tell them anything.
+- **A profile per channel, written from code**, so a project that has just installed the package has
+  them. The profile is where a channel's tag lives - `[Signal]`, `[Command]` - and it takes the
+  channel's own colour, so recolouring a channel recolours its tag. They are mandatory and not
+  editable: a tag somebody renamed no longer matches what the documentation says the console prints.
+- **The console's own layout.** The channels moved out of a strip across the top into a panel down
+  the right behind a `Filters` switch, grouped into Unity's output, the framework's channels and the
+  project's modules - each foldable, each saying how many of it are showing, each with a `Mute` that
+  silences the group without switching anything off. A row is the switch rather than carrying one,
+  and alt+clicking one isolates that channel until you leave isolation. `Settings` puts the two
+  dials a reader turns while following a flow - how many lines a row shows, and how much a log works
+  out about where it came from - along the bar beside `Export`. The severity counters became icons
+  in the toolbar the way Unity draws them, and `Focus Log` appears only while the selected row is
+  off screen.
+
+- **Flow Console is a console you can keep open instead of Unity's.** Unity's own output arrives on
+  two new channels, `Unity` and `Compiler`, read through `Application.logMessageReceived` and
+  `CompilationPipeline` and nothing else, so a Unity upgrade cannot quietly break them. Both are
+  recorded whether or not `ENABLE_LOG` is defined - turning the define off is a statement about your
+  logging, and a console that then showed no compile errors would be useless at the moment it is
+  most needed. With them come the switches Unity's console has: a `Clear` split button carrying
+  Clear on Play, Clear on Recompile and Clear on Build; `Collapse`, which folds equal rows onto one
+  line with a count and keeps the place of the first occurrence; `Error Pause`; severity icons; rows
+  of one, two or three lines; a list that follows new logs down while it is resting at the bottom
+  and leaves you alone once you scroll up; and arrows, PageUp/PageDown, Home/End, Enter and Ctrl+C
+  on the list.
+- **The log list survives a recompile.** `FlowLogger.Logs` is a static, so a domain reload used to
+  empty the console at the moment a compile error most wants reading, whatever Clear on Recompile
+  said. The newest five thousand rows are now written to `SessionState` before the reload and read
+  back after it.
+- **The search box parses what was typed.** Terms are ANDed, a `-term` excludes, and a term wrapped
+  in slashes is a regular expression; a half-typed expression says so rather than quietly emptying
+  the list. What matched is painted behind the text, because a narrowed list says which rows
+  survived but not why, and beside the severity counters is how many rows are shown against how many
+  the console holds.
+- **Alt+clicking a channel narrows the console to it**, and alt+clicking the one that is already
+  alone brings the rest back. `Presets` keeps a set of channels under a name - two ship with the
+  console, the rest are saved from what is shown - in EditorPrefs, because `CD_FlowConsole` is
+  committed and one developer's filter has no business in everybody's diff.
+- **`Flow` groups the rows into the flows they belong to.** Every log written while a signal runs
+  its commands now carries the id of that flow, and one started from inside another carries its
+  parent's, so each flow opens with a line that folds it away and a nested flow sits indented under
+  it. Read straight down, a busy frame is four operations interleaved. The ids cost a shipping build
+  nothing: the calls that keep them carry `[Conditional("ENABLE_LOG")]`.
+- **Pinning, timing and session lines.** Pinning a row - `P`, or its right-click menu - is you
+  saying this one is not noise, so it outranks the channel switches, the severity toggles, the trim
+  at `MaxLogCount` and the automatic clears; only the `Clear` button and a search go past it.
+  `Timing` swaps a row's clock for the frame it was written in and the gap since the row above. A
+  line is drawn across the list wherever a play session begins or ends.
+- **`Export`** saves or copies the rows that are showing as plain text, filters and search included,
+  because the rows you narrowed down to are the ones worth sending.
+- **Create Function**, beside Create Command in `Tools/FlowIoC`. It writes one file into the
+  module's `Controllers` folder and touches no Context, because a function is called from inside a
+  Command rather than dispatched. What the window is for is the base type: the kind, the parameters
+  and the return type decide which of the shipped arities the class derives from, and the three have
+  to agree - `FunctionReturn<double, string>` with a `public override double Execute(string)` and
+  the right `using` - which is where a hand-written function goes wrong. An async function's type
+  argument is the value its callback carries rather than a parameter, so the parameter rows are not
+  offered for one at all.
+
+  It also shows **how the function is called**, in the Help window's own code block with the same
+  colouring and the same Copy button. That is the half a generator cannot write: a function says
+  nothing about where it is called from, which is the whole difference between one and a Command.
+  The snippet follows the fields as they are filled in - the kind picks the terminator, the
+  parameters become the arguments under the names that were typed, and a callback type turns the
+  call into the `CallAsync<T, TValue>` form with a callback to hand in.
+
+### Changed
+
+- **The framework's own log lines have one shape: the subject, then what happened.** `'OpenMainScreen'
+  dispatched (0 parameters)`, `OpenMainScreenCommand executed as Sequence`, `MainScreenView opened`,
+  `MainContext | setup`. The channel's name is not repeated in the text - the channel is the column
+  the row is in, and the profile puts the tag on the front - and the subject leads because that is
+  what a reader scans the column for. The bracketed names stay in warnings and errors, where they
+  are not a channel tag but the guard that noticed speaking.
+- **`ICommandBinder.Bind` takes the caller's file and line**, as optional arguments the compiler
+  fills in. Source-compatible with every call already written; a binder implemented outside the
+  package needs the two parameters added to its signature.
+- **A Function lives in `Controllers/` with the Commands, and the `Functions/` folder is gone.** A
+  Command and a Function are the same kind of thing - neither holds state, and both do the module's
+  work - so a module has one folder for its controllers rather than two. Create Module no longer
+  writes `Functions/`, and a config asset written while it did has the entry healed out the next
+  time the Editor opens; the folder itself is left where it is, along with anything in it, because a
+  heal that runs on every open is no place to move a developer's code.
+- **A function derives from one of the shipped arities, and the compiler is what says so.**
+  `FunctionBody`'s constructor is internal and its `TryInvokeExecute` is abstract, so a class can no
+  longer be written straight on it. That class used to compile and run: the provider found its
+  `Execute` by name and called it through `MethodInfo.Invoke`, at a boxed call per run, and nothing
+  reported that the function had been given the wrong base. The fallback and its `MethodInfo` cache
+  are gone with it, and every function is now called through its own typed entry. An `AsyncFunction`
+  reached with `Call` instead of `CallAsync` is reported by name rather than doing nothing.
+
+### Fixed
+
+- **A compile error was two rows.** Unity echoes every compiler message through
+  `Application.logMessageReceived` as well, so the console held the `Compiler` row that knows the
+  file and line and, beside it, Unity's copy that knows neither. The bridge recognises the echo by
+  its shape - `(line,column): error CSxxxx:` - and drops it, so the row that stays is the one that
+  opens the code.
+- **A row whose whole stack is the framework is clickable again.** The frame filter skips the
+  package's own frames to find the game's, and a log the framework writes about itself has none - so
+  the row got no location at all. Failing to find a game frame now falls back to the first frame that
+  has a file and a line.
+- **An injectable a generator could not place is written anyway rather than dropped.** Create
+  Command, Create Function and Create Model looked each injected type up by name and, finding
+  nothing, left the member out of the file - silently. A name with a typo in it, or a type in an
+  assembly the module does not reference, simply was not there, and the author was left to work out
+  which of the fields they had filled in was the reason. Every name given is written now: one whose
+  type the project has brings its using with it, and one it does not have is written regardless,
+  because a member that does not compile is a compiler error naming the file, the line and the
+  column - and nothing at all is not a report. FlowIoC adds no message of its own beside it, which
+  would say the same thing less precisely. Create Function does say so before the file is written,
+  though: a row naming a type the project does not have wears a warning, so the mistake can be
+  fixed rather than compiled. The lookup became an index built once rather than a walk over every
+  loaded assembly per question, which is what makes asking on every repaint affordable.
+- **A generator selects and pings the file it just wrote.** Create Command, Create Function, Create
+  Model and Create View write into a folder the author may not have open, and a file that cannot be
+  found reads as a generator that did nothing.
+- **The four single-file generators can no longer be filled in and then not used.** Create Command,
+  Create Function, Create Model and Create View each hold a list that grows a row at a time -
+  injectables, a view's actions, a function's parameters - and laid their sections out one under the
+  other with no scroll of their own. Enough rows pushed the module list and the window's own button
+  past the bottom with nothing to scroll them back. The body scrolls now and the button does not: it
+  is drawn below the scroll view and stays where it is however long the list gets. The three inner
+  scroll views went with the fix, so a window has one scrollbar rather than one per list - a list
+  with its own scroll inside a scrolling page traps the wheel over whichever one the pointer is on.
+- **Leaving play mode no longer throws a `MissingReferenceException` for every open screen.** The
+  Root's `OnDestroy` dispatches `UnRegisterScreen`, and by then Unity has already destroyed the
+  screen - but an `IScreenBody` is an interface, so the `== null` guards on that path compared the
+  managed reference and let the dead instance through to the passive pool, which reads its
+  transform. `IView.IsAlive()` is what those guards ask now: an unregister that finds its screen
+  destroyed drops it from the pools and releases the loader's handle without hiding it, and the
+  two loaders skip the `Destroy` they can no longer do.
+- **A diagnostic opens the code that caused it, not the guard that noticed.** Double-clicking a
+  warning about a command that released without retaining used to open `CommandGroupResolver` - the
+  framework checking a condition - which tells the reader nothing they did not already know. The
+  console now skips the framework's own stack frames when it works out where a log came from, and
+  the diagnostics that know which type they are about say so, so an asynchronous release still
+  opens the Command.
+- **A log's source can no longer take the console window down.** A path read out of a stack trace
+  is whatever text was there, and a generated frame carries angle brackets that `System.IO.Path`
+  refuses with an `ArgumentException`. Thrown inside `OnGUI` it unbalanced GUILayout and broke the
+  window's drawing once per repaint.
+- **The log list is no longer wiped at the start of every run.** `ResetStatics` cleared it as play
+  mode began, after the reload had just carried it across, so Clear on Play being off changed
+  nothing and a pinned row went with the rest. What the console holds when a run starts is Clear on
+  Play's decision alone. The trim at `MaxLogCount` counts pinned rows as kept rather than dropping
+  the oldest of them, and the runtime trim and the window's now go through one trimmer.
+
+## [1.8.0] - 2026-09-07
+
+### Fixed
+
+- **A function that releases itself inside its own `Execute` is no longer pooled twice.** The
+  provider pools a function whose run left nothing retained, and `Release()` cleared `HasRetain` on
+  the way out - so a function that retained and released mid-`Execute` was pooled by its own
+  `Release` and then again by the check after it, and two callers were handed one instance. Both
+  halves of the command engine's answer are here now: `FunctionBody.Dispose` leaves `HasRetain`
+  alone and a `BeginRun` clears it when the instance is taken out, and a `RunToken` says whether the
+  run that took an instance out is still the run holding it - for the case where a nested call of
+  the same type took it out again mid-`Execute`. A Function may now retain and release inside one
+  `Execute`, the way a Command always could.
+
+### Changed
+
+- **A function is called with `Call<T>()` and run with `Execute()`, `ExecuteAsync()` or
+  `ExecuteAndGetResult<T>()`.** Both halves of the chain said the wrong thing.
+  `IFunctionProvider.Execute<T>()` did not execute - it names the function and hands back a chain,
+  and nothing happens until the chain is ended - while the terminators `SetVoid()`, `SetAsync()` and
+  `SetReturn<T>()` said assignment about the lines that actually run it. The provider says `Call<T>()`
+  and `CallAsync<T>()` now, and the terminator says `Execute`, which is the same word the function's
+  own method carries and the same word a Command runs under. The three terminators share the
+  `Execute` prefix on purpose: typing `E` after the dot offers all three, rather than making a caller
+  know in advance which one this function needs. `ExecuteAndGetResult<T>` is longer than a bare verb
+  for the reason `SetReturn` was named that way in the first place - the type parameter is what comes
+  back, and a shorter `Execute<double>()` would read as a parameter going in.
+
+### Fixed
+
+- **A screen test scene clears its authored screen in `Awake`, and no longer calls a Unity message
+  by hand.** The scene keeps the screen's prefab in it so it can be edited there, and the run opens
+  the screen from code instead - so the authored instance has to go before anything registers it.
+  `BaseScreenTestRoot` was clearing it in `AfterCreateBeforeStartContext`, which is the middle of
+  Unity's Start phase: the screen's own `ViewInjector` may have started first, found no context
+  started yet, and subscribed to `OnContextReady` - which `StartContext` raises a few lines later.
+  The instance on its way out then had its Mediator built and registered, and undoing that is why
+  the Root called `ViewInjector.OnDestroy` itself. Clearing in `BeforeCreateContext` is before every
+  `Start`, so there is nothing to undo and the hand-written call is gone. The screen is deactivated
+  before it is destroyed, because `Destroy` is deferred to the end of the frame and deactivating
+  says now, without depending on when the frame ends.
+
+### Changed
+
+- **The naming and API nits a review had left alone, now that there is nothing to break.** Each one
+  touches a public surface, which is why they waited; they are cheap today and dearer later.
+  `IConstructable.IsDeConstructed` is `IsDeconstructed`. `ICoroutineProvider` and `IUpdateProvider`
+  take `Action` rather than `UnityAction`, which was never a Unity event to begin with. `IContext`,
+  `ICommandBody`, `IFunctionBody` and `IScreenService` declare a setter only where something outside
+  the implementation actually writes one - `ICommandBody.IsRetain` and `HasRetain` were writable from
+  outside the engine, which is the flag the resolver decides a step by. `SignalConnector`'s
+  `"signalName"` sentinel is a plain `null`, its `Disconnect` takes the `ISignalBody` its `Connect`
+  takes rather than the concrete `SignalBody`, and the `[ShowInModelViewer]` on its static field is
+  gone - the Model Viewer reflects instance members only, so it never did anything.
+  `PoolServiceSignals` is `PoolServiceInternalSignals` and `internal`, next to
+  `ScreenServiceInternalSignals`: it has no `Incoming` and no `Outgoing` because its two signals are
+  traffic between the config adapter and the service, and an internal holder is what that is.
+  `InjectionBinder`'s two `BindInstance` bodies and two `CreateInstance` bodies are one each, since
+  they differed only in which type the instance is filed under.
+
+- **A context fills what its binder made, and nothing else.** `InjectAllInstances` walked the shared
+  binder too, and an instance handed in with `BindInstance` records no context - so it was injected
+  once per context and the last Root in Initialize Order decided what its `[Inject]` members
+  resolved to. Nothing bound that way has any today, which is the only reason it was never seen.
+  Whoever hands an object in fills it, the same way it belongs to them at teardown.
+
+- **A log message spells names out; `nameof` is no longer used in one.**
+  `$"{nameof(Execute)} - {nameof(AddCurrencyCommand)}"` written inside `AddCurrencyCommand` is a real
+  reference to the type, so Find Usages and a plain search answer *where is this Command used* with
+  the command's own logging lines - and the answer wanted, which Context binds it and which signal
+  runs it, is buried under hits from the file the reader is already in. Every log in the package, in
+  the modules it ships and in its documentation now carries the name as a literal, including the
+  places that fed one in indirectly: `CommandBody`'s detached-call report, `LoadSubService`'s caller
+  label and `LocalSaveService`'s prefix. The trade is that a rename leaves the literal stale, and a
+  stale word in a log line is cheaper than a search that cannot be trusted. `nameof` is untouched
+  everywhere else - `[Inject(nameof(PlayerContext))]`, a `Group` constant, an `ArgumentNullException`
+  parameter name. The rule is in `AgentRules.md`, the README, `FlowConsole.md` and the Help window's
+  Flow Console page.
+
+- **The rule about resolving a retain now covers an `await`.** "Every path out of a retained Command
+  ends in `Release()` or `Stop()`" was already written down, and the shipped example of an
+  asynchronous command did not obey it: it awaited, and only the success path resolved the retain.
+  An `await` has three ways out - the work returned, it came back with nothing, and it threw - and
+  the two nobody writes are the ones that hang the group for ever, silently, because a retain has no
+  timeout. A throw is the worse of the pair: it leaves `Execute` at the `await` line and, being
+  `async void`, surfaces through Unity's unhandled-exception handler with nothing in it to name the
+  command. `OpenMainScreenCommand` and `OpenGameplayScreenCommand` wrap their work in `try`/`catch`
+  and answer all three, and use `Show<T>()` rather than `Show()` so the null check runs through
+  Unity's own operator instead of an interface reference comparison. The rule is in `AgentRules.md`,
+  the README, `Controller.md`, the Help window's Controllers page and the `flowioc-screens` skill.
+
+  What the `catch` does stays the game's decision - `Stop()`, a `Release()` that carries on, a signal
+  that opens something else - which is why no base class writes it. An `AsyncCommand` that retained
+  and released around `ExecuteAsync` was built for this and reverted the same day for taking that
+  decision into the package.
+
+- **`AssetModule`'s `LoadGroupCommand` follows the same rule.** It released only when the load
+  finished, so an exception in it hung the group. It also let an empty label through: the service
+  answers one with a finished task, no group and no `GroupLoaded`, so the steps behind it carried on
+  believing the group was in memory. The command names that case before it starts and stops, stops
+  on a throw, and releases when the group is actually loaded.
+
+### Added
+
+- **`RemoveAllListeners()` on every signal.** A Mediator's `OnRemove` was the only teardown path a
+  listener had, so a signal that outlived the objects listening to it kept every listener a
+  destroyed one left behind. The call is declared on `ISignalBody`, so it reaches a signal of any
+  arity without the caller knowing which, and it drops the once-listeners with the ordinary ones.
+  What a dispatch runs in the middle - the commands bound to the signal - is left alone, because
+  that belongs to the context that bound it and goes when the context does. `SignalBody` is
+  `abstract` now, which it always was in practice: it is never instantiated, only inherited by the
+  five arities.
+
+- **The tests the engine was missing.** `StopCommand` on a parallel step, which ends that step alone
+  while a sequence step's Stop ends the group; a Release or a Stop arriving after its group already
+  ended, which must change nothing and above all must not pool a busy command twice; the injection
+  binder's assignable-type cache, whose remembered answer - a miss included - has to be forgotten
+  when the container changes, and the binding generation that makes a pooled command resolve again;
+  `ShowSubService` and `HideSubService` against a runtime model that only records what it was asked;
+  and a scene reload driven through real Roots rather than bare contexts, where a Connector rebuilt
+  with its scene has to be wiring the holders the rebuilt modules bound. 1119 tests, up from 1084.
+
+### Changed
+
+- **`Signal.Dispatch`'s order is written down.** Once-listeners, then the commands bound to the
+  signal, then the ordinary listeners - so `AddListener` is the one a Mediator uses to redraw from
+  a value a command has just written, and `AddListenerOnce` sees the dispatch before that command
+  ran. It is on the Signals help page, in `BaseModule.md` and in the README, and a test asserts the
+  order rather than leaving it to be rediscovered.
+- **A screen already being loaded is waited for rather than refused.** `ScreenModule`'s
+  `AddressableLoadSubService` answered a second load of an address still in flight with a warning
+  and a null screen. Nobody asked for that: the caller meant the load, and the same address is
+  loaded twice legitimately when one screen is registered at two managers. It now awaits the handle
+  already loading, the way the pool's loader does, and returns the entry's screen if that load
+  filled it rather than instantiating a second copy of it.
+- **A missing command group names the context it was looked for in.** `ExecuteGroupStep` reported
+  that the group "could not be found in any context" while looking in the binding context alone,
+  which sent the reader off to check every other Root in the scene. It says which context, and that
+  a group is looked up in the context that binds it and nowhere else.
+
+### Removed
+
+- **The screen builder's `AddToHistory()` is gone.** It set `ScreenVO.AddToHistory`, which nothing
+  read: `ShowSubService` carried a `//TODO: History` where the history would have been written, so
+  the call promised a navigation history the module never kept. The flag, the method on
+  `IScreenBuilder` and `ScreenBuilder`, the reset in `ScreenRegistryModel.CopyDataFromConfig` and
+  the documentation row went with it. A screen history, if one is wanted later, is a module of its
+  own rather than a flag on the open call.
+
+## [1.7.3] - 2026-09-07
+
+### Added
+
+- **The Help window colours its code blocks.** Snippets are lexed and drawn in Rider's own palette -
+  Rider Dark under the dark skin, Rider Light under the light one - so a snippet in the window and
+  the same lines open in the IDE read alike. The block paints its own fill and hairline and carries
+  a Copy button, because a rich text label cannot be selected the way the plain one it replaces
+  could.
+
+### Changed
+
+- **A context takes back what it bound across.** `DestroyContext` emptied the context's own binder
+  and left the shared one alone, so a module's signal holder and Service outlived the module. When
+  its Root was built again - a scene coming back - `Bind` handed the old instances back, and the
+  old Service was still pointing at the sub services and models the old context had already torn
+  down: `InjectAllInstances` tried to resolve it against that dead context and logged an injection
+  failure per member, twenty-four of them for the pool service alone, and the screens and pools of
+  the new scene never reached it. A context now takes out of `InjectionBinderCrossContext`
+  everything it bound there, after its own binder and before it goes, so a module's public surface
+  lives exactly as long as its Root: a scene's module goes with the scene and is bound fresh when
+  the scene comes back, a persistent Root's Service lives for the run, and what was handed in with
+  `BindInstance` - the two providers - stays. The README, the agent rules and the Help window state
+  the rule together with its corollary: a Connector, the one thing that holds another module's
+  signals, gets them in `Setup` and disconnects them in `DestroyContext`.
+
+## [1.7.2] - 2026-09-07
+
+### Added
+
+- **`FlowLogger.IsEnabled`, and log overloads that take the message in parts.** `[Conditional]`
+  removes a log call only where `ENABLE_LOG` is not defined; a project that defines it - this one
+  does, for Standalone, Android and WebGL - still built every interpolated message with logging
+  switched off. The parts overloads join them only when logging is on, and `IsEnabled` is for a
+  call site that has to build something before it can log.
+
+- **`IPoolService.GetAsync`, `InitializeGroupAsync` and `Destroy`.** An addressable item could only
+  be fetched through the sub service, because the asynchronous Get was never on the interface; the
+  fill of a group could not be waited on; and the destroy surface was on the service but not on
+  what a caller injects.
+
+- **Tests for the setter delegate, the injection entries, the pool's config model, a screen's own
+  hide-during-show, the function provider's mismatches, and unbinding by instance.** Twenty of them.
+
+### Changed
+
+- **The command path hands the logger its parts rather than a built string.** Every dispatch, every
+  command taken and returned, and every sub group built its message before the logger was asked
+  whether anyone wanted it. The five `Dispatch` overloads, the binder and the group resolver pass
+  the pieces instead, and the one line that pays for an enum's name asks `FlowLogger.IsEnabled`
+  first.
+
+- **The binder builds one delegate for the pool return instead of one per dispatch.** Writing the
+  method group at the subscription made a new `Action` every time a signal was dispatched, which a
+  signal that fires each frame notices.
+
+- **`[Inject]`, `[InjectSignal]` and `[SignalParam]` properties are written through a setter
+  delegate.** 1.7.0 said filling a `[SignalParam]` was a typed assignment rather than a `SetValue`;
+  the code still called `SetValue`, on every execution of every command. Each entry now carries a
+  delegate built once with it - a typed setter in a generic box, so a fill is a delegate call and
+  two casts - and falls back to the reflective setter where the box cannot be built.
+
+- **A function runs without reflection and is injected once.** Each shipped arity - `FunctionVoid`
+  and `FunctionReturn`, up to four parameters - calls its own typed `Execute`, and a parameter that
+  does not fit is reported naming the function and the slot rather than thrown from inside the
+  provider. `FunctionBody` remembers the context and binding generation it was filled at, the way a
+  pooled command does. The asynchronous completion callback is handed over by the data container
+  that knows its type, instead of being found by name on both objects with reflection.
+
+- **The pooled screen instance is taken at Show, not at Open.** `Open<T>()` used to take the
+  instance out of the pool before anything was decided, so a builder that never reached `Show` kept
+  it out of the pool for good. The builder reads the declaration at Open and asks the pool at Show,
+  after the duplication and layer checks - there is nothing to give back on a refusal any more.
+
+- **The screen contexts declare in the four phases like every other context.** `ScreenServiceContext`
+  did its binding in `CoreBindings`, which runs when a context starts whatever its Root's phase
+  switches say; it binds in `SignalBindings`, `InjectionBindings` and `CommandBindings` now.
+  `BaseScreenContext` binds its manager's mediation in `MediationBindings`, and both it and every
+  screen context reach the screen service in `Setup`, the phase that may reach another module.
+
+- **Filling a pool group is a Task, and the synchronous Get builds without one.** `CreateSubService.Group`
+  returns the fill; `InitializeGroup` starts it and reports what went wrong, where it used to be
+  dropped on the floor. The synchronous `Get` builds a direct prefab through `CreateItemSync` rather
+  than reading a Task's `Result`, which held only for as long as nothing on the way awaited. The
+  `Check` questions answer without warning: a caller asking whether a group is ready is usually
+  about to make it ready.
+
+- **`RetryCommand` waits on the coroutine provider**, in real time. It was a `Task.Delay` inside an
+  `async void`, which swallowed whatever the retry threw, could not stop with the scene, and never
+  fired on WebGL.
+
+- **A screen unloaded from Resources no longer sweeps the heap.** `Resources.UnloadUnusedAssets` ran
+  on every single unload, a hitch each time; scheduling that sweep is the game's, on a loading
+  screen say.
+
+- **The shared cross-context binder and the two providers are bound once.** Every context asked to
+  bind them again and was answered with a warning - three per context, for the framework doing what
+  it always does.
+
+- **Names.** `InjectionBinding.BoundContext` and `SetBoundContext` (were `Binded`), `hasSetUp`,
+  `AfterStartBeforeLaunchContext`, `AssetSignals.Incoming` and `Outgoing` (were `InComing` and
+  `OutGoing`), `PoolItemCVO` (was `PoolItemVO`, and is config data), and `PoolGroupCVO` under
+  `Data/ValueObjects/` rather than `Entities/`. `ScreenTag`, `ScreenLoadType`, `FlowRole` and
+  `SignalParamDiagnosticKind` carry their numbers, as the rule says every enum does - `ScreenTag`
+  is serialized on every Root that overrides a screen. `MediationBinder`'s refusal names `IView`
+  rather than an interface that does not exist, and `ScreenSafeArea` logs through the Flow Console.
+
+### Fixed
+
+- **A once-listener added while a once-listener was running was dropped unheard.** `Dispatch` invoked
+  the once-list and then cleared the field, so anything the running listener added - including
+  itself, added back - was wiped by that line before it was ever called. The list is taken into a
+  local and the field cleared first, then invoked. All five arities.
+
+- **A command could be put in the pool twice.** A command that retains and releases inside its own
+  `Execute` is back in the pool before that `Execute` returns, so a later step of the same type takes
+  the very same instance out again - and the first step's frame, still on the stack, then read the
+  second run's flags as its own and returned a running command to the pool. Each execution of a
+  pooled instance carries a token now, and the frame checks it before it acts.
+
+- **A command still retained when its group ended was handed to the next dispatch.** It was returned
+  to the pool so the pool would see it again, but whatever it was waiting on is still going and still
+  holds it: its late `Release` then finished a step of somebody else's run. It is dropped instead,
+  which costs one pooled instance and no correctness.
+
+- **The same signal bound twice in one Context threw a null reference.** The base binder answers a
+  duplicate key with null, and the second chain's first `ToSequence` dereferenced it - so a mistake
+  in a Context was reported as a null reference somewhere inside the framework. It is named now, and
+  a binding nothing can reach is handed back so the line the caller wrote still reads and only the
+  first chain runs.
+
+- **`PoolConfigModel.GetGroupConfigOfItem` threw on an item nobody registered.** Every pool service
+  asked it first and expected null, so the "No GroupConfigKey found" report behind it was never
+  reached and a typo in an item key was a dictionary exception. It answers null.
+
+- **`InjectionBinder.UnBind<T>(object)` threw for an instance that was never bound.** It tested the
+  wrong variable for null and then read the binding it had not found; a type nobody had bound threw
+  a key error on top. A type left with nothing under it is also forgotten, so asking for it is
+  answered "nothing is bound" rather than "bound, but not under this name".
+
+- **A view with no `ViewInjector` threw on Register and UnRegister**, and an injector added from
+  code and destroyed before its Start threw in `OnDestroy`. A view without an injector is mediated
+  and not injected, which is what an injector entry with Injectable View unticked says too.
+
+- **A hide asked for during the show animation was dropped.** The service checks InUse, and a screen
+  animating in is InUse as well, so the hide reached the screen and the screen ignored it: the screen
+  stayed on stage, and one being unloaded stayed marked as unloading for good. The screen holds the
+  hide and plays it the moment the show reports done, and a forced hide clears the animation flag it
+  could land in the middle of.
+
+- **A `[Inject]` or `[SignalParam]` property with no setter threw on every injection.** It is
+  reported once, when the type's entries are built, and left out.
+
+- **The pool's config commands said "screen configs"**, and the unregister command logged under the
+  Screen channel with the register command's name.
+
+### Removed
+
+- `SignalExtensions` - `ConnectWithConversion` and `ConnectEnumToInt`, which `Connect` with a
+  converter already does and which registered no disconnector; `SubContextAttribute`, used nowhere;
+  the commented-out `PostConstructAttribute` and `DeconstructAttribute` files;
+  `InjectionBinderCrossContext.PostConstructedObjects`; and the commented history block in
+  `IScreenService`.
+
+## [1.7.1] - 2026-09-07
+
+### Fixed
+
+- **A signal could not be bound again once the Context that owned it was torn down.** 1.7.0 gave a
+  signal's command callback an owner, so that a second Context binding the same signal is refused
+  rather than silently taking it over. Nothing gave that ownership back: `UnBindAll` dropped the
+  bindings and left the callback pointing at a binder that had none, so the next Context to bind the
+  signal was refused on behalf of a run that was already over and its commands never ran again.
+  Reloading a scene is exactly that - every Context is rebuilt while the signal holder, which lives
+  in the cross-context binder, is the same instance it was. The binder now takes its own callback
+  off every signal it unbinds, and only its own: a signal another binder has since taken over is
+  left alone. The guard itself is unchanged, so two live Contexts still do not share a signal.
+
+- **A command group could be closed by a run that had already finished.** The resolver is pooled,
+  and it told its listener the run was over *before* ending it - the listener being the binder
+  putting it back in the pool. A sub group finishing therefore parked its resolver while the parent
+  carried straight on, and a step of the parent that dispatched a signal took that same resolver
+  back out and started a new run on it. The finished run's frames were still on the stack
+  underneath, and their `Dispose` then closed the new run mid-flight: its retained command went back
+  to the pool with nothing waiting on it, and every step behind that command was never reached, with
+  nothing logged. The run is ended before the callback now, so there is nothing left for those
+  frames to do, and each run carries an id that the places which carry on after calling out check
+  before they touch anything.
+
+## [1.7.0] - 2026-09-07
+
+### Added
+
+- **A one-shot listener can be taken back.** `AddListenerOnce` had no counterpart, so a listener
+  waiting for a signal that then never arrived stayed on it for the run. `RemoveListenerOnce` sits
+  on all five signal arities and on the interfaces they declare, beside the `RemoveListener` that
+  was always there.
+
+- **The Flow Console says how much it keeps and how much it traces.** `CD_FlowConsole` gained
+  `StackTraceCapture` - `Never`, `WarningsAndErrors` or `Always` - and `MaxLogCount`, which defaults
+  to 5000. Working out where a log came from is the expensive half of logging and only the console's
+  source column reads it, so the default captures it for warnings and errors and leaves everything
+  else alone. The list is trimmed in blocks of 256 rather than one entry at a time, so a run that
+  logs steadily no longer shifts the whole list on every line. Before this the list had no ceiling
+  at all: a long play session grew it until the domain reloaded.
+
+- **Sixty-two tests for the parts that carry a flow**, none of them needing a scene: the command
+  group resolver, signal listeners and `Connect`, the pool's runtime model, the function provider,
+  the shared instance pool, and the screen builder. Two real defects were found by writing them, and
+  both are in Fixed below.
+
+### Changed
+
+- **`IScreenService.Open<T>()` hands back an `IScreenBuilder`.** It used to hand back the sub
+  service itself, which is one object for the whole run - so the screen being opened lived in that
+  object's fields, and two commands opening a screen in the same frame wrote over each other. The
+  chain a caller writes is unchanged, and so is every call that reads `Open<T>().Show()`; what
+  changes is the declared return type, which a project storing it in a local has to update.
+
+- **A Root holds its sub-contexts by script reference, not by name.** `SubContextData` carries the
+  `MonoScript` the context is declared in, so the entry is a real guid in the scene or prefab rather
+  than a string nothing in the project depends on. Renaming the class inside its file or moving the
+  file now keeps working, and deleting the module a context lives in leaves a reference the Root
+  reports instead of a name that quietly stops resolving - which used to be visible only as an error
+  at play time, if the scene was ever run. `ContextFullName` stays beside it and is still the only
+  half runtime reads, because `MonoScript` is an Editor type and a build nulls the reference; it is
+  rewritten from the script whenever the inspector or a generator touches the entry.
+
+  Entries authored before this carry no script. They keep working, and the Root's inspector offers
+  **Resolve**, which links one in a press. An entry whose name resolves to nothing offers no button:
+  the module is gone, and whether the Root should still list it is a decision.
+
+- **Delete Module takes the module's sub-contexts out of the Roots that list them.** It asks first,
+  and there are three answers: remove them from every Root, go through them one at a time, or remove
+  none, see where they are and keep the module. This is the rule the rest of the tool already
+  follows - unwire a thing from everywhere it is referenced, then delete - reaching the one place
+  that used to be exempt, and it is only possible because a sub-context entry is a tracked reference
+  now rather than a name nothing depended on.
+
+  The question comes **before** anything is deleted, so cancelling leaves the module whole: its
+  assemblies, its settings files and its folder are all still there.
+
+  Which asset holds the Root decides how far it goes. A prefab is a file and is written. A scene
+  that is not open is opened, written and closed again. A scene that **is** open is changed and left
+  dirty, because whatever else is unsaved in it belongs to whoever opened it - the summary says so,
+  and saving is theirs. Every entry removed, skipped or left is named on the console with its Root
+  and its asset.
+
+- **A command runs without reflection.** `CommandBody` declares `InvokeExecute`, and each arity
+  overrides it to call its own `Execute` - so dispatching a signal no longer does a `GetMethod` and
+  an `Invoke` per command, and no longer allocates the parameter array those needed. Filling a
+  command's `[SignalParam]` properties is a typed assignment rather than a `SetValue`.
+
+- **Injection is resolved once per type and remembered.** `InjectionExtensions` built the list of
+  members to fill on every injection, walking the type's declaration chain and reading attributes
+  each time. It builds that list once per type now and keeps it, and the cache is stamped with the
+  binder's generation so a rebind invalidates it rather than being missed. The file is roughly half
+  the size it was.
+
+- **Context types are indexed once for the run, not looked up per Root.** `RootsManager` owns a
+  `ContextTypeIndex` built from the loaded assemblies, so a scene with twenty Roots sweeps them
+  once instead of twenty times. The sweep also survives an assembly it cannot load, which used to
+  throw `ReflectionTypeLoadException` and take the whole index with it.
+
+- **A pool checkout and a return are constant time.** The runtime model kept its items in lists it
+  searched linearly, so a pool of a few hundred cost more on every checkout than the object it was
+  saving. Items sit in a set that carries its own index and removes by swapping the last item into
+  the gap. The buckets are keyed by pool and by item, which is what makes a lookup a lookup rather
+  than a scan.
+
+- **The pool activates what it hands out.** A checkout parents the item and sets it active, rather
+  than leaving that to whoever asked. A caller that was already activating the item still works; one
+  that assumed it came back inactive has to say so.
+
+- **Four pools of instances become one.** Commands, functions, function data containers, bindings
+  and mediators each had their own dictionary of stacks and their own take-and-return code.
+  `TypePool<T>` is that code, once, and the double-return guard the mediator pool needs is a
+  constructor flag rather than a list walk.
+
+- **Ordinary work stops reporting itself as a warning.** Unbinding something, creating a function
+  and returning a container to its pool were logged at warning level, which meant a console filtered
+  to warnings filled with the framework doing its job. They log at the normal level; what is
+  actually wrong still warns.
+
+- **The Controllers help page shows every binding shape** - sequence, parallel, bind-time
+  parameters, `DispatchSignalCommand`, and a group as a step - and both the page and
+  `Controller.md` now say where a command's data comes from: the signal reaches the bound method,
+  and `[SignalParam]` is filled from the binding's parameters or from the previous step's
+  `Release`. Getting that wrong was the most common way to reach a null payload.
+
+### Fixed
+
+- **A group of synchronous parallel steps ran only the first of them.** A group ended as soon as
+  nothing was running, and a step that finishes inside its own `Execute` leaves nothing running - so
+  `ToParallel` with no async step in it dispatched one command and closed. A group ends when nothing
+  is running *and* every step has been reached. Found by the new resolver tests.
+
+- **A group step bound to nothing stopped the chain instead of being skipped.** The resolver waited
+  on a step that would never report, so everything after it in the sequence was never reached. It is
+  skipped, and says so once.
+
+- **`ResumeContext` paused every sub context it owned.** The loop logged `ResumeContext!` and called
+  `PauseContext()`, so resuming a Root left its sub contexts asleep. It also reset three of the
+  seven lifecycle flags on teardown, leaving the other four claiming the context had bound and
+  launched when it had done neither.
+
+- **`UnBindAll` unbound half the bindings of any key that had more than one.** It counted up to the
+  live list's `Count` while always taking element `0`, and unbinding removes from that list - so the
+  index chased a shrinking list and stopped in the middle. It works from a snapshot.
+
+- **A screen left the active registers by identity, and is parked once.** Removal matched on type
+  and manager rather than on the instance, so with two screens of a type registered the wrong one
+  could be taken out; and a screen hidden twice was added to the passive pool twice, which the pool
+  then handed out as two different screens.
+
+- **A screen shown or hidden twice carried two subscriptions.** `ShowCompleted` and `HideCompleted`
+  were subscribed without being dropped first, so a screen reopened before its last show finished
+  ran the completion handler once per open.
+
+- **A screen whose load failed lost the exception.** The load ran as `async void`, so anything it
+  threw went nowhere and the screen simply never appeared. It is awaited and caught, and says which
+  screen and what went wrong.
+
+- **A command's retain flag belonged to the pooled instance rather than to the run.** A command that
+  retained once kept `HasRetain` set when it came back out of the pool, so a later run of the same
+  command type was waited on for a `Release` that was never coming. The flags are set at the start
+  of every run.
+
+- **An open belonged to the service rather than to the call that made it.** Two opens in flight at
+  once shared the sub service's fields, so what one of them was told - its layer, its parameters,
+  its force flags - reached the other. Each open carries its own builder, shows once, and returns
+  its pooled instance if it is refused.
+
+- **A screen registered nowhere was reported twice**, once by the registry lookup and once by
+  `Open`. The lookup is quiet and `Open` is the voice.
+
+- **The mediator pool walked its whole stack to refuse a double return.** It refuses on a set
+  instead, so returning a mediator costs the same whether the pool holds two or two hundred.
+
+- **The function provider said "Function Created!" when it had reused one from the pool**, and
+  looked up the `Execute` method by reflection on every call. The methods are cached per type and
+  the message says which of the two happened.
+
+- **Create Module attached a generated screen to the wrong Root when a module held more than one.**
+  The parent's Root prefab was whichever one under its `Prefabs` folder carried a `RootBase` first,
+  and `MainModule/Prefabs/` holds `PoolServiceRoot.prefab` beside `MainRoot.prefab` - the right one
+  was picked only because the filesystem returned it first. The prefab named after the module wins
+  now, matching the suffix a Root actually carries so that `CounterServiceRoot` and
+  `PlayerSystemRoot` are recognised as their module's own. A folder with several Roots and none of
+  them the module's attaches nothing and says so, because being silently wrong is worse than leaving
+  the step to *Add Sub Context*.
+
+### Removed
+
+- `InjectionCaching`, `PostConstructUtils` and `DeconstructUtils` - three files nothing called since
+  injection was rewritten around a per-type entry.
+
+- `CommandStepVO.Id`, and the resolver's `_stepsDictionary` and `CommandBinder._activeCommandGroup`
+  with it. A `Guid` was generated per step and the dictionaries keyed by it were written to and
+  never read.
+
+## [1.6.0] - 2026-09-06
+
+### Added
+
+- **Every module carries a card.** `MODULE.md` at the top of a module says what it is for and what
+  it is about in the author's own words, and holds a generated block underneath - kind, assemblies,
+  Root and Context, the signals it announces and accepts, the modules under it - written by Module
+  Scanner and refreshed after every compile. It is what an agent reads to decide whether a piece of
+  work belongs to that module, so `ModuleCardCheck` reports a card that is missing or has fallen
+  behind. The two authored lines are asked for in Create Module, at the moment somebody knows what
+  the module is for and rarely again afterwards. A test module carries no card: nothing is routed to
+  one, and the module it drives already lists it.
+
+- **A `flowioc-screens` skill**, the sixth. It carries the chain a screen opens through, the rule
+  that the opening Command fills the screen because it is holding the instance it awaited, when a
+  change goes through a signal and when a Command may fetch the screen instead, the Mediator's two
+  guards, how an animation reports that it finished, and where a pooled screen is reset.
+
+### Changed
+
+- **`Tools/FlowIoC/Add Shared Data` is now `Add Shared or Signals`**, and offers either assembly to
+  a module that already exists rather than only Shared.
+
+- **`MainModule` announces that it started.** `MainSignals.Outgoing.OpenMainScene` was an order
+  sitting on Outgoing; it is `Started`, and the Connector joins that to
+  `MainScreenSignals.Incoming.OpenMainScreen`, which was already an order and already right.
+  MainModule does not decide that opening the main screen is what starting means. `Launch` moved out
+  of the public holder into `MainInternalSignals`, which is what it always was - dispatched by
+  `MainContext` and handled by `MainContext`. A project that already installed MainModule keeps its
+  own copy; this is what a new install gets.
+
+- **How a screen's Mediator guards itself is written down.** It subscribes on `ShowCompleted` and
+  unsubscribes on `HideCompleted` - `OnRegister` wires those two and nothing else, because a screen
+  is pooled and `OnRegister` runs once while the screen opens many times - and every handler is
+  guarded by `ScreenState.AvailableToSendSignal`, so a tap landing during an animation does not
+  become a signal.
+
+- **An animation reports when it finished, not when it started.** The state stays `InShowAnimation`
+  until the View invokes `ShowCompleted`, which is what that guard is made of. A timeline waits for
+  its duration; a set of staggered tweens hangs `OnComplete` on the last one only. And a pooled
+  screen is reset in `BeforeScreenActivation` rather than by the hide animation, which is only for
+  the look of it.
+
+## [1.5.1] - 2026-09-06
+
+### Added
+
+- **Role ticks the folder it implies.** `Services/` and `Systems/` were already optional folders in
+  the main layout and already tickable in the structure panel, but both started clear whatever Role
+  said - so choosing Service and finding no `Services/` folder in the module was the ordinary
+  outcome. System now arrives with `Systems/` ticked, Service with `Services/`, Core with neither,
+  and either tick may still be changed before pressing Create.
+
+### Changed
+
+- **Every enum value carries its number**, and `FolderEVO.FolderType` is written out. Unity
+  serializes an enum as an int, so a value inserted or deleted in the middle renumbers everything
+  below it and every asset on disk then reads back as the wrong thing. Numbered, a value can be
+  deleted without moving the rest. The rule is in the agent rules under Code style.
+
+- **What a Function is, said by what it is for.** The rule read "a Function returns a value and does
+  not orchestrate", and neither half survives a real module: the eight Functions in HitNPoP's
+  MapModule are all `FunctionVoid`, one of them dispatching signals from inside itself. A Command is
+  a step in a flow, read in order; a Function is called from inside one, does its work without
+  depending on where it sits, and returns a value only when it has one. The half that holds is the
+  trade: a Function is not a step in the Flow Console, so a step somebody should read in the
+  sequence is a Command.
+
+- **A decision belongs in a Command, said once.** It was in the documents three times and never by
+  itself - a Context needs no `if`, a View holds no `if` about game rules, a Mediator holds none
+  either. Those are now instances of it, along with the System type that holds no method doing work.
+  With the other half stated too: what needs no decision is not one, so a close button that always
+  closes is the Mediator calling `_view.Hide()`.
+
+- **A flow is read from one Context, and a Connector does not decide.** A Command whose only job is
+  to dispatch is not written - `DispatchSignalCommand` is bound with the signal and its payload, so
+  the signal leaving is a line in the Context. A list of consequences hung off one announcement
+  belongs in the sequence that owns it: binding `GameOver` to `OpenGameEndScreen` and to
+  `ResetPlayerData` puts both only in the wiring, and reads as though the Connector decided that
+  ending a game resets the player's data.
+
+### Removed
+
+- **Three retired `FolderType` values**: `ScreenViews`, `ScreenConfigs` and `SharedSignals`, kept
+  alive only to hold their positions. Their numbers - 2, 9 and 24 - are in
+  `FolderEVO.RetiredFolderTypes` and are never reused; the heals that removed one type each remove
+  all three now, which is the first time `ScreenViews` was removed from anything. A settings asset
+  carrying keys for them prunes them on load rather than needing to be deleted.
+
+## [1.5.0] - 2026-09-06
+
+### Added
+
+- **The public signal holder has an assembly of its own.** It moves from `Scripts/Shared/Signals/`
+  to `Scripts/Signals/`, which is `Modules.Player.Signals`. A System or a Screen that references a
+  neighbour's Shared assembly to read an enum can no longer see that module's signals, so the rule
+  that signals cross through a Connector is the compiler's now rather than the reader's. Module
+  Scanner gained `SignalReferenceCheck`, which reports any assembly other than a Connector's that
+  references a `.Signals`. The folder is mandatory and the assembly is not: a module with no public
+  signals leaves it empty and Module Scanner reads that as Ok, which is what `ConnectorModule` does.
+
+- **`FlowRole.Core`.** A Core module is part of the project's frame rather than of its game - one
+  per project, a reserved Initialize Order, extended rather than authored. `MainRoot` and
+  `ScreenRoot` declare it with `[FlowHeader(FlowRole.Core)]`, and it is the one role a Root can only
+  take from the attribute, because a Core module carries no suffix for the name to be read from.
+  Create Module writes that line for Role = Core on a main module.
+
+- **A Systems and Services page** in the Help window's Structure category, and a
+  `flowioc-systems-services` skill beside the four already installed. Both carry the rules the
+  architecture had never written down: a System needs no `System.cs`, one arrives when the module
+  wants a surface, it holds injected members and no method that does work, it is built out of sub
+  systems, a Model owns the module's state and data while a sub system computes, and a Service is
+  driven by a call or by a Command it ships and answers with a signal or a callback.
+
+- **FlowIoC's editor look is offered rather than hidden.** `FlowPalette`, `FlowRowPainter`,
+  `FlowHeaderBar` and `FlowHelpPageMap` are public, so a project writing tooling of its own can draw
+  a FlowIoC window - the header bar, the row colours, the action button under a list.
+
+### Changed
+
+- **The camera module is `CameraModule`.** A module is named for what it does while its Root and
+  Context keep the suffix that says what the Root roots, so the folder is `CameraModule`, the
+  assemblies are `Modules.Camera` and `Modules.Camera.Shared`, the namespaces are
+  `Modules.CameraModule.*`, and the Root and Context stay `CameraSystemRoot` and
+  `CameraSystemContext` - the Context renamed from `CameraContext` so the pair reads together. The
+  Help window lists the module as *Camera*. A project that already has the module installed renames
+  its own copy: the folder, the two asmdefs and the namespaces they hold.
+
+- **Shared is optional everywhere and starts unticked**, including on a screen module, where it used
+  to be forced on. A module pays for that assembly on the day it publishes something.
+
+- **`Services/` and `Systems/` are optional folders**, ticked from *Role* in Create Module: System
+  arrives with `Systems/` ticked, Service with `Services/` ticked, and either may be changed.
+
+- **The windows wear FlowIoC's own colour rather than a role's.** The generator windows, the Help
+  banner and the Create Module panels were painted with `FlowRole.Root`, which made them all change
+  colour the day that fill did. They take a chrome violet no role owns, and their action button
+  takes it too - it used to be `Color.cyan`, which belonged to nothing else on screen. Core is
+  indigo, deliberately apart from the chrome it sits beside in Create Module's Root preview, and the
+  plain Root is red: nothing in a finished project wears it, so it now means a Root that has not
+  said what it roots.
+
+- **Folder Painter wears the header bar**, with Refresh and Select Asset on the right of it, and its
+  Enabled switch moved under the rules it governs - a tick and the row green while it is on, a
+  warning icon and the amber while it is off.
+
+- **Whether a context belongs to a Connector is asked through `FlowRoleResolver` everywhere.** The
+  Root inspector was reading the name itself, so a context that declared itself with
+  `[FlowHeader(FlowRole.Connector)]` was offered correctly by Add Sub Context and drawn without the
+  badge.
+
+### Removed
+
+- **`InputModule`.** It is gone from `Modules~`, from the Help sidebar, and with it
+  `InputModulePage`. Nothing in the package referenced it. It will be written again if it is wanted.
+
+- `ScreenHistoryData`, a sub service nothing used.
+
+## [1.4.5] - 2026-09-04
+
+### Added
+
+- **A module's Root and Context are named for what the Root roots.** Create Module asks a main
+  module that gets a Root for its *Role*: **System** writes `PlayerSystemRoot` and
+  `PlayerSystemContext`, **Service** writes `CounterServiceRoot` and `CounterServiceContext`, and
+  **Core** writes the plain `PlayerRoot` and `PlayerContext`. The Root inspector reads a Root's own
+  name to colour it, so the choice is what makes a Service module's Root draw as a Service. It
+  starts on System, because a module written for the game at hand is one, and the module folder,
+  its assembly and its namespaces are untouched whichever is picked.
+
+- **The name field says what it is about to produce.** Beside it sits a preview panel: the folder
+  the module will land in, and the Root drawn the way its own inspector will draw it - the role's
+  fill, its accent stripe, and the strip naming the assembly and the role.
+
+- **The folder layout is one button away.** The `Config` field left the module type's row for a
+  square button on the Folder Structure bar, which selects the layout asset and pings it in the
+  Project window.
+
+### Changed
+
+- **Create Module reads as two columns.** Name and preview, type and what the module is made of,
+  role and what it publishes, then the parent module beside the folder structure - each row split
+  45/55 and growing with the window. The panels wear the Root's violet: a header bar over rows
+  tinted a washed-out version of the same, and a screen module's settings wear Screen Scanner's
+  amber for the same reason.
+
+- **A gated toggle is shown off rather than hidden.** Create Root and Create Scene stay in the row
+  when the toggle above them is off, disabled and unticked, so the row does not lose an entry as it
+  is ticked. Create Signals is gone entirely - the public holder lives in Shared and the internal
+  one in the Runtime Signals folder, so ticking those folders is the whole answer - and a screen
+  module is neither asked nor told about Shared, which it must have.
+
+- **The module tree says what it knows.** A module with nothing under it is drawn without a foldout
+  arrow, and `(Screen)` and `(Test)` are the role's own colour rather than words in brackets. The
+  parent panel reports a missing parent in its own bar, in place of the second bar that used to say
+  so under the list.
+
+- **The other generators match.** Create View, Create Model, Create Command, Delete Module and Add
+  Shared Data wear the same header bar, ask for a parent module in the same shape, and keep their
+  action button at the bottom of a window that no longer opens too small to use.
+
+- **A screen module cannot nest under another screen module.** It belongs to the module whose
+  feature it shows, so Main and Sub host it and Screen and Test do not.
+
+- **The Screens panel wears the header bar every FlowIoC component wears.** It says what the window
+  is and which module it belongs to, and carries the window's two ways out on its right: the link
+  to the Screens help page, and Refresh. The strip that used to sit under it is gone with them -
+  the screen count and the collision count were saying what the rows already say. `FlowHeaderBar`
+  grew a `DrawWindow` for this: a window has no fields to explain, so it wears the window's own
+  action where a component wears the help toggle.
+
+- **Two screens on one layer are amber rather than red.** The runtime allows it and a game
+  sometimes wants it - opening one closes the other - so it is a warning and never a refusal. A
+  layer no other screen of that manager opens on is green, which is the settled case rather than a
+  checked one.
+
+- **The columns say what they mean.** `Mgr` is `Manager`, and `Show` and `Hide` are `Show Anim` and
+  `Hide Anim` with their checkboxes carried to the middle of the column instead of hugging its left
+  edge. The headings sit level in their strip too: `miniBoldLabel` is authored for a body of text -
+  a 6 pixel top margin over a 3 pixel top padding, aligned upper left - which in a 21 pixel toolbar
+  left every word near the bottom of its cell.
+
+### Fixed
+
+- **The Screens panel's Mgr and Layer cells apply when you leave them, not as you type.** Both
+  decide where a row sits - the manager picks its box and the layer sorts it inside one - and both
+  wrote back on every keystroke, so typing `12` committed `1` after the first digit, moved the row
+  into a `Manager 1` box that had not existed a moment earlier, and left the caret pointing at
+  whatever row slid into that place. The second digit then landed on the wrong row. They are
+  delayed fields now: the value applies on Enter or when the field loses focus. The Tag popup and
+  the two animation toggles still apply at once, because a click on either is a finished edit and
+  neither moves the row.
+
+- **A `ViewInjector` whose list was never filled says so instead of registering nothing.** The list
+  is written by the injector's own inspector, so an object assembled from code reaches `Start` with
+  an empty one - or, for a component added at runtime, a null one - and every view on that object
+  stays unregistered without a word, with `IsRegistered` quietly false. `Start` now reports which
+  views on which object are affected and how to fill the list, and an injector on an object that
+  carries no view stays silent, because that one is idle rather than broken.
+
+- **A project's first open no longer opens on a warning about eight issues the install was about
+  to fix.** The Module Scan startup report was made from inside `ModuleAutoDetector`, which the
+  setup install calls one line before `ModuleRepair.FixAll` - so the scan counted the
+  `.csproj.DotSettings` files that had not been written yet and told a brand new reader their eight
+  modules had eight issues, on a set FlowIoC had installed itself a moment earlier. The report is
+  now the caller's to make: the startup pass reports, and an install reports once its own repair
+  has run. `RescanModules` detects and says nothing, which is what a caller in the middle of
+  changing the project needs.
+
+- **Create Command wrote a context that did not compile.** The binding it added said `.To<T>()`
+  closed with `.InSequence()` or `.InParallel()`, for a binder whose methods are `ToSequence<T>()`
+  and `ToParallel<T>()`; it imported `{module}.Commands` while the command lands in `Controllers`;
+  it wrote a second `#if UNITY_EDITOR` above a test context's own; and it collected one duplicate
+  `using` per run. The block is built in one place now, and a block written by the older generator
+  is rewritten into what compiles.
+
+- **Create Command, Create Model and Create View find a context named for its role.** All three
+  looked for `{module}Context.cs` by name, so a module holding `PlayerSystemContext.cs` had its
+  bindings written to a file that was not there.
+
+- **Removing an injectable or an action no longer breaks the window.** The row was dropped from
+  inside its own layout group, which ended the frame with that group still open and left every
+  repaint reporting an invalid GUILayout state.
+
+- **Delete Module takes the Shared assembly's project files with it.** The module's own `.csproj`
+  and `.csproj.DotSettings` were removed; the ones the Shared assembly leaves at the project root
+  stayed behind.
+
+## [1.4.4] - 2026-09-03
+
+### Added
+
+- **A project meeting FlowIoC is shown the Welcome page.** The window opened itself on What's New
+  after an update and on nothing at all the first time, which left the one reader who most needed
+  a starting point without one: a new project is handed four modules, an `AGENTS.md`, a set of
+  agent skills and a Flow Console, and nothing in the Editor says where to begin. The startup now
+  opens Welcome on its introduction instead of recording the version in silence, and a project that
+  has had FlowIoC for a while still lands on What's New. `WhatsNewDecision.RecordOnly` is
+  `Introduce`, because there is no longer a case that records and shows nothing.
+
+### Changed
+
+- **The agent rules are kept up to date without asking.** FlowIoC used to open a modal dialog on
+  startup offering to write or refresh the rule block, which was wrong twice over: a modal during a
+  load callback blocks every other one behind it - the setup modules install from one, and on a
+  first open they waited for the dialog to be answered - and the question had one sensible answer,
+  because a stale block describes a version of FlowIoC the project is no longer on. The block is
+  generated text between two markers, so nothing a reader wrote is ever touched, which is what
+  makes writing it without asking honest. It is now written whenever it is absent or stale, with a
+  line in the console saying which file was taken, the same way the agent skills report themselves.
+  A project that would rather decide for itself turns it off with a toggle in the Agent Rules
+  window, and then nothing is written until Sync is pressed. `Do not ask again`, which lapsed the
+  next time the rules changed, is gone - the toggle stays off until it is turned back on.
+
+- **Removing the generated `FlowLogType.cs` is announced rather than done in silence.** Deleting it
+  is correct when the settings carry no log types beyond the mandatory channels, because there is
+  then nothing to generate - but a deletion that says nothing is indistinguishable from the bug
+  fixed in `1.4.3`, where the same call ran on a settings stand-in and took the file with it. The
+  cleanup now logs which file it removed and why, and that it comes back as soon as a module or a
+  custom channel is registered.
+
+### Fixed
+
+- **The agent rules notice stopped noticing after the first check of a session.** It guarded itself
+  with a session flag, and `SessionState` survives a domain reload, so a package update - which is
+  a domain reload inside the same session - never re-ran the check: a project that updated twice in
+  one sitting kept a rule block describing the version it started on. The check now answers from
+  the files themselves, which is the only thing that can be stale, and needs no flag at all.
+
+## [1.4.3] - 2026-09-03
+
+### Fixed
+
+- **Updating the package shows What's New straight away, rather than on the next Editor launch.**
+  The notice guarded itself with a session flag so that a domain reload - which happens every time
+  a script compiles - would not be mistaken for an update and bring the window back over and over.
+  But `SessionState` survives a domain reload and is cleared only when the Editor restarts, and
+  updating a package *is* a domain reload inside the same session, so the flag swallowed the one
+  event the feature exists for: the reader pressed Update, the new version resolved, and nothing
+  was shown until they next opened the Editor. The session now remembers which version it answered
+  for instead of that it answered, which still elides a recompile on the same version and no longer
+  elides an update to a new one.
+
+- **A project's first open no longer deletes the `FlowLogType.cs` it just generated.** When
+  `CD_FlowConsole.asset` cannot be loaded - which happens during the import storm of a first open -
+  `FlowLogger` hands back an in-memory stand-in built by `ResetToDefaults`, and that stand-in
+  carries the mandatory system channels and no module channels. `FlowLogTypeGenerator` read three
+  empty type lists from it and asked `LogTypeSettingsGuard` whether the settings could be trusted;
+  the guard answered by counting mandatory channels, which the stand-in has, so the generated file
+  was deleted without a word. The next compile then failed with `The name 'FlowLogType' does not
+  exist in the current context` in every command that logs, and only focusing the Editor once put
+  it right. The settings object now says whether it came from disk, and the guard asks that first,
+  so a stand-in is never trusted with a deletion. When it is refused, the console says so rather
+  than staying silent.
+
+## [1.4.2] - 2026-09-03
+
+### Fixed
+
+- **What's New is shown to a project that has been on FlowIoC for a while, not only from the
+  second update onwards.** The notice remembers the version a reader has seen in `EditorPrefs`,
+  and reads nothing recorded as somebody meeting FlowIoC for the first time - who wants the
+  introduction rather than a list of changes to a package they have not used. That is right for a
+  new project and wrong for every existing one on the day the feature lands, which is how `1.4.1`
+  shipped What's New and then could not announce itself to a single reader. The rule now asks the
+  project as well as the reader: `ProjectSettings/FlowIoCSetup.json` carries the version the setup
+  modules were installed at, so a marker naming an older version is the project saying it has been
+  here before, and the notes are shown. No marker, or one naming the version now installed, still
+  means a first meeting.
+
+## [1.4.1] - 2026-09-03
+
+### Added
+
+- **A What's New tab on the Help window's Welcome page, and the window opens itself there once
+  after an update.** The window has always opened on the introduction, which is right the first
+  time somebody meets FlowIoC and wrong every time after a new version lands. The tab is read out
+  of the `CHANGELOG.md` the package ships, reduced to one line per entry: every entry's first
+  sentence, grouped under the version and section it was written in, newest first. Nothing is
+  written twice, so a release still means one file to update. The version a reader has seen is
+  remembered per person rather than per project, because a marker committed with the project
+  would be ticked by whoever updated the package and nobody who pulled afterwards would ever be
+  shown the notes.
+
+- **Add Sub Context says what kind each listed context is, and where it is already used.** The
+  window now wears the same `SCREEN` and `CONNECTOR` badges the Root's own list does, so a context
+  is recognisable before it is added rather than after. A context that a Root in one of the open
+  scenes already lists says which Root has it, and sorts to the bottom of the list instead of
+  disappearing from it - adding the same screen context to a second Root with a second `ManagerId`
+  is a real thing to want, and hiding the row would have made it look impossible.
+
+### Fixed
+
+- **An error reaches the console whether or not `ENABLE_LOG` is defined, and exactly once.** Every
+  `FlowLogger.LogError` overload now routes through one `WriteError` that carries no
+  `[Conditional]` and consults no setting, so an error survives both a missing `ENABLE_LOG` define
+  and `IsLoggingEnabled` being off - a build that had turned logging off was throwing its
+  diagnostics away with it. Errors also take an optional context object, so clicking one in the
+  console selects the object it is about, and the three runtime `Debug.LogError` call sites moved
+  onto the matching channels; the last `Debug`/`FlowLogger` pair among them had been printing the
+  same error twice.
+- **`InputRoot.prefab`'s view registers again, and both shipped scenes hang their views off a
+  Root.** `InputView` sat on the Root's own GameObject, and bubbling up starts at the view's parent
+  rather than at the view itself, so the only way it ever worked was the *Use Root Selection*
+  toggle the `ContextSource` rework retired. The view moved to an `InputView` child under
+  `InputRoot`, where bubbling up finds the Root with nothing configured. The counter module's test
+  scene was re-authored the same way, after `LocalSaveTestScene`: the `Canvas` carries the
+  `ViewInjector` and the View itself, and it and the `EventSystem` sit under the test Root, which
+  is what the rule about a module's GameObjects living under its Root asked for all along. Every
+  other shipped scene and prefab was reserialized onto `ContextSource` in the same pass, so no
+  asset FlowIoC ships still carries the retired `UseBubbleUp` and `UseRootSelection` keys.
+- **A View that names its Root now actually registers against it.** The injector resolved a
+  view's context from its entry when the object started, and registration then threw that answer
+  away and looked at the selected Root alone. A view with *Use Bubble-up* off and a Root Name
+  typed therefore waited for the named context and registered against whatever Root happened to
+  sit above it in the hierarchy - or reported that there was none. `ViewInjector.ResolveContext`
+  is now the one place that answers the question, and `ViewExtensions.Register` asks it. A Root
+  name that no Root answers to is reported and the object carries on, where
+  `RootsManager.GetRootByName` used to throw a `KeyNotFoundException` on a typo.
+- **Two views on one object waiting for different Roots no longer strand one of them.** The
+  injector subscribed to `OnContextReady` once per view and unsubscribed once per handler run, so
+  the first Root to become ready took away the subscription the other view was still waiting on.
+  It now subscribes once and lets go only when every view on the object has its context.
+- **The inspector's Register button works on a view that does not register itself.** *Auto
+  Register* says whether the injector registers the view on its own; it was also consulted by the
+  registration itself, so pressing the button by hand did nothing and said nothing.
+
+- **A generated module's signal holders no longer keep `Scripts` in their namespace.** *Create
+  Module* wrote `Modules.PlayerModule.Scripts.Shared.Signals` while every module already on disk
+  said `Modules.PlayerModule.Shared.Signals`, so Rider reported the namespace as not matching the
+  file location and a namespace reorganise would have renamed a type nobody meant to touch. The
+  generator wrote its skip list into each assembly's `.csproj.DotSettings` and then read it back
+  from a project-wide `Project.DotSettings` that has never existed, so every folder counted as a
+  namespace provider. Both sides now answer from `DotSettingsPlan`, the one list the settings files
+  are written from, and the folder-to-segment decision moved into `FolderNamespaceSegments`, which
+  is covered by tests that need no project on disk.
+
+### Changed
+
+- **`CountdownServiceModule` is now `CounterModule`, and its service counts in both directions
+  under names that say so.** The module always measured elapsed time as well as counting down, so
+  a name that described only half of it was the wrong name. **This is a breaking change**: the
+  folder is `CounterModule`, the assemblies are `Modules.Counter`, `Modules.Counter.Shared` and
+  `Modules.Counter.Test`, the namespaces are `Modules.CounterModule.*`, and the types are
+  `ICounterService`, `CounterService`, `ICounterModel`, `CounterModel`, `CounterVO`,
+  `CounterRequestVO` and `CounterServiceSignals`. `EvaluateElapsedTime` is now `CountUpFrom`, to
+  read beside `CountDownFrom`, and the request's `CountdownTick`, `CountdownComplete` and
+  `CountdownStop` are `CounterTick`, `CounterComplete` and `CounterStop`. The Root and Context
+  keep the suffix - `CounterServiceRoot` and `CounterServiceContext` - because a Root takes the
+  colour of whatever it roots and reads that from its own name, which is now written down as a
+  rule in the agent rules, the README and the Help window.
+- **Add Sub Context offers only the contexts that may honestly go on a Root.** A context that some
+  Root declares as its `Root<T>` is built by that Root already, so adding it to a second Root would
+  build a second instance and run the same bindings twice - those are now hidden. A module meant to
+  be hosted on another module's Root says so with the new `[AllowAsSubContext]` on its context and
+  is offered again, and `[ExcludeFromContextWindow]` says the opposite and wins over it. A
+  Connector sub-context is offered on the Connector Root and nowhere else, so the wiring between
+  two modules stays in the one place it belongs; a context counts as a Connector's when its name
+  says so or when it carries `[FlowHeader(FlowRole.Connector)]`. *Create Module* offers
+  `[AllowAsSubContext]` as a toggle on a main module that gets a Root, unticked, because a module
+  with a Root of its own is the ordinary case.
+- **A view says where its context comes from with one value instead of two toggles.** *Use
+  Bubble-up* and *Use Root Selection* are replaced by `ContextSource`, which is `BubbleUp`,
+  `SelectedRoot` or `RootName`. The two booleans could say both things at once and the inspector
+  had to hide one of them to keep the answer single. **This is a breaking change**: an entry that
+  selected a Root is read back as bubbling up, because the old toggles are gone from the
+  serialised data. The two shipped entries that selected a Root have been re-authored to bubble up
+  instead of migrated, because a view that cannot find its Root by bubbling up is a hierarchy
+  problem rather than a setting; every other entry FlowIoC ships was already bubbling up. A project
+  that had a view selecting a Root has to pick it again.
+- **The View Injector's inspector was rewritten in the same visual language as the rest.** One
+  card, one folding entry per view wearing a badge that says where its context comes from, and a
+  `?` beside every field that opens what that field does - read from the documentation
+  `ViewInjectorData` now carries, so nothing is written twice. Selecting a Root inside a prefab
+  warns that a prefab cannot hold a scene reference, which used to fail silently when the asset
+  was saved. While the game runs each entry reports the Context it reached and whether it
+  registered, with the badge and the single action the Root's own lifecycle table uses; the red
+  and green buttons are gone. Edits go through the serialized object, so they are undoable and
+  land on the prefab or scene that holds the object.
+- **`AssetServiceRoot` moved from `-10000` to `-1`**, the last seat in the Services band. It was
+  the one shipped Root still carrying a number from the old open-ended scheme, so Initialize Order
+  now runs from `-100` to `100` with nothing outside it, exactly as the agent rules, the README,
+  the `flowioc-root-order` skill and the Help window's Ordering Roots page all say. Nothing binds
+  differently: the asset service still comes up ahead of every module that injects it, and no
+  shipped scene overrides the value. A project that placed a Root below `-1` on purpose, to bind
+  before the asset service, should check that it still does.
+
+## [1.4.0] - 2026-09-02
+
+### Added
+
+- **Initialize Order is a documented convention rather than a number people guess at.** The Roots
+  the package ships fall into bands - Services take negative numbers because they depend on
+  nothing, the game's own modules take `0` to `97`, `ConnectorRoot` takes `98` so the wiring reads
+  after the modules it wires, `ScreenRoot` takes `99`, and `MainRoot` takes `100` because its
+  `Launch` is the entry point. The bands are now written down in the agent rules, in the README's
+  lifecycle section, in a new **Ordering Roots** page in the Help window - with a picture of
+  `MainScene` showing the Hierarchy authored in the same order - and in a `flowioc-root-order`
+  skill installed alongside the others. The page's numbers are checked against the
+  `initializeOrder` actually serialised into the shipped prefabs, so the two cannot drift apart.
+- **What each lifecycle phase is for, written down.** The binding phases declare, `Setup`
+  initialises - it does not run until every Root in the scene has finished binding, so it is where
+  a module readies its Models and the only phase that may reach across modules - and `Launch`
+  dispatches the first signal. In the agent rules, the README, and the Help window's Root & Context
+  page.
+- **A `flowioc-connectors` skill**, covering the shape of a Connector sub-context, the `Connect`
+  overloads, connection groups, and what to check when a signal is dispatched but never arrives.
+- **One visual language across every inspector.** A FlowIoC component now wears a bar that says
+  what it is and which module it comes from, coloured by its role: Root purple, Service blue,
+  System teal, View orange, Mediator its darker shade, Screen amber, Connector green, Adapter and
+  Test grey. Each colour is two values - a deep one the bar is filled with, dark enough that the
+  white title clears 4.5:1, and a vivid one for the stripe down its left edge and the help accents -
+  and the palette is covered by a test, so a colour that fails contrast or disappears against a
+  skin cannot be committed.
+
+  A Root takes the colour of whatever it roots, which is why `ScreenServiceRoot` reads as a Service
+  and `ConnectorRoot` as a Connector while a game module's Root stays a Root. A Service, a System
+  and a Connector sub-context are not components, so without that rule three of the colours would
+  never have been seen at all; the sub-context list badges connector and screen entries for the
+  same reason.
+- **A help button on every documented field, reading the code's own `///` summary.** Nothing is
+  written twice: the parser takes the summary above a field, follows the type's base chain, and a
+  field with no comment simply has no button. The Root's fields are documented for it, so the
+  lifecycle table explains itself. Where Odin is installed the button joins Odin's own drawer
+  chain, so `[Button]`, `[ShowIf]` and the rest keep drawing exactly as before.
+- **`[FlowHeader]`**, for a type whose role the package cannot read from the type itself. It also
+  takes an optional label, so a type can wear a role's colour without claiming to be one -
+  `ViewInjector` wears the Mediator colour and says `VIEW INJECTOR`.
+- **`Tools/FlowIoC/Inspector Bar`**, which turns all of this off for a project that wants its
+  inspectors untouched.
+
+### Changed
+
+- **One *Module Scan* panel replaces the three tools that used to repair a module.** *Assembly
+  Creator Window*, *Module Configuration ▸ Detect & Fix Module Index* and *Module Configuration ▸
+  Update Namespace Settings* are gone. Between them they had a dependency order nothing stated -
+  the namespace settings silently skip a module whose index entry is stale or whose assembly is
+  missing - and none of them could say what was actually wrong. Assembly Creator could not fire at
+  all: its checkbox was disabled whenever a module already had an asmdef, and *Create Module*
+  always writes one.
+
+  The panel reads every module from the folder tree rather than from the index, so its rows are
+  right even when the index is not, and reports nine things: mandatory folders, the Shared
+  assembly, the assembly definition, its references, the root `.csproj.DotSettings`, and for the
+  project itself the module index, orphaned settings files, the Flow log types and the solution
+  code style. `Fix All` repairs everything that does not require renaming an assembly or removing
+  a reference someone added by hand; those rows stay red and say what to do. If anything is wrong,
+  the console carries one line about it on editor load.
+
+- **BREAKING: a screen declares itself in its context. The `CD_Screen` asset is gone.** A screen
+  module's context now derives from `ScreenSubContext<TView, TMediator>`, which binds the View to
+  the Mediator, and declares where the prefab lives and how the screen behaves in a `ScreenCVO` -
+  `Load = ScreenLoadCVO.Addressable("SettingsScreen")`, `Layer`, `Tag`, `ManagerId`, the two
+  animation flags. The context registers the screen with the service in `Setup`; when the screen is
+  instantiated the service tells the prefab's `ViewInjector` which context owns the view
+  (`ViewInjector.AssignContext`), so the mediator comes from the context that bound it instead of
+  being reflected into `ScreenRoot`'s context from strings in an asset.
+
+  Gone with the asset: the type-name strings and the AppDomain scan that resolved them, the
+  `ScreenConfigAdapter`, the `ScreenManager`'s config list, the `DirectPrefab` load type (a context
+  cannot hold a prefab reference; `Addressable` and `Resource` remain), and
+  `Tools/FlowIoC/Screen Config Manager` with its Help page. `Create Module` writes the context, adds
+  it to the parent module's Root prefab, and the screen's test Root lists that same context instead
+  of re-declaring the screen.
+
+  Upgrading: on the first Editor open, the package generates a context for every `CD_Screen` asset
+  whose screen has none, attaches it to the parent Root where it can find one, and asks before
+  deleting the assets. A screen that already has a hand-written context, or that used
+  `DirectPrefab`, is reported with the `Screen` block to paste, because that file is yours. The
+  legacy `CD_Screen` type is kept editor-only for this, and goes in the following release.
+
+- **BREAKING: every ScriptableObject the package ships now carries the data-type prefix its own
+  rules ask for.** `CD_PoolGroup` already followed the table; the rest did not. The editor-only
+  assets became `ED_CodeGenerator`, `ED_ModuleIndex`, `ED_FolderPainter` and
+  `ED_MainModuleDirectoryStructure` / `ED_ScreenModuleDirectoryStructure` /
+  `ED_TestModuleDirectoryStructure`, and the config a game reads at runtime became
+  `CD_FlowConsole`. The serializable classes they are built out of took the
+  matching suffixes: `FolderEVO`, `ModuleDescriptorEVO`, the nine `FolderPainter*EVO` rule types,
+  and `CD_FlowConsole.FlowConsoleLogTypeCVO`.
+
+  `FlowConsoleSettings` was public, so code that names it has to be updated to `CD_FlowConsole`.
+  Nothing else about it changed.
+
+  The asset files were renamed with the types. The assets FlowIoC writes into a project are moved
+  by the path migrator on the first editor tick after the upgrade, keeping their GUIDs and
+  everything configured in them, so a project keeps its log types, folder colors and generator
+  settings.
+
+- **BREAKING: the Folder Drawer is now the Folder Painter.** The menu item is
+  `Tools/FlowIoC/Folder Painter`, the types are `FolderPainter`, `FolderPainterWindow`,
+  `ED_FolderPainter` and the nine `FolderPainter*EVO` rule classes, and the namespace is
+  `FlowIoC.Editor.FolderPainter`. Unity already calls a property drawer a drawer, and the tool
+  paints folders rather than drawing them, so the old name read as the wrong thing twice over.
+  The project-local config moves from `Editor/FolderDrawer/ED_FolderDrawer.asset` to
+  `Editor/FolderPainter/ED_FolderPainter.asset` on the first editor tick after the upgrade,
+  keeping its GUID and every rule configured in it.
+
+- **A Connector now gets signal holders instead of binding them.** `InjectionBinderCrossContext`
+  `.GetInstance<PlayerSignals>()` rather than `.Bind<PlayerSignals>()`, in the shipped
+  `ConnectorModule` and in every example. `Bind` is get-or-create, so a Connector wiring a module
+  whose Root is missing from the scene used to receive a fresh holder, connect to that, and
+  silently deliver every signal to nobody. Module Contexts still bind their own holder as before.
+- **`InjectionBinder.GetInstance<T>` reports a missing binding instead of throwing.** It used to
+  index the container directly and hand the caller a bare `KeyNotFoundException`; it now names the
+  type - and the name it was asked for, if any - and returns the default.
+- **`ConnectorRoot` moved from `101` to `98`.** The frame barrier already guarantees that every
+  signal holder is bound before any `Setup` runs, so the Connector never needed to be last; `98`
+  places it after the modules it wires and before the screen host and the entry point.
+- **A Root's inspector is one lifecycle table.** Six option boxes and a status box that repeated
+  what they said became a single card: a row per phase, with the toggle that says whether it
+  happens on its own and - while the game runs - a badge for what has happened and a button to make
+  it happen now. Two bugs went with them: the *Bind Mediations* toggle wrote to
+  `AutoBindInjections` and so never saved, and a derived Root drew its own fields twice. Removing
+  an entry from the sub-context list now records an Undo, which it did not before.
+- **The shipped Roots are named after what they root**, so their colours follow from their names:
+  `CameraRoot` is `CameraSystemRoot`, `GameplayRoot` is `GameplaySystemRoot`, and the pool prefab
+  drops its `Variant` suffix.
+- **The help window's banner comes from the inspector palette.** It also gets darker: white on the
+  purple it used to be measured 3.7:1.
+
+### Removed
+
+- **The `Assets ▸ FlowIoC ▸ Create Assembly` and `Assets ▸ FlowIoC ▸ Update Module's Namespaces`
+  context menus.** Both wrote `.csproj.DotSettings` inside the module folder, where Rider never
+  reads it - the file has to sit beside the `.csproj`, which is at the project root - so neither
+  had any effect. Rewriting the `namespace` line inside `.cs` files goes with them: once the
+  settings file at the root is right, Rider's own *Adjust Namespaces* does that better, moving
+  files and fixing `using` directives as it goes.
+- **BREAKING: `CustomClassHeaderAttribute` is gone, and with it the header drawer nothing called.**
+  The attribute described a gradient bar in colours each type chose for itself, which is the
+  opposite of a shared language; a role decides the colour now, and `[FlowHeader]` is there for the
+  types whose role cannot be read from the type. `CustomHeaderDrawer`, `CustomHeaderEditor`,
+  `GenericCustomHeaderEditor` and the `ED_Header` asset they used were never called from anywhere
+  and go with it.
+
+  Upgrading: delete the attribute from your own types. Most need nothing in its place - a Root, a
+  View and a screen are recognised on their own.
+
+## [1.3.1] - 2026-08-31
+
+### Added
+
+- **An Input module, installed from the Help window.** It turns the pointer into signals -
+  `PointerPressed`, `PointerDragged` and `PointerReleased`, each carrying the screen position - so
+  nothing in a game has to read the Input System itself. Dragged is announced only while the
+  pointer is down, because a signal per mouse move would be a dispatch per frame for something
+  almost no game wants. `SetActionMapEnabled` turns a map on or off by name, which silences input
+  at the source rather than leaving it to be ignored downstream. The module brings an action asset
+  of its own with a Pointer map bound to mouse and to touch, read from the prefab rather than from
+  the project wide actions, so a game can point it at an asset it owns. It is a ready-made module
+  rather than part of the setup set: a scene's EventSystem is an ordinary Unity component, not a
+  reason to install a module.
+
+### Fixed
+
+- **The setup set had no `EventSystem`, so nothing in `MainScene` could be pressed.** uGUI received
+  no pointer input at all, which is why the three difficulty buttons did nothing. `MainScene`
+  carries an ordinary EventSystem now. The component beside it matters as much: the generated test
+  scenes used `StandaloneInputModule`, which reads through the legacy `UnityEngine.Input` and throws
+  in a project whose active input handling is the Input System alone - what a new Unity 6 project is
+  set to. FlowIoC looks the Input System's own module up by name, so no package reference is added
+  to the Editor assembly and a project without `com.unity.inputsystem` still compiles, and falls
+  back to the legacy module when the package is absent.
+
+- **The setup modules could not install into a project that had never had FlowIoC in it.** Without
+  a `CodeGeneratorSettings` asset - which until now only the generator menus created - the module
+  index was left empty, `FlowLogType` was written with no channels, and every module the set had
+  just installed referred to a channel that did not exist. The project would not compile and the
+  Editor would not enter play mode. The settings asset is created before the set is registered now.
+
+### Changed
+
+- **A module ships whatever it hands the reader, and adds nothing to the `Tools/FlowIoC` menu.**
+  The countdown module's test scene was built by a menu item; it is an ordinary asset in the
+  payload now, the way `MainScene` already was, and the `Tools/FlowIoC/Modules` branch that held
+  that one item is gone. The payload carries a `.meta` beside every script it references, so the
+  scene's references resolve in a consuming project.
+
+- **The Editor's own `SerializableDictionary` is gone**, replaced by
+  `UnityEngine.Rendering.SerializedDictionary`, which the package already depended on. The two
+  types serialize under different field names, so a settings asset written by an earlier FlowIoC
+  arrives with its maps empty; `CodeGeneratorSettings` refills a map that comes back empty from the
+  defaults and leaves one that still holds anything alone, because removing a single entry in the
+  inspector is a considered act.
+
+- **`MainScene` no longer brings a Global Volume**, and `GameplayRoot`'s initialize order lives on
+  the prefab rather than as an override on the scene instance.
+
+- **Two rules were added to the agent rules, the README and the Help window.** A GameObject a
+  module needs in the scene goes under that module's Root; and a module whose work outlives a scene
+  detaches its Root and marks it do-not-destroy in `BeforeCreateContext`, where the reparenting is
+  not decoration - Unity marks only root level objects as do not destroy.
+
+## [1.3.0] - 2026-08-31
+
+### Fixed
+
+- Module assembly names are built in one tested place. Four hand-rolled copies read the suffix off
+  a module folder without asking what stood in front of it, so a module named exactly
+  `ScreenModule` matched the screen rule with an empty parent and came out as `Modules..Screen`.
+  An empty parent falls through to the plain module rule now, and the `ScreenTestModule` branch no
+  longer strips twelve characters of a sixteen character suffix.
+
+- The code style FlowIoC ships now reaches a project on its own. The naming rules that decide what
+  a `CD_` asset or a `PVO` value object may be called live in the solution level settings file, and
+  `Tools/FlowIoC/Module Configuration/Update Namespace Settings` was the only thing that ever wrote
+  it - so a project that installed the package and generated a module had every convention
+  documented and none of them enforced. The file is written when the Editor opens now, the way the
+  agent rules and the skills already are. Only the keys FlowIoC ships are touched, so a team's own
+  settings survive, and a session that finds the file already correct writes nothing and says
+  nothing.
+
+- The package's own assemblies declare their root namespace, so an IDE stops reporting every
+  file in FlowIoC as living in the wrong namespace. Rider derives the expected namespace from
+  the folder path below the assembly definition and had nothing to put in front of it, so
+  `FlowIoC.BaseModule.Controller` read as one segment too long. A registry install cannot be
+  fixed the way an embedded one was - the folder rules a project keeps name a path, and under
+  `Library/PackageCache` that path carries a hash that changes with every version - so the
+  answer belongs in the assembly definition, which travels with the package.
+
+- A test module is wired to the module it sits under. `Create Module` gave a test module a
+  reference to FlowIoC and to its parent's Shared assembly, but not to the parent itself, so the
+  first thing a test module tried to test would not compile until somebody edited the asmdef by
+  hand. A test module is the one kind allowed to reach anything, so it now gets the reference
+  outright. Every other module type is unchanged: reaching a neighbour's Models and Commands is
+  still the thing the architecture does not allow, and Shared is still how data crosses.
+
+- A test module's generated signal holder is wrapped in `#if UNITY_EDITOR`, the way its Root and
+  Context already were. It was the one file `Create Module` left unguarded, which was enough to
+  carry the whole test module into a player build.
+
+- `ModuleDeleter.DeleteModule` no longer opens a dialog of its own. It returns the list of what it
+  removed and leaves announcing to the caller, so the Delete Module window still shows its summary
+  while a batch script, an editor test or a tool driving the Editor can delete a module without a
+  modal blocking the Editor until somebody clicks it.
+
+### Changed
+
+- A module publishes its signals through Shared. The public holder lives in
+  `Scripts/Shared/Signals/` and compiles into the module's Shared assembly, so a Connector reaches
+  a module through `Modules.X.Shared` alone and no module's assembly ever has to reference
+  another's. What a public signal carries moves to Shared with it. The module's own traffic gets a
+  second holder, `XInternalSignals` in `Scripts/Runtime/Signals/`, with no `Incoming` and no
+  `Outgoing`: those two halves describe a boundary, and an internal signal never crosses one.
+  Screen modules therefore get a Shared assembly of their own, and the Create Shared toggle starts
+  ticked for them.
+
+- Screen views and mediators are generated straight into `ViewsMediators/`; the `ScreenViews`
+  folder is gone. A generated screen view wires its buttons in `OnEnable` and drops them in
+  `OnDisable` rather than in `Awake`, because a screen is pooled - `Awake` runs once while the
+  screen opens many times.
+
+- The Help window's sidebar nests. A category holds sections rather than pages, so Structure and
+  Editor Tools fold out inside Wiki instead of competing with it at the top level. Closed, the
+  sidebar is now three entries - Welcome, Wiki, Modules - and a reader picks the part of FlowIoC
+  they want before picking a topic in it. Which categories are open is remembered by the path down
+  to them rather than by their name, so two modules may both bring a category called Usage. The
+  sidebar is wider and keeps its scrollbar's width reserved, so a topic two levels down fits its
+  name on one line and the list no longer shifts under the cursor the moment the scrollbar appears.
+
+### Added
+
+- **The setup modules.** A project that gets FlowIoC and has no modules of its own is given the six
+  a game starts with, the first time the Editor opens on it: `MainModule` launches the game and
+  owns `MainScene`, `ScreenModule` holds the ScreenManager and the layers screens open into,
+  `ConnectorModule` is where the modules meet, `GameplayModule` is the game, and
+  `MainScreenModule` and `GameplayScreenModule` sit inside their parents. Together they are a flow
+  that already runs - the game launches, the main screen opens, picking Easy, Medium or Hard closes
+  it and opens the gameplay screen with the difficulty carried as a signal parameter - so a reader
+  can see how FlowIoC is wired rather than be told.
+
+  There is no button and no dialog. The set arrives registered: the module index, the `FlowLogType`
+  channels, the `.csproj.DotSettings`, the Addressables entries for both screens, and `MainScene`
+  at the front of the build list and open. It installs all of it or none - the payload holds GUID
+  references that cross module boundaries, so half a set is a set that does not work, and every
+  target is checked before anything is written.
+
+  It happens once. `ProjectSettings/FlowIoCSetup.json` records that it did and belongs in source
+  control, so delete one of the modules and it stays deleted. A project that already had modules of
+  its own when FlowIoC arrived is marked and left alone - having them is a decision - and can still
+  take the set from the button on the Setup Modules page in the Help window. A batch run writes
+  nothing at all.
+
+- **CameraSystemModule.** Named Cinemachine cameras switched by signal, per-camera last positions
+  and custom blends as data, with two adapters that register a rig's cameras on their own.
+  Installing it copies its own folder and nothing else, so its Help page carries the connector
+  sub-context to write by hand. Its assemblies reference Cinemachine and the render pipeline core,
+  which a project may not have: what is absent is worked out and added first, and the intent
+  survives the domain reload the resolve usually triggers.
+
+- Shared has a toggle of its own in `Create Module`, beside Create Signals, rather than only being
+  reachable by ticking its folder in the preview tree. It starts off for a plain module - one that
+  hands nothing to its neighbours has no use for a second assembly - and ticked for a screen
+  module, which publishes its signals through Shared. `Tools/FlowIoC/Help` becomes Welcome, Wiki
+  and Modules, each opening the window on the first topic of that section rather than always on the
+  introduction.
+
+- Ready-made modules, installed from the Help window. A module the package ships lives in
+  `Modules~/`, which Unity does not import, and the Install button on its Help page copies it into
+  `Assets/Modules/` - then registers it in the module index, gives it its `FlowLogType` channel and
+  writes the `.csproj.DotSettings` its namespaces need. Copying the folder by hand gets the files
+  and none of the other three. Whether a module is already installed is decided by the assembly it
+  declares rather than by the folder it landed in, so renaming that folder or moving it out of
+  `Assets/Modules/` - which a game is free to do, the module being its code now - does not offer to
+  install a second copy on top of it. A module already in the project is never overwritten: the copy there
+  is the one the game has been editing.
+
+- The first of them: **CountdownServiceModule**. Named countdowns with once-a-second callbacks,
+  seconds left or 0..1, several listeners on one id, counting up as well as down, and an
+  `ITimeSource` behind it so a server clock can replace the device one without touching a call site.
+  It ships with its test module, which is also the worked example.
+
+- A Modules category in the Help window, and the first page in it: Countdown Service, with what the
+  module does, a Usage tab of worked calls, and a Time Source tab on swapping the device clock for
+  a clock the player cannot move.
+
+- A page in the Help window can offer one action, drawn as a button on the right of its banner.
+  Install is the first; the tabs beside it change what you are reading, and this changes the
+  project.
+
+- A second agent skill, `flowioc-scaffolding`, installed into `.claude/skills` alongside
+  `flowioc-data-types`. The agent rules say not to lay a module out by hand; this is the part that
+  did not fit in them - which menu item does what, what to fill in, why the optional folders are
+  the step that is easiest to get wrong, where the `.csproj.DotSettings` files land and why, and
+  how to drive the generators from a terminal against an open Editor.
+
+### Removed
+
+- The Command Execution Test Module sample, and the Samples tab it was imported from. Ready-made
+  modules cover the same ground better: they install from the Help window, land somewhere a game
+  can actually use them rather than under `Assets/Samples/<package>/<version>/`, and arrive
+  registered instead of as loose files.
+
+## [1.2.0] - 2026-08-27
+
+### Added
+
+- The Help window's Wiki opens on a new *Creating a Module* page, ahead of the folder layout
+  and the data types, because generating the module is what a reader does before either
+  convention applies. It carries a screenshot of `Tools > FlowIoC > Create Module`, says why a
+  module is generated rather than made by hand, and explains what the Main, Screen and Test
+  types each produce, where they are allowed to sit and what the toggles beside them decide.
+  Help pages can show a picture now: screenshots live in `Editor/Help/Images` and are drawn
+  through `HelpPainter.Image`, scaled down to the page and captioned.
+
+- The extension methods that lived in the separate FlowIoC-addons package now ship with the
+  core package, under `Runtime/ExtensionModule` and the `FlowIoC.ExtensionModule` namespace:
+  vector and float maths, enum flag enumeration, list conversion and UTC time formatting.
+  `SafeSerializedScriptableObject` and the enum modifier built on it need Odin Inspector, so
+  they compile only where `ODIN_INSPECTOR` is defined and the package gains no dependency of
+  its own. The addons package keeps its copies under `FlowIoC.Addons.Extensions`, so a project
+  that has both installed still compiles.
+
+- The data type convention is written down. A module's data carries its origin in its name:
+  `CD_` for config a designer authors, `RD_` for what play produces, `PD_` for what the save
+  system keeps, `ED_` for editor tooling and `DD_` for a copy of what a backend owns, each
+  with the matching `CVO`, `RVO`, `PVO`, `EVO` and `DVO` suffix on the value objects inside
+  it. A value object that carries two kinds at once - an authored half and a runtime half in
+  one place - is named after neither and keeps the lettered suffixes on its parts. The rule is
+  in the agent rules, in the README, and on a new *Data Types* page in the Help window.
+
+- The skills FlowIoC ships are installed into the project's `.claude/skills` folder when the
+  Editor opens, one folder per skill, and refreshed when the package changes one. What gets
+  written is logged rather than done silently, and a batch run installs nothing.
+  `Tools/FlowIoC/AI/Agent Skills` shows what is there and puts a deleted skill back without
+  waiting for the next session. Removing FlowIoC through the Package Manager takes the shipped
+  skills with it, file by file, so nothing the consumer wrote is caught up in it: a skill of
+  their own, or a note left beside a shipped one, keeps its folder. A removal that raises no
+  event - `manifest.json` edited by hand, the folder deleted - is covered the way the rule block
+  covers it: every shipped skill opens by saying it applies only while FlowIoC is installed.
+  The agent rules are what an assistant is told on every task and so stay short; a skill is what
+  it reaches for when one kind of work comes up and can afford the detail. The first is
+  `flowioc-data-types`. Only the files the package owns are compared, so a skill you wrote
+  yourself is never touched and a note left beside a shipped one survives an install.
+
+- *Create Module* writes a module's signal holder. `Signals` is a folder type of its own now
+  rather than a plain folder, so the generator can find it; a new `TempSignals` template
+  produces `<Name>Signals` with its `Incoming` and `Outgoing` classes, the Context declares
+  and binds it in `SignalBindings`, and a screen Mediator gets it injected. Mandatory for a
+  Screen module, which has no Context of its own and so reaches the outside world only
+  through its holder; a `Create Signals` toggle for Main and Sub modules, on by default;
+  never offered for a Test module. A project whose `DirectoryStructureConfig` assets predate
+  the folder type has its `Signals` folder still typed as a plain folder — retype it in the
+  asset's inspector, or the generator cannot resolve it.
+
+- A shared code style. `Tools/FlowIoC/Module Configuration/Update Namespace Settings` now also
+  writes `<Solution>.sln.DotSettings`, so every project FlowIoC is installed in gets the same
+  ReSharper and Rider naming rules, prefixes and spacing. Rider reads only a settings file named
+  after the solution and that name differs per project, so the file is generated rather than
+  shipped. Only the keys FlowIoC owns are written; anything else in the file survives, and a
+  settings file left behind by a renamed solution is removed. The agent rules point at the file
+  so agents write code that matches it.
+
+- `Tools/FlowIoC/Help`, an Editor window that introduces the architecture without leaving
+  Unity. It opens on the module folder layout — every folder annotated with what belongs in
+  it — and the topics beside it walk one diagram at a time through the Root and Context, the
+  signal surface, commands and functions, models, views and mediators, and connectors. Each
+  step lights up a box, states the rule it stands for, and shows the code that rule produces.
+  The window teaches one worked example and never inspects the project it is opened in.
+
+- `FlowIoCModuleIndex.asset` is kept out of version control. FlowIoC writes a `.gitignore` next
+  to the asset covering it and its `.meta`. The index is a cache the next rebuild reproduces, so
+  two people adding modules on separate branches were meeting in the same serialized file for
+  nothing. The rule goes in that folder rather than in the project's root `.gitignore`, which
+  belongs to the project: a `.gitignore` only reaches the directory it sits in and below, and
+  this is the folder FlowIoC owns and the path migrator can move. Lines outside the
+  `FLOWIOC:BEGIN`/`FLOWIOC:END` markers are left alone, the same way the agent rules block works.
+  A project that already committed the asset keeps committing it until it runs
+  `git rm --cached Assets/Plugins/FlowIoC/Editor/CodeGenerator/FlowIoCModuleIndex.asset*` once —
+  `.gitignore` does not untrack what git already tracks.
+
+### Changed
+
+- The Help window sidebar folds *Folder Layout* into a *Wiki* category, alongside the new
+  *Data Types* page, and the window now opens on *Welcome* rather than on the folder layout - a
+  reader who has never seen FlowIoC meets what it is before meeting how its folders are arranged.
+
+- The agent rules spell out how a Model relates to signals, which was previously left to
+  inference. A Model never subscribes to a signal: an incoming signal runs a Command and
+  the Command calls the Model. A Model may dispatch its own module's outgoing signals to
+  announce that a value it holds has changed — announcing is allowed, listening is not.
+  The **Who does what** table in the README says the same thing.
+- A Service is now defined by what it depends on rather than by what it talks to. The old
+  wording made a Service the module's boundary with HTTP, storage and vendor SDKs, and
+  forbade it from deciding anything. A Service is a self-contained unit of work that
+  answers the input it is given, is not specific to the game around it, and is free to
+  decide whatever its own job requires. A Service several modules need gets its own module.
+- **System** joins the vocabulary: the game-specific counterpart to a Service. A System may
+  lean on other Systems and Services, waiting on a signal they raise or working from data
+  they share, which is exactly what a Service may not do. Both dispatch outgoing signals,
+  and a Command drives either the same way it drives a Model. Systems live in `Systems/`,
+  as an interface and an implementation.
+- The rules name the exceptions to "a module never reaches into another module", which was
+  stated absolutely while the framework has always had three. A Service crosses directly —
+  reference its assembly, inject its interface, which is what makes a Service worth its own
+  module. A nested module may use the types of the module it sits in, one way only: a
+  module never knows what its own `z` folders hold. And a test module may reference
+  anything, in exchange for every script in it being wrapped in `#if UNITY_EDITOR`.
+  Systems are not on that list: two Systems in separate modules meet through a Connector,
+  never through an assembly reference.
+- `Create Module` produces a `Systems` folder in main modules. Screen and test modules are
+  unchanged. The folder list is stored in your project's
+  `MainModuleDirectoryStructureConfig.asset`, which an upgrade does not rewrite, so a
+  project created before this release keeps its old list — add `Systems` in that asset's
+  inspector, or delete the asset and let FlowIoC recreate it.
+- Modules are no longer marked with text files. `_module_info.txt` held a module's name and
+  kind, both already implied by the folder itself — its own name, and its parent's — and
+  `_<foldertype>_info.txt` marked a container folder so a rename could be followed, which
+  Unity's own folder GUIDs already do without help. Both are gone: a module's whole identity
+  now lives in one `FlowIoCModuleIndex.asset`, next to the code generator settings, keyed on
+  folder GUID rather than name or path. The index is a cache, not a source of truth — name,
+  kind and nesting are read back off the folder tree on every rebuild, so a stale entry is
+  repaired by rebuilding it, never by hand-editing it. Each module's folder-type GUID map is
+  the exception: it is durable state, carried forward rather than read back off the tree and
+  healed only lazily, so deleting the asset outright is not the same as rebuilding it. A
+  project upgrading from an earlier version has its markers swept away the first time it opens
+  after upgrading, once every pre-existing module's folder GUIDs are safely on record — 74
+  files (37 markers and their `.meta` siblings) in this template's three modules.
+- The Create Command window now lists modules. Its own copy of the marker filename was
+  `module_info.txt`, missing FlowIoC's leading underscore, so its probe never matched a real
+  `_module_info.txt` and the module tree came up empty. `Create Model` and `Create View` used
+  the correct name and were never affected.
+- A module's kind is decided in one place. `ModuleAutoDetector` compared the parent folder
+  against the configured folder names, `DeleteModuleMenu` matched hardcoded `zTest` / `zScreen`
+  / `zSub` prefixes and ignored the settings, and `NamespaceProvider` parsed a string out of a
+  marker file and silently mapped anything it did not recognise to `Main`. Renaming
+  `zScreenModules` in the settings used to make those three disagree with each other.
+- Log types for deleted modules are removed. Registration only ever added a channel, so a
+  module's channel and its constant in the generated `FlowLogType.cs` used to outlive the
+  module's own folder. Removal only ever targets auto-registered channels, and only runs when
+  the scan actually found at least one module, so a failed scan is never mistaken for a
+  project with no modules and cannot wipe every channel.
+- *Module Configuration ▸ Detect & Fix Module Infos* is now *Detect & Fix Module Index*. It has
+  rebuilt the index rather than repaired info files since info files stopped existing, and the
+  menu was the last place still saying otherwise.
+- Folder types a module is not required to have no longer warn when they are missing. About half
+  the tracked types are optional, so the warning that a folder could not be found fired several
+  times per pass on a project that was perfectly healthy, which is exactly how a warning that
+  matters gets ignored.
+
+### Removed
+
+- `SingletonRoot<TContext>`, its duplicate registry, and the *Make Root Singleton* option in
+  *Create Module*. A Root that has to outlive a scene load now says so itself by overriding
+  `BeforeCreateContext` and calling `DontDestroyOnLoad` there, which is all the base type did
+  beyond standing duplicates down. **Breaking:** a project with `SingletonRoot` Roots must
+  rebase them on `Root<TContext>` and add that override where the lifetime mattered. Nothing
+  deduplicates Roots any more, so a Root that survives scene loads belongs in a bootstrap
+  scene and nowhere else.
+
+- `ModuleCleaner`, and with it *Module Configuration ▸ Cleanse Module Infos*. Its only job was
+  pruning stale module names out of the container-folder marker files; rebuilding the index
+  makes that pruning automatic, since a module missing from the folder tree is simply missing
+  from the next rebuild.
+
+### Fixed
+
+- *Update Namespace Settings* survives a module the index is wrong about. The index is a cache,
+  and `AssetDatabase.GUIDToAssetPath` answers for a deleted folder with the last path it knew
+  rather than with nothing, so the path looked usable and the first `Directory.GetFiles` on it
+  threw `DirectoryNotFoundException` - taking the whole run down, including the orphan cleanup
+  and the solution code style, which have nothing to do with that module. A folder that is not
+  on disk is now reported and stepped over the way an unresolvable folder GUID already was, a
+  module that fails no longer stops the ones after it, and the two closing steps run whatever
+  happened before them.
+
+- The shipped code style declares `PD_` a legal type prefix. `CD_`, `RD_`, `ED_` and `DD_` were
+  all there and the matching `PVO` suffix was too, so a player data asset was the one kind whose
+  name Rider flagged.
+
+- Reading a folder name for a type the project's `CodeGeneratorSettings.asset` has never
+  heard of no longer throws `KeyNotFoundException`. That asset is written once in the
+  consuming project, so any folder type added by a later FlowIoC version is missing from
+  every existing copy, and indexing the dictionary directly took module creation down with
+  it. Names now fall back to the built-in default.
+- A rebuild that could not run no longer leaves its callers working from an empty index. The
+  rebuild returned nothing and each caller loaded the index itself, which created an empty one
+  and looked exactly like a project with no modules: a newly created module's folder GUIDs went
+  unrecorded without a word, and log type detection would have proposed removing every
+  auto-registered channel. The rebuild now hands back the index it built, or nothing at all.
+- A recorded folder GUID that no longer resolves is looked for by name again. Deleting a folder
+  or moving it outside Unity used to skip that folder type for good, because the name fallback
+  only ran for a type that had never been recorded at all.
+- Deleting the last module out of a renamed container folder now removes the emptied container.
+  `zSubModules`, `zTestModules` and `zScreenModules` are configurable names, and the cleanup
+  matched the hardcoded ones.
+
+## [1.1.1] - 2026-08-23
+
+### Fixed
+
+- `FlowConsoleSettings.asset` is no longer replaced when it exists on disk but fails to load.
+  Unity returns null both for an absent asset and for one whose script cannot be resolved —
+  which happens while scripts are not compiling, or after the package's asset paths change —
+  and FlowIoC treated the second case as the first, writing a fresh settings asset over the
+  real one and taking every auto-registered module log type with it. The file on disk now
+  gets the benefit of the doubt and a warning explains what to fix.
+- `Assets/FlowIoC/Generated` is no longer deleted when the log type settings come back empty.
+  A settings asset loaded from disk always carries its mandatory channels, so an object with
+  none of them is a stand-in for one that failed to load, not a project with no log types.
+  Deleting `FlowLogType.cs` on its word broke compilation, and the compile errors then kept
+  the settings from loading — a loop that repeated on every domain reload.
+- Declining the agent rules startup notice is now remembered per project. `EditorPrefs` is
+  shared by every project opened with the same Editor, so "Do not ask again" used to silence
+  the notice everywhere on the machine. `Tools/FlowIoC/AI/Agent Rules` also gained a button to
+  switch the notice back on, which previously required the rules themselves to change.
+
+## [1.1.0] - 2026-08-23
+
+### Migrating from `com.flowioc.core`
+
+Renaming a package changes the asset path of every script it ships. Unity keeps the
+association between a script asset and its compiled type in `Library/`, and that
+association does not survive the change: `MonoScript.GetClass()` starts returning null
+for the package's scripts even though the types are compiled and loaded. Every
+`ScriptableObject` the package defines then fails to load, and FlowIoC's own recovery
+paths make that permanent — `FlowLogger` recreates `FlowConsoleSettings` from scratch,
+losing the auto-registered module log types, and the log type generator, finding no log
+types, deletes `Assets/FlowIoC/Generated`. `FlowLogType` disappears, every module that
+logs stops compiling, and the compile errors keep the script association broken, so the
+cycle repeats on each domain reload.
+
+**Do the migration with the Editor closed:**
+
+1. Close Unity.
+2. Edit `Packages/manifest.json`: remove `com.flowioc.core`, add
+   `"com.flowarc.flowioc.core": "https://github.com/FlowArc/FlowIoC.git#1.1.0"`.
+3. Delete the project's `Library/` folder. It is derived and gitignored; Unity rebuilds
+   it on the next open, which is what re-establishes the script associations.
+4. Open the project. The first import takes a while.
+
+If you renamed with the Editor open and hit the loop above, the recovery is the same
+sequence: close Unity, restore `Assets/FlowIoC/Generated` and
+`Assets/Resources/FlowConsoleSettings.asset` from version control **while Unity is
+closed**, delete `Library/`, then reopen. Restoring them with the Editor running does not
+hold — the running Editor rewrites them before the next compile finishes.
+
+One smaller side effect: removing the old package strips the FlowIoC block from
+`AGENTS.md`, because as far as the Package Manager is concerned FlowIoC was uninstalled.
+Anything you wrote outside the block survives, and the new package offers to write the
+rules back on the next domain reload.
+
+### Added
+
+- `Tools/FlowIoC/AI/Agent Rules` writes FlowIoC's architecture rules into the project's
+  root `AGENTS.md` as a marked block and points `CLAUDE.md` at it, so AI coding
+  assistants follow the framework's conventions instead of guessing at them. Only the
+  text between the `FLOWIOC` markers is touched, so rules you wrote yourself survive, and
+  a malformed marker makes the tool refuse to write rather than guess. FlowIoC offers to
+  install the block on first open and to refresh it when the rules change — detected by
+  hashing the rule text, so edits that ship without a version bump are still caught — and
+  removes it again when the package is uninstalled through the Package Manager. The rule
+  text ships in `Documentation~/AgentRules.md`.
+- `[SignalParam]` accepts an index: `[SignalParam(1)]` binds to the second value of
+  that property's type in the signal payload. The index counts within the type, so
+  adding a parameter of another type to the signal does not shift it. Commands can
+  now read a `Signal<int, int>` or a `Signal<string, string>` correctly.
+- An EditMode test assembly at `Tests/Editor`, covering signal parameter resolution.
+- A Scene Switcher dropdown on the main toolbar. It lists every scene under
+  `Assets/Modules` as `ModuleName/SceneName` and opens the picked one, prompting to save
+  the open scene in edit mode and loading through `SceneManager` in play mode. The main
+  toolbar API arrived in Unity 6000.3, so the feature compiles out on earlier editors
+  and the package minimum stays at 6000.0.
+
+### Changed
+
+- **Package name is now `com.flowarc.flowioc.core`** (was `com.flowioc.core`), matching the
+  FlowArc organisation the repository lives under. The Package Manager treats a package
+  name as its identity, so this is not an upgrade: remove `com.flowioc.core` from
+  `Packages/manifest.json` and add `com.flowarc.flowioc.core` pointing at the new tag.
+  Nothing else changes — assembly names, namespaces and the `FlowIoC` folder are untouched.
+  **If you are upgrading an existing project, read the migration note below before you
+  start.** A fresh install needs none of it.
+- `[SignalParam]` properties are now discovered by walking the command's base-class
+  chain directly rather than through the assembly scan the other injection attributes
+  use. Two consequences for existing code: a `[SignalParam]` declared on a base class
+  that lives in a *different assembly* from the command now binds, where it was
+  previously skipped without a warning; and a `public` inherited `[SignalParam]` is
+  now recorded once rather than twice, so it no longer consumes two payload values.
+  Both shifts ripple: unindexed properties take the next unclaimed value of their
+  type in declaration order, so a base-class property that newly joins the list — or
+  a duplicate that stops joining it — changes which value the properties after it
+  receive, and can leave the last one with none. `[Inject]` and `[InjectSignal]`
+  discovery is unchanged.
+- A dispatched `null` no longer logs `Signal Param is not found!`. It binds to any
+  property whose type can hold it, which is the intended behaviour, but code that
+  treated that message as a signal-shape alarm will stop seeing it.
+
+### Fixed
+
+- A command with two `[SignalParam]` properties of the same type received the same
+  value in both. Properties without an index now take the next value of their type
+  that no other property has claimed.
+- Binding failures now name the command, the property and the reason instead of
+  logging only the parameter type.
+
+## [1.0.1] - 2026-08-19
+
+### Fixed
+
+- Guarded the `using UnityEditor;` directives in `ComponentReference.cs` and
+  `ScreenConfig.cs` behind `#if UNITY_EDITOR`. Both files belong to the runtime
+  assembly, which is compiled for players, so the unguarded directives broke player
+  builds in consuming projects. Verified by compiling the player script assemblies.
+
+### Changed
+
+- **Breaking:** renamed the namespace `FlowIoC.PoolModule.Addressable.Components` to
+  `FlowIoC.PoolModule.Components`. `ComponentReference` and
+  `AssetReferenceSpawnableObject` moved with it. Update any `using` directive that
+  referenced the old namespace.
+- Moved `ScreenManager.prefab` out of the package's `Resources` folder to
+  `Assets/Prefabs/`, alongside the other code generator templates. Nothing ever loaded
+  it through `Resources.Load`; the generator resolves it with `AssetDatabase`, so the
+  `Resources` folder only forced the asset into every consumer build. The asset GUID is
+  unchanged, so prefab links in already generated scenes still resolve. The package no
+  longer ships a `Resources` folder at all.
+
+## [1.0.0] - 2026-08-19
+
+First tagged release, installable through the Unity Package Manager.
+
+### Added
+
+- `CHANGELOG.md` and package manifest metadata (`license`, `documentationUrl`,
+  `changelogUrl`, `licensesUrl`, keywords, author) so the package presents itself
+  properly in the Package Manager window.
+- Declared runtime dependencies on `com.unity.addressables` and
+  `com.unity.render-pipelines.core`. These were used by the code but never declared,
+  so installing the package into a project without them failed to compile.
+
+### Changed
+
+- Package name is now `com.flowioc.core` (was `flow-ioc`), following the reverse
+  domain naming that the Package Manager and scoped registries require.
+- Minimum supported editor is now Unity 6000.0 (the manifest previously claimed 2019.1).
+- The code generator resolves the package root from its own assembly instead of
+  assuming the package sits at `Packages/FlowIoC`. Template and prefab lookups now
+  work for Git URL and registry installs, not just embedded ones.
+
+### Removed
+
+- Dead assembly reference to `com.unity.editorcoroutines`; nothing in the package used it.
+- Leftover `Packages/manifest.json` and `Packages/packages-lock.json` from when this
+  repository was a standalone Unity project.

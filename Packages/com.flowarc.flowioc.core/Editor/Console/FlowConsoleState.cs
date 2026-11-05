@@ -1,0 +1,156 @@
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEngine;
+
+namespace FlowIoC.Editor.Console
+{
+    /// <summary>
+    /// The console's own switches, as one developer set them. They are in EditorPrefs because
+    /// a toolbar toggle is nobody else's business, and a committed asset would put it in
+    /// everybody's diff.
+    /// </summary>
+    public class FlowConsoleState
+    {
+        private const string PREFIX = "FlowIoC.Console.";
+
+        public bool ClearOnPlay
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(ClearOnPlay), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(ClearOnPlay), value);
+        }
+
+        public bool ClearOnRecompile
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(ClearOnRecompile), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(ClearOnRecompile), value);
+        }
+
+        public bool ClearOnBuild
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(ClearOnBuild), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(ClearOnBuild), value);
+        }
+
+        /// <summary>Whether equal rows are folded into one with a count.</summary>
+        public bool Collapse
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(Collapse), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(Collapse), value);
+        }
+
+        /// <summary>
+        /// How many lines a row shows. Two by default, which is what Unity's console does: the
+        /// message, and underneath it where the message came from.
+        /// </summary>
+        public int RowLineCount
+        {
+            get => Mathf.Clamp(EditorPrefs.GetInt(PREFIX + nameof(RowLineCount), 2), 1, 3);
+            set => EditorPrefs.SetInt(PREFIX + nameof(RowLineCount), Mathf.Clamp(value, 1, 3));
+        }
+
+        /// <summary>
+        /// What leads a row: the clock to the second, the clock with its milliseconds, or the
+        /// frame it was written in and the gap since the row above.
+        /// </summary>
+        public FlowConsoleTimeFormat TimeFormat
+        {
+            get => (FlowConsoleTimeFormat) Mathf.Clamp(
+                EditorPrefs.GetInt(PREFIX + nameof(TimeFormat), (int) FlowConsoleTimeFormat.Extended),
+                (int) FlowConsoleTimeFormat.Classic, (int) FlowConsoleTimeFormat.Frame);
+            set => EditorPrefs.SetInt(PREFIX + nameof(TimeFormat), (int) value);
+        }
+
+        /// <summary>
+        /// Whether the list is grouped into the flows the logs belong to, rather than read
+        /// straight down in the order they arrived.
+        /// </summary>
+        public bool FlowMode
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(FlowMode), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(FlowMode), value);
+        }
+
+        /// <summary>Whether the panel that holds how a row is drawn is open down the left-hand side.</summary>
+        public bool ShowSettings
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(ShowSettings), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(ShowSettings), value);
+        }
+
+        /// <summary>
+        /// The one channel the console is showing, or -1 when it is showing them all. Isolation is
+        /// a display decision like muting: no channel is switched off to arrange it, so leaving it
+        /// puts the reader back exactly where they were.
+        /// </summary>
+        public string IsolatedChannel
+        {
+            get => EditorPrefs.GetString(PREFIX + nameof(IsolatedChannel), null);
+            set => EditorPrefs.SetString(PREFIX + nameof(IsolatedChannel), value ?? "");
+        }
+
+        /// <summary>
+        /// Whether a whole group of channels is silenced. A group is muted at the console rather
+        /// than by switching its channels off, so unmuting brings back exactly the selection the
+        /// reader had - and nothing committed is written to say it.
+        /// </summary>
+        public bool UnityMuted
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(UnityMuted), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(UnityMuted), value);
+        }
+
+        public bool FrameworkMuted
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(FrameworkMuted), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(FrameworkMuted), value);
+        }
+
+        public bool ModulesMuted
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(ModulesMuted), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(ModulesMuted), value);
+        }
+
+        /// <summary>Whether the panel that holds every channel is open down the right-hand side.</summary>
+        public bool ShowFilters
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(ShowFilters), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(ShowFilters), value);
+        }
+
+        /// <summary>
+        /// How wide that panel is, as the reader last dragged it. The window clamps it to what
+        /// fits when it reads it back, so a value saved on a wide monitor is safe on a narrow one.
+        /// </summary>
+        public float FiltersPanelWidth
+        {
+            get => EditorPrefs.GetFloat(PREFIX + nameof(FiltersPanelWidth), 220f);
+            set => EditorPrefs.SetFloat(PREFIX + nameof(FiltersPanelWidth), value);
+        }
+
+        public bool UnityChannelsExpanded
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(UnityChannelsExpanded), true);
+            set => EditorPrefs.SetBool(PREFIX + nameof(UnityChannelsExpanded), value);
+        }
+
+        public bool FrameworkChannelsExpanded
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(FrameworkChannelsExpanded), true);
+            set => EditorPrefs.SetBool(PREFIX + nameof(FrameworkChannelsExpanded), value);
+        }
+
+        public bool ModuleChannelsExpanded
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(ModuleChannelsExpanded), true);
+            set => EditorPrefs.SetBool(PREFIX + nameof(ModuleChannelsExpanded), value);
+        }
+
+        public bool ErrorPause
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(ErrorPause), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(ErrorPause), value);
+        }
+    }
+}
+#endif

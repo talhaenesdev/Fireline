@@ -1,0 +1,225 @@
+#if UNITY_EDITOR
+
+using System.Collections.Generic;
+using FlowIoC.Editor.Icons;
+
+namespace FlowIoC.Editor.Help.Pages.Modules
+{
+    /// <summary>
+    /// The camera module: the cameras it names, how a game hands its own Cinemachine
+    /// cameras over, what it does not wire up for you, and the button that puts it in the project.
+    ///
+    /// Unlike the counter module this module has packages behind it, so installing it may have
+    /// to add them first - RequiredPackages is what the adapter asks about before it copies.
+    /// </summary>
+    internal class CameraModulePage : ModulePage
+    {
+        private readonly HelpImages _images = new HelpImages();
+
+        public override string ModuleFolderName => "CameraModule";
+
+        /// <summary>
+        /// What the module's two assemblies reference. Cinemachine is the module's subject;
+        /// the render pipeline core is where SerializedDictionary comes from, which is how a
+        /// camera adapter maps a name to its configuration in the Inspector.
+        /// </summary>
+        public override IReadOnlyList<string> RequiredPackages => new[]
+        {
+            "com.unity.cinemachine",
+            "com.unity.render-pipelines.core"
+        };
+
+        public override string Title => "Camera Module";
+
+        public override string Subtitle => "Named Cinemachine cameras";
+
+        public override FlowIcon Icon => FlowIcon.Camera;
+
+        public override IReadOnlyList<HelpTab> MoreTabs => new[]
+        {
+            new HelpTab("Usage", DrawUsage,
+                "Put CameraSystemRoot in the scene, then say which cameras it has.",
+                "A rig with several cameras carries one CameraAdapterView and a single camera "
+                + "carries SingleCameraAdapterView. Both register on their own - there is no call "
+                + "to make."),
+            new HelpTab("Wiring", DrawWiring,
+                "Installing copies the module's folder and nothing else.",
+                "It writes no sub-context into your Connector and does not touch ConnectorRoot. A "
+                + "tool that edited another module's files behind your back would be harder to "
+                + "trust than the two minutes this takes.")
+        };
+
+        public override string InstalledHint =>
+            "Nothing else in the project was touched - see the Wiring tab for the one thing "
+            + "left to do.";
+
+        public override string BodyHeadline => "Cinemachine cameras get names, and switching is one signal.";
+
+        public override string BodyTagline =>
+            "A menu camera and a gameplay camera come with the module; a game that needs more adds "
+            + "them to one enum.";
+
+        public override void DrawBody(HelpPainter painter)
+        {
+            painter.SubHeading("What it gives you");
+            painter.Bullet(
+                "A camera is a CameraName, not a scene reference. Switching is one dispatch, and "
+                + "nothing that switches has to know which GameObject the camera sits on.");
+            painter.Bullet(
+                "Cameras register themselves. An adapter on the rig hands its cameras over when "
+                + "the scene loads and takes them back when it unloads, so a scene change does not "
+                + "leave the model holding cameras that are gone.");
+            painter.Bullet(
+                "It remembers where a camera was. SetCameraLastPos stores a position per camera "
+                + "and MoveCameraToLastPos returns to it, which is what a game needs when the "
+                + "player comes back from a menu.");
+            painter.Bullet(
+                "Custom blends are data. CD_CameraCustomBlends holds the Cinemachine blend table, "
+                + "and a camera's own entry can override it as it registers.");
+
+            painter.Space();
+            painter.Note(
+                "It is a System, not a Service: it is specific to the game it sits in. No other "
+                + "module references it. What reaches it are signals, wired in a Connector - which "
+                + "the install deliberately does not write for you. The Wiring tab has it.");
+
+            painter.Separator();
+            painter.SubHeading("What lands in the project");
+            painter.Table(new[] {"What", "Holds"},
+                new[] {"Modules.Camera", "The model, the commands, the adapters."},
+                new[]
+                {
+                    "Modules.Camera.Shared",
+                    "The CameraName enum and CameraCVO on their own, so a module that names a camera "
+                    + "references the data and not the module."
+                },
+                new[] {"Modules.Camera.Signals", "CameraSignals, which only a Connector references."},
+                new[] {"Prefabs/CameraSystemRoot", "The module's presence in the scene."},
+                new[] {"Scriptables/CD_CameraCustomBlends", "The blend table."});
+
+            painter.Separator();
+            painter.SubHeading("What it needs");
+            painter.Paragraph(
+                "com.unity.cinemachine, and com.unity.render-pipelines.core for the "
+                + "SerializedDictionary the multi-camera adapter is authored through. The Install "
+                + "button checks both and offers to add whichever is absent before it copies "
+                + "anything.");
+        }
+
+        private void DrawUsage(HelpPainter painter)
+        {
+            painter.SubHeading("The Root");
+            painter.Paragraph(
+                "Drop CameraSystemRoot into the scene. It brings its own Main Camera with the "
+                + "Cinemachine brain, and a CameraManager - the adapter view - holding a Cinemachine camera and the target it follows.");
+            painter.Image(_images.Get("CameraRootHierarchy.png"),
+                "CameraSystemRoot in MainScene, in the Systems band, opened out.");
+            painter.Image(_images.Get("CameraRootAdapter.png"),
+                "Its adapter as it ships: CD_CameraCustomBlends, the blend table, in the Scriptable Map.");
+
+            painter.Separator();
+            painter.SubHeading("Naming a camera");
+            painter.Paragraph(
+                "CameraName is the module's vocabulary and lives in its Shared assembly. Add the "
+                + "entries the game needs and fill the adapter's map in the Inspector.");
+            painter.Code(
+                "public enum CameraName\n"
+                + "{\n"
+                + "    Menu,\n"
+                + "    Gameplay,\n"
+                + "    Cutscene\n"
+                + "}");
+
+            painter.Separator();
+            painter.SubHeading("Switching");
+            painter.Paragraph(
+                "Everything the module does is an incoming signal, so a Command drives it the way "
+                + "it drives anything else.");
+            painter.Code(
+                "[InjectSignal] private CameraSignals _cameraSignals { get; set; }\n"
+                + "\n"
+                + "_cameraSignals.Incoming.SwitchCamera.Dispatch(CameraName.Gameplay);\n"
+                + "_cameraSignals.Incoming.SetCameraTarget.Dispatch(_playerTransform);");
+
+            painter.Separator();
+            painter.SubHeading("Coming back to where you were");
+            painter.Paragraph(
+                "Store a camera's position before leaving it and move back to it afterwards. The "
+                + "float is how long the move takes.");
+            painter.Code(
+                "_cameraSignals.Incoming.SetCameraLastPos.Dispatch(CameraName.Gameplay);\n"
+                + "_cameraSignals.Incoming.MoveCameraToLastPos.Dispatch(CameraName.Gameplay, 0.4f);");
+
+            painter.Separator();
+            painter.SubHeading("Asking who the target is");
+            painter.Paragraph(
+                "PublishCameraTarget asks; the answer comes back on Outgoing.CameraTargetReady, "
+                + "which is what a Connector listens to. A module that wants the target does not "
+                + "read it - it is told.");
+            painter.Code(
+                "_cameraSignals.Incoming.PublishCameraTarget.Dispatch();");
+
+            painter.Space();
+            painter.Note(
+                "The other incoming signals are MoveCamera, SetCameraDistance, RegisterCamera and "
+                + "UnregisterCamera. The last two are what the adapters dispatch, so a game rarely "
+                + "sends them itself.");
+        }
+
+        private void DrawWiring(HelpPainter painter)
+        {
+
+            painter.SubHeading("One reference");
+            painter.Paragraph(
+                "Add Modules.Camera to the references of the assembly that holds your "
+                + "connectors. That assembly is the only one in the project allowed to see both "
+                + "sides of a wire.");
+
+            painter.Separator();
+            painter.SubHeading("One sub-context");
+            painter.Paragraph(
+                "Name it after the module on the other side of the wire and split the two "
+                + "directions, so a reader can see at a glance what leaves and what arrives.");
+            painter.Code(
+                "public class CameraConnectorSubContext : Context\n"
+                + "{\n"
+                + "    private MainSignals   _mainSignals;\n"
+                + "    private CameraSignals _cameraSignals;\n"
+                + "\n"
+                + "    public override void Setup()\n"
+                + "    {\n"
+                + "        base.Setup();\n"
+                + "\n"
+                + "        _mainSignals   = InjectionBinderCrossContext.GetInstance<MainSignals>();\n"
+                + "        _cameraSignals = InjectionBinderCrossContext.GetInstance<CameraSignals>();\n"
+                + "\n"
+                + "        IncomingSignals();\n"
+                + "        OutgoingSignals();\n"
+                + "    }\n"
+                + "\n"
+                + "    private void IncomingSignals() =>\n"
+                + "        _mainSignals.Outgoing.SetCameraTarget\n"
+                + "            .Connect(_cameraSignals.Incoming.SetCameraTarget);\n"
+                + "\n"
+                + "    private void OutgoingSignals() =>\n"
+                + "        _cameraSignals.Outgoing.CameraTargetReady\n"
+                + "            .Connect(_mainSignals.Incoming.CameraTargetReady);\n"
+                + "}");
+
+            painter.Separator();
+            painter.SubHeading("One entry on the Root");
+            painter.Paragraph(
+                "A sub-context is not found by reflection: the Root that owns it lists it. Select "
+                + "your ConnectorRoot prefab and add CameraConnectorSubContext to Sub Context "
+                + "Types. Without that line the class compiles and never runs.");
+
+            painter.Space();
+            painter.Note(
+                "The signals on the other side are the game's, not the module's. MainSignals here "
+                + "is only the example - whichever module knows who the camera should follow is "
+                + "the one that declares SetCameraTarget and gets connected to it.");
+        }
+    }
+}
+
+#endif

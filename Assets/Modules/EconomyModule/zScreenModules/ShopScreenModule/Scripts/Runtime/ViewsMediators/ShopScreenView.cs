@@ -4,6 +4,7 @@ using FlowIoC.BaseModule.Injectable.Components;
 using FlowIoC.ScreenModule.ViewsMediators.Screen;
 using Modules.EconomyModule.Shared.Data.ValueObjects;
 using Modules.EconomyModule.Shared.Enums;
+using Modules.LocalizationModule.Entities;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -30,6 +31,9 @@ namespace Modules.EconomyModule.ShopScreenModule.ViewsMediators
 
         private RectTransform _panel;
         private RectTransform _content;
+        /// <summary>Filled by the Mediator; every text in the shop is looked up through it.</summary>
+        public TextLocalizer Localizer { get; } = new();
+
         private TMP_Text _titleText;
         private TMP_Text _moneyText;
         private readonly List<Row> _rows = new();
@@ -47,7 +51,11 @@ namespace Modules.EconomyModule.ShopScreenModule.ViewsMediators
             public Button Button;
         }
 
-        private void Awake() => BuildPanel();
+        private void Awake()
+        {
+            BuildPanel();
+            Localizer.Changed += Draw;
+        }
 
         private void OnDisable()
         {
@@ -60,7 +68,7 @@ namespace Modules.EconomyModule.ShopScreenModule.ViewsMediators
         public void ShowItems(ShopItemCVO[] items)
         {
             _items = items ?? Array.Empty<ShopItemCVO>();
-            _titleText.text = TitleOf(_items);
+            Localizer.Bind(_titleText, TitleOf(_items));
 
             while (_rows.Count < _items.Length)
                 _rows.Add(CreateRow(_rows.Count));
@@ -101,7 +109,7 @@ namespace Modules.EconomyModule.ShopScreenModule.ViewsMediators
             if (_moneyText == null)
                 return;
 
-            _moneyText.text = $"Para: {_money}   <color=#C8B08A>Malzeme: {_materials}</color>";
+            _moneyText.text = $"{Localizer.Format("Para: {0}", _money)}   <color=#C8B08A>{Localizer.Format("Malzeme: {0}", _materials)}</color>";
             for (int i = 0; i < _items.Length && i < _rows.Count; i++)
             {
                 ShopItemCVO item = _items[i];
@@ -109,41 +117,41 @@ namespace Modules.EconomyModule.ShopScreenModule.ViewsMediators
                 bool hasMaterials = _materials >= item.MaterialCost;
                 string price = hasMoney ? $"<color=#FFC857>{item.Price}</color>" : $"<color=#E05555>{item.Price}</color>";
                 string materials = item.MaterialCost <= 0 ? string.Empty
-                    : hasMaterials ? $"  <color=#C8B08A>+{item.MaterialCost} malzeme</color>" : $"  <color=#E05555>+{item.MaterialCost} malzeme</color>";
-                _rows[i].Label.text = $"{item.Name}  <color=#9AA4B2><size=80%>{Describe(item)}</size></color>\n{price}{materials}";
+                    : hasMaterials ? $"  <color=#C8B08A>{Localizer.Format("+{0} malzeme", item.MaterialCost)}</color>" : $"  <color=#E05555>{Localizer.Format("+{0} malzeme", item.MaterialCost)}</color>";
+                _rows[i].Label.text = $"{Localizer.Get(item.Name)}  <color=#9AA4B2><size=80%>{Describe(item)}</size></color>\n{price}{materials}";
                 _rows[i].Label.alpha = hasMoney && hasMaterials ? 1f : 0.45f;
                 _rows[i].Button.interactable = hasMoney && hasMaterials;
             }
         }
 
-        private static string Describe(ShopItemCVO item) => item.Type switch
+        private string Describe(ShopItemCVO item) => item.Type switch
         {
-            ShopItemType.Heal => $"+{item.Amount:0} can",
-            ShopItemType.Shield => $"+{item.Amount:0} kalkan",
-            ShopItemType.FireRate => $"%{item.Amount * 100f:0} daha hızlı ateş",
-            ShopItemType.Turret => "taşı, durduğun yere kur; zombilere ateş eder",
-            ShopItemType.Weapon => "elindeki silahın yerine geçer",
-            ShopItemType.TurretUpgrade => "kurduğun her taret bir seviye güçlenir",
-            ShopItemType.Barricade => "taşı, durduğun yere kur; zombileri durdurur",
-            ShopItemType.Wall => "sağlam duvar; taşı, durduğun yere kur",
-            ShopItemType.Barracks => "kışla kur; sana savaşan askerler yetiştirir",
-            ShopItemType.Gate => "kapı; zombiler kırmak zorunda, sen geçersin",
-            ShopItemType.RepairStation => "çevresindeki yapıları yavaşça tamir eder",
-            ShopItemType.WallUpgrade => "bütün duvarlar bir kademe güçlenir: tahta, taş, metal",
-            ShopItemType.SpikeTrap => "dikenli tel; üstündeki zombiler yavaşlar ve kanar",
-            ShopItemType.Mine => "mayın; yaklaşan ilk zombide patlar",
+            ShopItemType.Heal => Localizer.Format("+{0:0} can", item.Amount),
+            ShopItemType.Shield => Localizer.Format("+{0:0} kalkan", item.Amount),
+            ShopItemType.FireRate => Localizer.Format("%{0:0} daha hızlı ateş", item.Amount * 100f),
+            ShopItemType.Turret => Localizer.Get("taşı, durduğun yere kur; zombilere ateş eder"),
+            ShopItemType.Weapon => Localizer.Get("elindeki silahın yerine geçer"),
+            ShopItemType.TurretUpgrade => Localizer.Get("kurduğun her taret bir seviye güçlenir"),
+            ShopItemType.Barricade => Localizer.Get("taşı, durduğun yere kur; zombileri durdurur"),
+            ShopItemType.Wall => Localizer.Get("sağlam duvar; taşı, durduğun yere kur"),
+            ShopItemType.Barracks => Localizer.Get("kışla kur; sana savaşan askerler yetiştirir"),
+            ShopItemType.Gate => Localizer.Get("kapı; zombiler kırmak zorunda, sen geçersin"),
+            ShopItemType.RepairStation => Localizer.Get("çevresindeki yapıları yavaşça tamir eder"),
+            ShopItemType.WallUpgrade => Localizer.Get("bütün duvarlar bir kademe güçlenir: tahta, taş, metal"),
+            ShopItemType.SpikeTrap => Localizer.Get("dikenli tel; üstündeki zombiler yavaşlar ve kanar"),
+            ShopItemType.Mine => Localizer.Get("mayın; yaklaşan ilk zombide patlar"),
             ShopItemType.Ammo => item.Index > 0
-                ? $"sadece tabancaya {item.Amount:0} şarjör yedek mermi"
-                : $"elindeki silaha {item.Amount:0} şarjör yedek mermi",
-            ShopItemType.BarracksUpgrade => "kışlaların daha çok asker tutar, daha hızlı yetiştirir",
+                ? Localizer.Format("sadece tabancaya {0:0} şarjör yedek mermi", item.Amount)
+                : Localizer.Format("elindeki silaha {0:0} şarjör yedek mermi", item.Amount),
+            ShopItemType.BarracksUpgrade => Localizer.Get("kışlaların daha çok asker tutar, daha hızlı yetiştirir"),
             ShopItemType.Perk => item.Index switch
             {
-                0 => $"en yüksek can %{item.Amount * 100f:0} artar - bir kez",
-                1 => $"canlandırman %{item.Amount * 100f:0} kısalır - bir kez",
-                _ => $"%{item.Amount * 100f:0} daha hızlı koşarsın - bir kez"
+                0 => Localizer.Format("en yüksek can %{0:0} artar - bir kez", item.Amount * 100f),
+                1 => Localizer.Format("canlandırman %{0:0} kısalır - bir kez", item.Amount * 100f),
+                _ => Localizer.Format("%{0:0} daha hızlı koşarsın - bir kez", item.Amount * 100f)
             },
-            ShopItemType.Door => "kapıyı herkes için açar",
-            ShopItemType.ReloadPerk => $"şarjör %{item.Amount * 100f:0} daha hızlı dolar - bir kez",
+            ShopItemType.Door => Localizer.Get("kapıyı herkes için açar"),
+            ShopItemType.ReloadPerk => Localizer.Format("şarjör %{0:0} daha hızlı dolar - bir kez", item.Amount * 100f),
             _ => string.Empty
         };
 
@@ -212,7 +220,7 @@ namespace Modules.EconomyModule.ShopScreenModule.ViewsMediators
             colors.disabledColor = new Color(0.35f, 0.35f, 0.35f, 0.6f);
             button.colors = colors;
 
-            TMP_Text buy = Text("Label", buttonRect, BUY, 20f, FontStyles.Bold);
+            TMP_Text buy = Localizer.Bind(Text("Label", buttonRect, BUY, 20f, FontStyles.Bold), BUY);
             Place(buy.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             buy.raycastTarget = false;
 

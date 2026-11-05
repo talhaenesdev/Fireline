@@ -1,0 +1,2282 @@
+#if UNITY_EDITOR
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using FlowIoC.ConsoleModule;
+using UnityEditor;
+using UnityEditor.IMGUI.Controls;
+using UnityEditor.Networking.PlayerConnection;
+using UnityEngine;
+using UnityEngine.Networking.PlayerConnection;
+
+namespace FlowIoC.Editor.Console
+{
+    internal partial class FlowConsoleEditor : EditorWindow
+    {
+        [MenuItem("Tools/FlowIoC/Flow Console", false, -1151)]
+        private static void OpenConsole()
+        {
+            var window = GetWindow<FlowConsoleEditor>("Flow Console");
+            // window.position = new Rect(window.position.position, new Vector2(800, 600));
+            window.minSize = new Vector2(800, 600);
+        }
+
+        /// <summary>
+        /// The console as a tab beside Unity's own Console, where somebody who has just installed
+        /// the package finds it without being told - the framework narrates itself into it, and
+        /// nothing else in the Editor says so. Beside the Project window when the Console is not
+        /// open, which is the same area in Unity's default layout, and floating when neither is.
+        /// The layout keeps the tab from then on, so this is called once per reader and project -
+        /// on the project's first meeting with FlowIoC, or on the first update that brings the tab
+        /// to a project that was on FlowIoC before there was one, which <c>FlowConsoleDockRecord</c>
+        /// remembers; the menu item above is the door after that, and a reader who closed the tab
+        /// decided. Focused, so that the tab sits in front of its area. No minimum size: a docked
+        /// tab takes its area's size, and a minimum larger than the area would push the layout
+        /// around.
+        /// </summary>
+        internal static void OpenBesideUnityConsole()
+        {
+            GetWindow<FlowConsoleEditor>("Flow Console", true, DockNeighbours());
+        }
+
+        /// <summary>
+        /// The windows the console docks beside, in order of preference. Both are internal to
+        /// Unity and reached by name; a name that stops resolving on a Unity upgrade drops out of
+        /// the list rather than failing, and the test on this method is what says so.
+        /// </summary>
+        internal static Type[] DockNeighbours()
+        {
+            Assembly editor = typeof(EditorWindow).Assembly;
+            var neighbours = new List<Type>();
+
+            foreach (string name in new[] {"UnityEditor.ConsoleWindow", "UnityEditor.ProjectBrowser"})
+            {
+                Type type = editor.GetType(name);
+                if (type != null) neighbours.Add(type);
+            }
+
+            return neighbours.ToArray();
+        }
+
+//======================================================================================================================
+//  ===========   Properties   ===========
+
+        private ConsoleLog _selectedLog;
+
+        private Dictionary<LogType, bool> _logFilter;
+        private Vector2 _logsPanelScroll;
+        private Vector2 _detailPanelScroll;
+        private float _detailPanelHeight = 150f;
+        private bool _isResizingDetailPanel;
+
+        private bool _needsRepaint;
+        private List<ConsoleLog> _cachedFilteredLogs;
+        private List<ConsoleLog> _cachedVisibleLogs;
+        private bool _logsDirty = true;
+        private int _cachedLogCount;
+        private int _cachedWarningCount;
+        private int _cachedErrorCount;
+        private const float LogEntryLineHeight = 16f;
+        private const float LogEntryPadding = 6f;
+        private const float PinIconSize = 16f;
+
+        /// <summary>
+        /// The pin's size, so the two icons a row can carry sit on one line. The channel icons are
+        /// the asset icons the Project window draws - 256 pixels with a mip chain - so at 16 they
+        /// come out as crisp as they do there. The About window's UnityLogo was tried first: 67
+        /// pixels, point-filtered and without mips, it came out ragged at this size.
+        /// </summary>
+        private const float ChannelIconSize = 16f;
+
+        private const int LogTrimChunk = 256;
+
+        private float[] _cachedLogHeights;
+        private float[] _cumulativeHeights;
+
+        private List<ConsoleLog> _multiTypeFilterBuffer;
+
+        private int _layoutFirstVisible;
+        private int _layoutLastVisible;
+
+        private readonly FlowConsoleStickyTail _stickyTail = new FlowConsoleStickyTail();
+        private readonly FlowConsoleKeyboard _keyboard = new FlowConsoleKeyboard();
+        private readonly FlowConsoleSearch _search = new FlowConsoleSearch();
+        private readonly FlowConsoleHighlight _highlight = new FlowConsoleHighlight();
+        private readonly FlowConsoleChannelTag _channelTag = new FlowConsoleChannelTag();
+        private readonly FlowConsoleTiming _timing = new FlowConsoleTiming();
+        private FlowConsoleTimeFormat _timeFormat;
+
+        private readonly FlowConsoleExport _export = new FlowConsoleExport();
+        private readonly FlowConsoleFilterPresets _presets = new FlowConsoleFilterPresets();
+        private readonly FlowConsoleEmptyListHint _emptyListHint = new FlowConsoleEmptyListHint();
+        private readonly FlowConsoleStyleGuard _styleGuard = new FlowConsoleStyleGuard();
+        private readonly FlowConsoleChannelRule _channelRule = new FlowConsoleChannelRule();
+        private GUIStyle _emptyListHintStyle;
+
+        private bool _showFilters;
+        private bool _showSettings;
+        private GUIStyle _channelOnStyle;
+        private GUIStyle _channelOffStyle;
+        private GUIStyle _channelAllOnStyle;
+        private GUIStyle _channelAllOffStyle;
+        private GUIStyle _groupCountStyle;
+        private GUIStyle _groupCountHighlightStyle;
+        private const float ChannelRowHeight = 20f;
+        private const float ChannelRowIndent = 14f;
+        private const float GroupMuteWidth = 48f;
+        private static readonly Color GroupMutedTintColor = new Color(1.4f, 0.85f, 0.55f, 1f);
+        private const float ChannelSwatchSize = 9f;
+        private static readonly Color ChannelRowBandColor = new Color(0f, 0f, 0f, 0.08f);
+        private static readonly Color ChannelRowHoverColor = new Color(1f, 1f, 1f, 0.06f);
+        private static readonly Color ChannelOnTextColor = new Color(0.92f, 0.92f, 0.92f, 1f);
+        private static readonly Color ChannelOffTextColor = new Color(0.55f, 0.55f, 0.55f, 1f);
+        private static readonly Color ChannelTickColor = new Color(0.35f, 0.8f, 0.4f, 1f);
+
+        // Muting is a display decision, not a stored one: it throws no channel switch, so unmuting
+        // brings back the exact selection the reader had. Index 0 Unity, 1 Framework, 2 Modules.
+        private readonly List<bool> _groupUnmuted = new() {true, true, true};
+
+        // What the three were before a solo, and which group is soloed. Coming out of a solo puts
+        // these back rather than switching everything on: a group the reader had already muted is
+        // theirs to keep.
+        private readonly List<bool> _groupUnmutedBeforeSolo = new() {true, true, true};
+        private int _soloedGroup = -1;
+
+        // The one channel the panel is isolated to, or -1. Like muting, it changes no setting.
+        private string _isolatedChannel;
+
+        private bool _unityChannelsExpanded = true;
+        private bool _systemChannelsExpanded = true;
+        private bool _moduleChannelsExpanded = true;
+        private Vector2 _filtersPanelScroll;
+
+        /// <summary>
+        /// How wide the filters panel is. The reader's, dragged at the panel's edge and kept in
+        /// EditorPrefs, so a module name that does not fit at the default is theirs to make room
+        /// for. Read once from the state on enable and written back when a drag ends.
+        /// </summary>
+        private float _filtersPanelWidth = FiltersPanelDefaultWidth;
+
+        private bool _isResizingFiltersPanel;
+
+        private const float FiltersPanelDefaultWidth = 220f;
+
+        /// <summary>Half the default: the floor the owner set, under which the panel is no longer a panel.</summary>
+        private const float FiltersPanelMinWidth = 110f;
+
+        /// <summary>What the list keeps whatever the panel is dragged to.</summary>
+        private const float FiltersPanelListReserve = 200f;
+
+        /// <summary>
+        /// The panel's edge, as wide as a finger can find. Inside the panel rather than astride the
+        /// line, so it never takes a press meant for the list's scrollbar beside it.
+        /// </summary>
+        private const float FiltersPanelSplitterWidth = 5f;
+
+        /// <summary>
+        /// Below this the counts on the panel's headers - "2 / 12" beside a group, "7 / 25" beside
+        /// Filters - are not drawn, because they would sit on top of the words. The widest header,
+        /// Framework with its Mute button, needs this much to hold all three.
+        /// </summary>
+        private const float FiltersPanelCountsMinWidth = 200f;
+
+        private static readonly Color FiltersPanelEdgeColor = new Color(0f, 0f, 0f, 0.45f);
+        private static readonly Color FiltersPanelBackgroundColor = new Color(0f, 0f, 0f, 0.16f);
+        private static readonly Color FiltersPanelBarColor = new Color(0f, 0f, 0f, 0.30f);
+        private static readonly Color FiltersGroupHeaderColor = new Color(1f, 1f, 1f, 0.07f);
+        private static readonly Color FiltersGroupHeaderHoverColor = new Color(1f, 1f, 1f, 0.13f);
+        private const float FiltersPanelBarHeight = 20f;
+
+        private readonly FlowConsoleFlowTreeBuilder _flowTree = new FlowConsoleFlowTreeBuilder();
+        private bool _flowMode;
+        private readonly HashSet<int> _collapsedFlowIds = new();
+        private readonly List<ConsoleLog> _flowRowBuffer = new();
+        private readonly List<int> _flowDepthBuffer = new();
+        private readonly List<int> _flowHeaderBuffer = new();
+        private readonly List<int> _flowHiddenBuffer = new();
+        private int[] _rowDepths;
+        private int[] _rowFlowHeaders;
+        private const float FlowHeaderHeight = 18f;
+        private const float FlowIndent = 14f;
+        private GUIStyle _flowHeaderStyle;
+        private static readonly Color FlowHeaderColor = new Color(0.45f, 0.65f, 0.85f, 1f);
+
+        private readonly FlowConsolePins _pins = new FlowConsolePins();
+        private bool _pinnedOnly;
+
+
+        private readonly FlowConsoleSessionRule _sessionRule = new FlowConsoleSessionRule();
+
+        /// <summary>
+        /// The player connection's picker, the same one Unity's Console and the Profiler draw.
+        /// Taken from the window on enable and disposed on disable, because it registers itself
+        /// with the profiler driver for as long as it lives.
+        /// </summary>
+        private IConnectionState _connectionState;
+
+        private GUIStyle _sessionSeparatorStyle;
+        private const float SessionSeparatorHeight = 18f;
+        private static readonly Color SessionSeparatorColor = new Color(0.78f, 0.78f, 0.78f, 0.9f);
+        private static readonly Color SessionSeparatorBandColor = new Color(1f, 1f, 1f, 0.09f);
+
+        /// <summary>Translucent, so the text keeps reading through it.</summary>
+        private static readonly Color SearchHighlightColor = new Color(0.24f, 0.48f, 0.90f, 0.45f);
+
+        /// <summary>Between the channel tag on a source line and the file name after it.</summary>
+        private const float SecondLineTagGap = 4f;
+
+        /// <summary>
+        /// How faint the plate behind a channel tag is. The tag is written in the same colour, so
+        /// the plate has to sit well under it for the letters to keep reading - the way selected
+        /// text does.
+        /// </summary>
+        private const float TagPlateAlpha = 0.15f;
+
+        private const string DimHex = "#A0A0A0";
+
+        /// <summary>
+        /// A dark cyan. The pin glyph is light, so the disc behind it has to be dark enough to
+        /// leave the shape readable - yellow washed it out.
+        /// </summary>
+        private static readonly Color PinBadgeColor = new Color(0.05f, 0.42f, 0.48f, 1f);
+
+        /// <summary>The same colour as a multiplier, for a control that paints its own background.</summary>
+        private static readonly Color PinBadgeTintColor = new Color(0.35f, 1.1f, 1.25f, 1f);
+
+        /// <summary>2 is a square with the corners taken off; half the width would be a disc.</summary>
+        private const float PinBadgeCornerRadius = 2f;
+
+        private const float PinBadgeSize = 15f;
+
+        /// <summary>
+        /// The plate behind the pin. Square with the corners just taken off, drawn through
+        /// GUI.DrawTexture's border-radius overload because EditorGUI.DrawRect has square corners
+        /// and nothing else.
+        /// </summary>
+        private static void DrawDisc(Rect rect, Color color)
+        {
+            GUI.DrawTexture(rect, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0f, color,
+                Vector4.zero, Vector4.one * PinBadgeCornerRadius);
+        }
+
+        private static string Dim(string text)
+        {
+            return "<color=" + DimHex + ">" + text + "</color>";
+        }
+
+        private FlowConsoleSearchQuery _searchQuery;
+
+        /// <summary>Unity's own toolbar search field, which is where the cancel cross comes from.</summary>
+        private SearchField _searchField;
+
+        private float _logsViewportHeight;
+
+        private List<ConsoleLog> _allLogs;
+        private string _searchText = "";
+        private bool _scrollToSelectedLog;
+        private float _preSearchScrollY;
+        private bool _logSelectedDuringSearch;
+
+        private static readonly SystemLogType[] SystemLogTypeValues =
+            (SystemLogType[]) Enum.GetValues(typeof(SystemLogType));
+
+        private readonly FlowSourceNavigator _navigator = new();
+        private readonly FlowConsoleState _state = new();
+        private readonly FlowConsoleCollapse _collapse = new();
+
+        /// <summary>
+        /// Paths that came out of a stack trace are whatever text was there, so they are taken
+        /// apart by hand rather than by System.IO.Path, which throws on characters Windows does
+        /// not allow - and a throw inside OnGUI takes the window's drawing down with it.
+        /// </summary>
+        private static readonly FlowStackFrameFilter PathText = new();
+
+        private bool _collapseRows;
+        private int[] _collapseCounts;
+
+        /// <summary>The table every row is coloured and filtered by, and the developer's switches on it.</summary>
+        private static FlowLogChannels Channels => FlowLogger.Channels;
+
+        /// <summary>How much the logger does, as this developer set it.</summary>
+        private static FlowConsolePreferences Preferences => FlowLogger.Preferences;
+
+        private GUIStyle _richTextStyle;
+        private GUIStyle _detailRichTextStyle;
+        private GUIStyle _detailPanelStyle;
+        private GUIStyle _linkStyle;
+        private GUIStyle _secondLineStyle;
+        private GUIStyle _secondLineTagStyle;
+        private GUIStyle _toolbarLabelStyle;
+
+        private Rect _toolbarRect;
+        private bool _mouseWasOverToolbar;
+
+        // The toolbar's fixed widths, named so the fit can be worked out before anything is laid
+        // out: a control the window has no room for is left out, never drawn half.
+        private const float ClearWidth = 46f;
+        private const float ClearArrowWidth = 22f;
+        private const float CollapseWidth = 70f;
+        private const float ErrorPauseWidth = 80f;
+        private const float FocusLogWidth = 70f;
+
+        /// <summary>The narrowest the search field goes before it is dropped instead.</summary>
+        private const float SearchMinWidth = 80f;
+
+        /// <summary>The "shown / held" count beside the search, drawn only while a search is on.</summary>
+        private const float SearchCountWidth = 90f;
+
+        /// <summary>The toolbar's own padding and the gaps between its controls, so a fit is decided a little early rather than a little late.</summary>
+        private const float ToolbarSlack = 12f;
+
+        /// <summary>What the list moves per unit of a wheel notch's delta - the factor Unity's own scroll views use.</summary>
+        private const float WheelStep = 20f;
+
+        /// <summary>
+        /// The list's outer rect, kept from the last repaint because a layout pass answers with
+        /// a placeholder, and the strip that floats over the list needs the real one on every
+        /// event.
+        /// </summary>
+        private Rect _logsViewportRect;
+
+        /// <summary>
+        /// Where the gear and what it opens are: the strip floating over the list's corner while
+        /// the gear is closed, the bar above the list while it is open. Either way the hover
+        /// repaint watches it.
+        /// </summary>
+        private Rect _stripRect;
+
+        /// <summary>
+        /// Whether the pointer is on the floating strip, decided once per event in window space
+        /// before the list's scroll view moves the coordinates. A row lying under the strip reads
+        /// it and lets the press go by, so the gear takes the click and not the row it covers.
+        /// While the bar is open no row lies under it, and this is simply false over the rows.
+        /// </summary>
+        private bool _pointerOverStrip;
+
+        // Unity's own console icons, fetched once. IconContent is a lookup and a row draws many
+        // times a second.
+        private Texture _infoIcon;
+        private Texture _warningIcon;
+        private Texture _errorIcon;
+        private Texture _dropdownIcon;
+        private static readonly GUIContent ClearLabel = new("Clear");
+
+        private Texture _infoIconSmall;
+        private Texture _warningIconSmall;
+        private Texture _errorIconSmall;
+
+        /// <summary>
+        /// What a row on one of Unity's own channels carries where the framework's channels carry
+        /// a text tag: the scene icon the Hierarchy draws - the Unity logo - for the Unity channel,
+        /// the C# script icon for Compiler, the shader icon for Shader.
+        /// </summary>
+        private Texture _unityChannelIcon;
+
+        private Texture _compilerChannelIcon;
+        private Texture _shaderChannelIcon;
+
+        /// <summary>
+        /// How many lines of a message a row shows. Unity's console shows two - the message and
+        /// the frame it came from - and that is what this starts on.
+        /// </summary>
+        private int _rowLineCount = 2;
+
+        private ConsoleLog _cachedTraceLog;
+        private string[] _cachedTraceLines;
+        private string[] _cachedTraceDisplayTexts;
+        private string[] _cachedTraceFilePaths;
+        private string[] _cachedTraceClassNames;
+        private int[] _cachedTraceLineNumbers;
+
+
+        private void OnEnable()
+        {
+            _selectedLog = null;
+            InvalidateTraceCache();
+
+            // Set on every enable rather than kept, because the texture behind an editor icon
+            // belongs to the editor and is freed on a domain reload.
+            titleContent = new GUIContent("Flow Console",
+                EditorGUIUtility.IconContent("UnityEditor.ConsoleWindow")?.image);
+
+            // Without this the window is never told the pointer moved, and a toolbar button only
+            // turns hovered on the next repaint something else happens to cause.
+            wantsMouseMove = true;
+
+            _rowLineCount = _state.RowLineCount;
+            _collapseRows = _state.Collapse;
+            _timeFormat = _state.TimeFormat;
+            _flowMode = _state.FlowMode;
+            _showFilters = _state.ShowFilters;
+            _filtersPanelWidth = ClampFiltersPanelWidth(_state.FiltersPanelWidth);
+            _showSettings = _state.ShowSettings;
+            _isolatedChannel = _state.IsolatedChannel;
+            _groupUnmuted[0] = !_state.UnityMuted;
+            _groupUnmuted[1] = !_state.FrameworkMuted;
+            _groupUnmuted[2] = !_state.ModulesMuted;
+
+            _unityChannelsExpanded = _state.UnityChannelsExpanded;
+            _systemChannelsExpanded = _state.FrameworkChannelsExpanded;
+            _moduleChannelsExpanded = _state.ModuleChannelsExpanded;
+            _searchQuery = _search.Parse(_searchText);
+
+            _logFilter = new Dictionary<LogType, bool>
+            {
+                {LogType.Log, true},
+                {LogType.Warning, true},
+                {LogType.Error, true}
+            };
+
+            InitializeLogs();
+
+            _cachedVisibleLogs = new List<ConsoleLog>();
+            _cachedFilteredLogs = _allLogs;
+            _logsDirty = true;
+
+            FlowLogger.OnLogAdded += OnLogAdded;
+            FlowLogger.OnLogsCleared += OnLogsCleared;
+
+            _connectionState = PlayerConnectionGUIUtility.GetConnectionState(this);
+
+            _richTextStyle = new GUIStyle();
+            _richTextStyle.richText = true;
+            _richTextStyle.wordWrap = false;
+            _richTextStyle.clipping = TextClipping.Clip;
+            _richTextStyle.normal.textColor = Color.white;
+
+            _detailRichTextStyle = new GUIStyle();
+            _detailRichTextStyle.richText = true;
+            _detailRichTextStyle.wordWrap = true;
+            _detailRichTextStyle.normal.textColor = Color.white;
+
+            // Wrapped like the message above it. A trace frame is one long line, and unwrapped it
+            // pushed the panel into scrolling sideways - Unity's console folds it instead.
+            _linkStyle = new GUIStyle();
+            _linkStyle.normal.textColor = new Color(0.3f, 0.7f, 1f);
+            _linkStyle.hover.textColor = new Color(0.5f, 0.85f, 1f);
+            _linkStyle.active.textColor = new Color(0.2f, 0.6f, 0.9f);
+            _linkStyle.wordWrap = true;
+
+            // No box and no margin around the panel: the splitter already says where the list ends,
+            // and Unity's console starts its text straight under the line. The padding is what
+            // keeps the first letter off the window's edge.
+            _detailPanelStyle = new GUIStyle();
+            _detailPanelStyle.padding = new RectOffset(4, 4, 2, 2);
+
+            // Unity ships each console icon at two sizes. Scaling the large one down to 14px is
+            // what made the shapes come out ragged, so each is drawn at the size it was authored
+            // for: the small one on a one-line row, the large one on a two-line row.
+            _secondLineStyle = new GUIStyle();
+            _secondLineStyle.richText = false;
+            _secondLineStyle.wordWrap = false;
+            _secondLineStyle.clipping = TextClipping.Clip;
+            _secondLineStyle.fontSize = 10;
+            _secondLineStyle.normal.textColor = new Color(0.65f, 0.65f, 0.65f);
+
+            // The source line with rich text on, for the channel tag that leads it: the tag carries
+            // its colour inside the text, and the dim grey stays for the file and line after it.
+            _secondLineTagStyle = new GUIStyle(_secondLineStyle);
+            _secondLineTagStyle.richText = true;
+
+            _infoIcon = EditorGUIUtility.IconContent("console.infoicon").image;
+            _warningIcon = EditorGUIUtility.IconContent("console.warnicon").image;
+            _errorIcon = EditorGUIUtility.IconContent("console.erroricon").image;
+
+            _dropdownIcon = EditorGUIUtility.IconContent("icon dropdown").image;
+
+            // The toolbar label style is not built here. OnEnable can run before EditorStyles is
+            // ready, and what it hands back then is not the style that was asked for - a probe
+            // showed the label still carrying the toolbar button's own graphics, which is what
+            // painted over the Clear half. It is built on the first repaint instead.
+            _toolbarLabelStyle = null;
+
+            _infoIconSmall = EditorGUIUtility.IconContent("console.infoicon.sml").image;
+            _warningIconSmall = EditorGUIUtility.IconContent("console.warnicon.sml").image;
+            _errorIconSmall = EditorGUIUtility.IconContent("console.erroricon.sml").image;
+
+            _unityChannelIcon = EditorGUIUtility.IconContent("SceneAsset Icon").image;
+            _compilerChannelIcon = EditorGUIUtility.IconContent("cs Script Icon").image;
+            _shaderChannelIcon = EditorGUIUtility.IconContent("Shader Icon").image;
+        }
+
+        /// <summary>
+        /// Why a double-click went nowhere. Nearly always the capture setting rather than a
+        /// missing file, so the answer names the switch that fixes it.
+        /// </summary>
+        private string NoSourceHint()
+        {
+            return Preferences.StackTraceCapture == FlowStackTraceCapture.Always
+                ? "No source was found for this log."
+                : "This log captured no source.\nRaise Source in the toolbar to Always.";
+        }
+
+        /// <summary>
+        /// What each capture setting costs, said where it is chosen. Always is what makes an
+        /// ordinary log clickable, and it is also the most expensive thing the console does.
+        /// </summary>
+        private static string CaptureLabel(FlowStackTraceCapture capture)
+        {
+            switch (capture)
+            {
+                case FlowStackTraceCapture.Never: return "Never  ·  cheapest, nothing is clickable";
+                case FlowStackTraceCapture.WarningsAndErrors: return "Warnings and errors  ·  the default";
+                default: return "Always  ·  every log clickable, costs the most";
+            }
+        }
+
+        /// <summary>
+        /// The first line of a message. A row is one height for every log, so a message carrying
+        /// newlines is read in the detail panel rather than pushing the rows below it off screen.
+        /// </summary>
+        private static string LineOf(string message, int index)
+        {
+            if (string.IsNullOrEmpty(message)) return index == 0 ? string.Empty : null;
+
+            int start = 0;
+
+            for (int i = 0; i < index; i++)
+            {
+                int next = message.IndexOf('\n', start);
+                if (next < 0) return null;
+                start = next + 1;
+            }
+
+            int end = message.IndexOf('\n', start);
+            return end < 0 ? message.Substring(start) : message.Substring(start, end - start);
+        }
+
+        /// <summary>
+        /// What a two-line row says underneath the message: where the log came from, or the
+        /// channel when nothing was captured. Never left blank, because an empty second line
+        /// reads as a rendering fault rather than as missing information.
+        /// </summary>
+        private static string SecondLineFor(ConsoleLog log)
+        {
+            if (!string.IsNullOrEmpty(log.SourceFilePath))
+                return PathText.FileNameOf(log.SourceFilePath) + ":" + log.SourceLineNumber;
+
+            if (!string.IsNullOrEmpty(log.BlameTypeName))
+                return log.BlameTypeName;
+
+            if (!string.IsNullOrEmpty(log.SourceClassName))
+                return log.SourceClassName;
+
+            // Said on the row rather than discovered by double-clicking it and getting nothing.
+            // Ordinary logs capture no source by default, because working one out builds the whole
+            // managed stack as a string and the framework writes a log per signal and command.
+            if (Preferences.StackTraceCapture != FlowStackTraceCapture.Always)
+                return log.SystemLogType + "  ·  source not captured";
+
+            return log.SystemLogType.ToString();
+        }
+
+        private Texture IconFor(LogType logType, bool small)
+        {
+            switch (logType)
+            {
+                case LogType.Warning: return small ? _warningIconSmall : _warningIcon;
+                case LogType.Log: return small ? _infoIconSmall : _infoIcon;
+                default: return small ? _errorIconSmall : _errorIcon;
+            }
+        }
+
+        /// <summary>
+        /// The icon a row carries in place of its channel's text tag. A line Unity wrote carries
+        /// one: the message is then exactly what Unity said, and the row still says at a glance
+        /// which lines are not the framework's and which of the three kinds it is. Every other
+        /// channel writes its tag into the message through its profile, so there is nothing to
+        /// draw for it.
+        /// </summary>
+        private Texture ChannelIconFor(ConsoleLog log)
+        {
+            switch (log.SystemLogType)
+            {
+                case SystemLogType.Unity: return _unityChannelIcon;
+                case SystemLogType.Compiler: return _compilerChannelIcon;
+                case SystemLogType.Shader: return _shaderChannelIcon;
+                default: return null;
+            }
+        }
+
+        private void OnDisable()
+        {
+            FlowLogger.OnLogAdded -= OnLogAdded;
+            FlowLogger.OnLogsCleared -= OnLogsCleared;
+
+            _connectionState?.Dispose();
+            _connectionState = null;
+        }
+
+        private void OnGUI()
+        {
+            RepaintForToolbarHover();
+
+            EditorGUILayout.BeginVertical();
+
+            DrawToolbar();
+
+            // The list and the filters panel side by side, straight under the toolbar. The
+            // panel's width is fixed, so what a wider window buys is more room for the messages
+            // rather than a wider column of channel names. The gear floats over the list's
+            // top-right corner while it is closed, and opens a bar of its own above the list -
+            // see FloatingStripGUI and SettingsBarGUI.
+            EditorGUILayout.BeginHorizontal();
+
+            EditorGUILayout.BeginVertical();
+            LogsPanelGUI();
+            EditorGUILayout.EndVertical();
+
+            if (_showFilters)
+                FiltersPanelGUI();
+
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.EndVertical();
+        }
+
+        /// <summary>
+        /// A toolbar button only looks hovered while the window is repainting, and a console that
+        /// is not receiving logs repaints for nothing - which is why hovering used to take about a
+        /// second to show. The window asks for mouse-move events and repaints on them, but only
+        /// while the pointer is over the toolbar or the strip floating on the list, or has just
+        /// left one of them. Moving across the log list still costs nothing.
+        /// </summary>
+        private void RepaintForToolbarHover()
+        {
+            if (Event.current.type != EventType.MouseMove) return;
+
+            // Nothing has been drawn yet, so there is no toolbar to test against. Repaint once to
+            // get one.
+            if (_toolbarRect.height <= 0f)
+            {
+                Repaint();
+                return;
+            }
+
+            Vector2 mouse = Event.current.mousePosition;
+            bool overToolbar = _toolbarRect.Contains(mouse) || _stripRect.Contains(mouse);
+            if (!overToolbar && !_mouseWasOverToolbar) return;
+
+            _mouseWasOverToolbar = overToolbar;
+            Repaint();
+        }
+
+        private void DrawToolbar()
+        {
+            // The severity counts are drawn up here now, so the list they count has to be rebuilt
+            // before the toolbar rather than after it. The call does nothing unless it is due.
+            RebuildCachedLogs();
+
+            Rect toolbarRect = EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+
+            // Kept only from a repaint. BeginHorizontal answers with an empty rect during a
+            // layout pass, and storing that wiped the real one just before the mouse-move event
+            // that needed it - which is why hovering was quick coming from Unity's own controls
+            // and slow everywhere else.
+            if (Event.current.type == EventType.Repaint)
+                _toolbarRect = toolbarRect;
+
+            // What a narrow window drops, and in what order, the way Unity's own console drops
+            // it: the search first, then the player picker, then Error Pause. Clear, Collapse and
+            // the severity counts are always drawn - the counts are the one thing a console must
+            // never lose, and they were the first thing the right edge cut off. A control that
+            // does not fit is left out rather than drawn half.
+            bool searching = !string.IsNullOrEmpty(_searchText);
+            bool focusVisible = IsSelectedLogOffScreen();
+
+            float mandatory = ClearWidth + ClearArrowWidth + CollapseWidth + SeverityTogglesWidth()
+                              + (focusVisible ? FocusLogWidth : 0f)
+                              + (searching ? SearchMinWidth + SearchCountWidth : 0f)
+                              + ToolbarSlack;
+
+            float editorWidth = _connectionState != null ? EditorDropdownWidth() : 0f;
+            float width = position.width;
+
+            bool showErrorPause = width >= mandatory + ErrorPauseWidth;
+
+            // The picker is judged by the width it really drew at, taken off the last repaint. Until
+            // it has drawn once there is only an estimate from its connection name, which is longer
+            // than the label Unity puts on it, so it is drawn that once and measured rather than
+            // dropped on a guess.
+            bool showEditor = showErrorPause && _connectionState != null
+                                             && (width >= mandatory + ErrorPauseWidth + editorWidth || !IsEditorDropdownMeasured());
+
+            // The search is dropped first, and on its own account: what is left after the controls
+            // that are drawn has to hold it at its narrowest. A search with something typed in it
+            // is never hidden - it is narrowing the list, and a reader has to be able to see that
+            // and clear it.
+            float drawn = mandatory + (showErrorPause ? ErrorPauseWidth : 0f) + (showEditor ? editorWidth : 0f);
+            bool showSearch = searching || width >= drawn + SearchMinWidth;
+
+            ClearButtonGUI();
+
+            // Collapse before Error Pause, which is the order Unity's own console puts them in.
+            bool collapse = GUILayout.Toggle(_collapseRows, "Collapse", EditorStyles.toolbarButton,
+                GUILayout.Width(CollapseWidth));
+            if (collapse != _collapseRows)
+            {
+                _collapseRows = collapse;
+                _state.Collapse = collapse;
+                _logsDirty = true;
+                _needsRepaint = true;
+            }
+
+            if (showErrorPause)
+            {
+                bool errorPause = GUILayout.Toggle(_state.ErrorPause, "Error Pause", EditorStyles.toolbarButton,
+                    GUILayout.Width(ErrorPauseWidth));
+                if (errorPause != _state.ErrorPause)
+                    _state.ErrorPause = errorPause;
+            }
+
+            // Unity's own attach-to-player picker, where Unity's console puts it. A development
+            // player picked here sends its rows over the same connection, through PlayerLogSender.
+            if (showEditor)
+            {
+                PlayerConnectionGUILayout.ConnectionTargetSelectionDropdown(_connectionState, EditorStyles.toolbarDropDown);
+
+                if (Event.current.type == EventType.Repaint)
+                {
+                    _measuredEditorDropdownWidth = GUILayoutUtility.GetLastRect().width;
+                    _measuredEditorDropdownName = _connectionState.connectionName;
+                }
+            }
+
+            // Flow, Pinned and Time are not here: they are view switches rather than console
+            // actions, and they sit at the left end of the bar the gear opens - see SettingsBarGUI.
+
+            // Only while the selected row is somewhere the reader cannot see. A button that is
+            // there when it would do nothing asks them to work out why nothing happened.
+            if (focusVisible)
+            {
+                var focusLabel = new GUIContent("Focus Log", "Scroll the selected row back into view.");
+
+                if (GUILayout.Button(focusLabel, EditorStyles.toolbarButton, GUILayout.Width(FocusLogWidth),
+                        GUILayout.ExpandHeight(true)))
+                {
+                    _scrollToSelectedLog = true;
+                    _needsRepaint = true;
+                }
+            }
+
+            GUILayout.FlexibleSpace();
+
+            // Only while a search is on. A search is typed and its effect is invisible - the reader
+            // cannot tell a term that matched nothing from one that matched everything - where the
+            // channels they switched off are shown by the panel and counted on its button.
+            if (searching)
+            {
+                int shownRows = _cachedVisibleLogs?.Count ?? 0;
+                int heldRows = _allLogs?.Count ?? 0;
+
+                Rect countRect = GUILayoutUtility.GetRect(new GUIContent("0 / 0"), EditorStyles.miniLabel,
+                    GUILayout.Width(SearchCountWidth), GUILayout.ExpandHeight(true));
+
+                if (Event.current.type == EventType.Repaint)
+                {
+                    EnsureChannelRowStyles();
+
+                    GUI.Label(countRect, shownRows + " / " + heldRows,
+                        shownRows == heldRows ? _groupCountStyle : _groupCountHighlightStyle);
+                }
+            }
+
+            _searchField ??= new SearchField();
+
+            string newSearch = showSearch
+                ? _searchField.OnToolbarGUI(_searchText, GUILayout.MinWidth(SearchMinWidth))
+                : _searchText;
+
+            if (newSearch != _searchText)
+            {
+                bool startingSearch = string.IsNullOrEmpty(_searchText) && !string.IsNullOrEmpty(newSearch);
+                bool clearingSearch = !string.IsNullOrEmpty(_searchText) && string.IsNullOrEmpty(newSearch);
+
+                if (startingSearch)
+                {
+                    _preSearchScrollY = _logsPanelScroll.y;
+                    _logSelectedDuringSearch = false;
+                }
+
+                if (clearingSearch)
+                {
+                    if (_logSelectedDuringSearch && _selectedLog != null)
+                        _scrollToSelectedLog = true;
+                    else
+                        _logsPanelScroll.y = _preSearchScrollY;
+                }
+
+                _searchText = newSearch;
+                _searchQuery = _search.Parse(_searchText);
+                _logsDirty = true;
+                _needsRepaint = true;
+            }
+
+            // A half-typed expression matches nothing, and a list that empties for no visible
+            // reason reads as a broken window. Say which it is.
+            if (_searchQuery != null && _searchQuery.IsBrokenPattern)
+            {
+                GUILayout.Label("bad pattern", EditorStyles.miniLabel);
+            }
+
+            SeverityTogglesGUI();
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        /// <summary>
+        /// The three severity switches, drawn where Unity's console draws them: at the right end of
+        /// the toolbar, as an icon and a count rather than a word and a number in brackets.
+        /// </summary>
+        private void SeverityTogglesGUI()
+        {
+            SeverityToggleGUI(LogType.Log, _cachedLogCount);
+            SeverityToggleGUI(LogType.Warning, _cachedWarningCount);
+            SeverityToggleGUI(LogType.Error, _cachedErrorCount);
+        }
+
+        /// <summary>
+        /// How wide the three severity switches come out, measured from what they will say, so the
+        /// toolbar can keep room for them before it lays anything else out. They are the one part
+        /// of the toolbar that is never dropped.
+        /// </summary>
+        private float SeverityTogglesWidth()
+        {
+            return SeverityToggleWidth(LogType.Log, _cachedLogCount)
+                   + SeverityToggleWidth(LogType.Warning, _cachedWarningCount)
+                   + SeverityToggleWidth(LogType.Error, _cachedErrorCount);
+        }
+
+        private float SeverityToggleWidth(LogType logType, int count)
+        {
+            return Mathf.Max(SeverityToggleMinWidth,
+                EditorStyles.toolbarButton.CalcSize(SeverityContent(logType, count)).x);
+        }
+
+        /// <summary>
+        /// How wide the player picker comes out. It sizes itself to the name of what it is attached
+        /// to - "Editor", or a device's name - so it is read off the last repaint that drew it. Until
+        /// there has been one, or when the connection has changed since, the connection name is
+        /// measured instead; Unity draws a shorter label than that name, so the estimate errs wide.
+        /// </summary>
+        private float EditorDropdownWidth()
+        {
+            if (IsEditorDropdownMeasured()) return _measuredEditorDropdownWidth;
+
+            string name = _connectionState.connectionName;
+            if (string.IsNullOrEmpty(name)) name = "Editor";
+
+            return EditorStyles.toolbarDropDown.CalcSize(new GUIContent(name)).x;
+        }
+
+        private bool IsEditorDropdownMeasured()
+        {
+            return _connectionState != null && _measuredEditorDropdownWidth > 0f
+                                            && _measuredEditorDropdownName == _connectionState.connectionName;
+        }
+
+        /// <summary>The picker's width off the last repaint that drew it, and the connection it was drawn for.</summary>
+        private float _measuredEditorDropdownWidth;
+
+        private string _measuredEditorDropdownName;
+
+        private const float SeverityToggleMinWidth = 38f;
+
+        private GUIContent SeverityContent(LogType logType, int count)
+        {
+            return new GUIContent(" " + count, IconFor(logType, true), logType + " messages");
+        }
+
+        private void SeverityToggleGUI(LogType logType, int count)
+        {
+            GUIContent content = SeverityContent(logType, count);
+
+            bool shown = GUILayout.Toggle(_logFilter[logType], content, EditorStyles.toolbarButton,
+                GUILayout.MinWidth(SeverityToggleMinWidth), GUILayout.ExpandHeight(true));
+
+            if (shown == _logFilter[logType]) return;
+
+            _logFilter[logType] = shown;
+            _logsDirty = true;
+            _needsRepaint = true;
+        }
+
+        /// <summary>
+        /// The sets of channels a reader keeps coming back to. Two ship with the console, named
+        /// for the job rather than the channels, and the rest are whatever they save.
+        /// </summary>
+        private void PresetMenuGUI(Rect rect)
+        {
+            var content = new GUIContent("Presets", "Channel filters saved under a name.");
+
+            if (!GUI.Button(rect, content, EditorStyles.toolbarDropDown)) return;
+
+            var menu = new GenericMenu();
+
+            // Offered only while there is something to put back: a reader whose channels already
+            // stand where the project has them would pick it and see nothing change.
+            if (Channels.Visibility.HasSwitches)
+                menu.AddItem(new GUIContent("Defaults"), false, ApplyDefaults);
+            else
+                menu.AddDisabledItem(new GUIContent("Defaults"));
+
+            menu.AddSeparator("");
+
+            for (int i = 0; i < _presets.BuiltIn.Count; i++)
+            {
+                FilterPreset preset = _presets.BuiltIn[i];
+                menu.AddItem(new GUIContent(preset.Name), false, () => ApplyPreset(preset));
+            }
+
+            List<FilterPreset> saved = _presets.LoadSaved();
+
+            if (saved.Count > 0)
+            {
+                menu.AddSeparator("");
+
+                for (int i = 0; i < saved.Count; i++)
+                {
+                    FilterPreset preset = saved[i];
+                    menu.AddItem(new GUIContent(preset.Name), false, () => ApplyPreset(preset));
+                }
+
+                menu.AddSeparator("");
+
+                for (int i = 0; i < saved.Count; i++)
+                {
+                    string name = saved[i].Name;
+                    menu.AddItem(new GUIContent("Delete/" + name), false, () => _presets.Delete(name));
+                }
+            }
+
+            menu.AddSeparator("");
+            menu.AddItem(new GUIContent("Save shown channels..."), false, SaveCurrentPreset);
+
+            menu.DropDown(new Rect(rect.x, rect.yMax, 0f, 0f));
+        }
+
+        private void ApplyPreset(FilterPreset preset)
+        {
+            IReadOnlyList<FlowLogChannel> channels = Channels.All;
+
+            for (int i = 0; i < channels.Count; i++)
+                Channels.Visibility.Show(channels[i], preset.VisibleChannels.Contains(channels[i].Name));
+
+            OnLogTypeSelectionChanged();
+        }
+
+        /// <summary>
+        /// The set the channels ship with, which is a preset like the others except that nobody
+        /// saved it: the framework's own defaults and every module on, which is what a developer
+        /// sees before they throw a switch of their own. Applying it drops their switches rather
+        /// than writing them.
+        /// </summary>
+        private void ApplyDefaults()
+        {
+            Channels.Visibility.Reset();
+            OnLogTypeSelectionChanged();
+        }
+
+        private void SaveCurrentPreset()
+        {
+            var visible = new List<string>();
+            IReadOnlyList<FlowLogChannel> channels = Channels.All;
+
+            for (int i = 0; i < channels.Count; i++)
+            {
+                if (Channels.IsShown(channels[i])) visible.Add(channels[i].Name);
+            }
+
+            FlowConsolePresetNameWindow.Show(name => _presets.Save(name, visible));
+        }
+
+        /// <summary>
+        /// Handing the list to somebody who was not at the machine. What it writes is what the
+        /// console is showing - filters, search and Collapse included - because the rows the
+        /// reader narrowed down to are the ones worth sending.
+        /// </summary>
+        private void ExportMenuGUI(Rect rect)
+        {
+            var content = new GUIContent("Export", "Save or copy the rows the console is showing.");
+
+            if (!GUI.Button(rect, content, EditorStyles.toolbarDropDown)) return;
+
+            var menu = new GenericMenu();
+            AddExportItems(menu, "");
+            menu.DropDown(new Rect(rect.x, rect.yMax, 0f, 0f));
+        }
+
+        /// <summary>
+        /// The three ways out: the dropdown's list, and under a path the tab menu's Export
+        /// submenu.
+        /// </summary>
+        private void AddExportItems(GenericMenu menu, string path)
+        {
+            menu.AddItem(new GUIContent(path + "Save shown rows..."), false, () => SaveShownLogs(false));
+            menu.AddItem(new GUIContent(path + "Save shown rows with stack traces..."), false, () => SaveShownLogs(true));
+            menu.AddSeparator(path);
+            menu.AddItem(new GUIContent(path + "Copy shown rows"), false,
+                () => EditorGUIUtility.systemCopyBuffer = _export.ToText(_cachedVisibleLogs, false));
+        }
+
+        private void SaveShownLogs(bool includeStackTrace)
+        {
+            string suggested = "flow-console-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".txt";
+            string path = EditorUtility.SaveFilePanel("Export Flow Console", "", suggested, "txt");
+
+            if (string.IsNullOrEmpty(path)) return;
+
+            File.WriteAllText(path, _export.ToText(_cachedVisibleLogs, includeStackTrace));
+        }
+
+        /// <summary>
+        /// Clear and the arrow beside it, drawn as the one split button Unity's console has.
+        ///
+        /// EditorStyles.toolbarDropDown cannot make this shape: it draws its own border and its
+        /// own arrow, which put the divider hard against the glyph and ran it the full height of
+        /// the bar. Here the two halves share one background, the divider is inset top and bottom
+        /// because it belongs to the button rather than to the toolbar, hovering either half
+        /// lights the whole thing, and hovering the arrow lights the arrow again on top.
+        /// </summary>
+        /// <summary>
+        /// Built on demand, inside OnGUI, where the editor's styles are certain to be ready.
+        /// GUIStyle.none carries no graphics of any kind, so nothing here can paint over what the
+        /// button drew underneath it.
+        /// </summary>
+        private void EnsureToolbarLabelStyle()
+        {
+            if (_styleGuard.IsBuilt(_toolbarLabelStyle, "FlowConsoleToolbarLabel")) return;
+
+            _toolbarLabelStyle = new GUIStyle(GUIStyle.none)
+            {
+                name = "FlowConsoleToolbarLabel",
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = EditorStyles.toolbarButton.fontSize,
+                font = EditorStyles.toolbarButton.font
+            };
+
+            _toolbarLabelStyle.normal.textColor = EditorStyles.label.normal.textColor;
+        }
+
+        private void ClearButtonGUI()
+        {
+            EnsureToolbarLabelStyle();
+
+            const float clearWidth = ClearWidth;
+            const float arrowWidth = ClearArrowWidth;
+
+            // The height is the toolbar row's, not a number of our own. Asking for
+            // singleLineHeight made this button two pixels shorter than the ones beside it, which
+            // left an unlit strip along the bottom and sat the label higher than Collapse's.
+            Rect whole = GUILayoutUtility.GetRect(clearWidth + arrowWidth, EditorGUIUtility.singleLineHeight,
+                EditorStyles.toolbarButton,
+                GUILayout.Width(clearWidth + arrowWidth), GUILayout.ExpandHeight(true));
+
+            var clearRect = new Rect(whole.x, whole.y, clearWidth, whole.height);
+            var arrowRect = new Rect(whole.x + clearWidth, whole.y, arrowWidth, whole.height);
+
+            Vector2 mouse = Event.current.mousePosition;
+            bool overWhole = whole.Contains(mouse);
+            bool overArrow = arrowRect.Contains(mouse);
+
+            if (Event.current.type == EventType.Repaint)
+            {
+                // Every pixel here is drawn by hand. EditorStyles.toolbarButton was doing two
+                // things that could not be switched off: its background carries borders, and the
+                // one at the arrow's left edge landed exactly on the divider and read as a second
+                // line beside it; and its hover state could not be made to light one half more
+                // than the other without drawing a second button, which brought the border back.
+                bool pro = EditorGUIUtility.isProSkin;
+
+                // The row runs to the bottom of the toolbar, and the toolbar's own dark edge is
+                // the last pixel of it. A wash painted over the full height covered that line, so
+                // the lit area stops one pixel short of it.
+                var wholeFill = new Rect(whole.x, whole.y, whole.width, whole.height - 1f);
+                var arrowFill = new Rect(arrowRect.x, arrowRect.y, arrowRect.width, arrowRect.height - 1f);
+
+                if (overWhole)
+                {
+                    EditorGUI.DrawRect(wholeFill, pro
+                        ? new Color(1f, 1f, 1f, 0.08f)
+                        : new Color(0f, 0f, 0f, 0.06f));
+                }
+
+                // Hovering the arrow lights the arrow further while the Clear half stays lit
+                // underneath, which is the shape Unity's split button has.
+                if (overArrow)
+                {
+                    EditorGUI.DrawRect(arrowFill, pro
+                        ? new Color(1f, 1f, 1f, 0.10f)
+                        : new Color(0f, 0f, 0f, 0.08f));
+                }
+
+                // The label alone, with no background of its own.
+                GUI.Label(clearRect, ClearLabel, _toolbarLabelStyle);
+
+                // Inset so the divider reads as part of the button rather than as a cut through
+                // the toolbar, which is what running it the full height looked like.
+                var divider = new Rect(arrowRect.x, whole.y + 4f, 1f, whole.height - 8f);
+                EditorGUI.DrawRect(divider, new Color(0f, 0f, 0f, 0.35f));
+
+                if (_dropdownIcon != null)
+                {
+                    const float glyphSize = 12f;
+                    var glyph = new Rect(arrowRect.x + (arrowWidth - glyphSize) * 0.5f,
+                        whole.y + (whole.height - glyphSize) * 0.5f, glyphSize, glyphSize);
+                    GUI.DrawTexture(glyph, _dropdownIcon, ScaleMode.ScaleToFit);
+                }
+            }
+
+            if (Event.current.type != EventType.MouseDown || Event.current.button != 0) return;
+
+            if (overArrow)
+            {
+                var menu = new GenericMenu();
+
+                menu.AddItem(new GUIContent("Clear on Play"), _state.ClearOnPlay,
+                    () => _state.ClearOnPlay = !_state.ClearOnPlay);
+                menu.AddItem(new GUIContent("Clear on Recompile"), _state.ClearOnRecompile,
+                    () => _state.ClearOnRecompile = !_state.ClearOnRecompile);
+                menu.AddItem(new GUIContent("Clear on Build"), _state.ClearOnBuild,
+                    () => _state.ClearOnBuild = !_state.ClearOnBuild);
+
+                // Hung under the button's own left edge, the way Unity's does, rather than
+                // wherever the pointer happened to be.
+                menu.DropDown(new Rect(whole.x, whole.yMax, 0f, 0f));
+                Event.current.Use();
+                return;
+            }
+
+            if (!clearRect.Contains(mouse)) return;
+
+            FlowLogger.ClearLogs();
+            _searchText = "";
+            Event.current.Use();
+        }
+
+        private void Update()
+        {
+            if (_needsRepaint)
+            {
+                _needsRepaint = false;
+                Repaint();
+            }
+        }
+
+        /// <summary>
+        /// Somebody emptied the list - Clear on Play, Clear on Recompile, or a call from game
+        /// code. The window holds its own copy, so it has to let go of it too.
+        /// </summary>
+        private void OnLogsCleared()
+        {
+            InitializeLogs();
+            _selectedLog = null;
+            InvalidateTraceCache();
+            _logsDirty = true;
+            _needsRepaint = true;
+        }
+
+        private void InitializeLogs()
+        {
+            _allLogs = new List<ConsoleLog>(FlowLogger.Logs);
+        }
+
+        /// <summary>
+        /// The switch that opens the filters panel, with the count that says whether the list is
+        /// narrowed. While the panel is closed it floats over the list beside the gear; open, it
+        /// is drawn at the top of the panel as that panel's own header. Either way it is as wide
+        /// as the panel, so it never changes size under the pointer that toggles it.
+        /// </summary>
+        private void FiltersToggleGUI(Rect rect)
+        {
+            // Every channel the panel holds, all three groups together, so the button says whether
+            // the list is narrowed without the panel having to be open. Isolation is one channel
+            // showing however many switches are on underneath it.
+            CountChannels(logType => true, out int channelsShown, out int channelsTotal);
+            if (!string.IsNullOrEmpty(_isolatedChannel)) channelsShown = 1;
+
+            var filtersLabel = new GUIContent("Filters",
+                "Open the panel that holds every channel this console can show.\n"
+                + "The count is how many of them are showing.");
+
+            bool showFilters = GUI.Toggle(rect, _showFilters, filtersLabel, EditorStyles.toolbarButton);
+
+            // The count is drawn beside the word rather than inside it, in the same small type the
+            // panel's own group headers use, so the two read as one thing.
+            if (Event.current.type == EventType.Repaint && FiltersPanelShowsCounts)
+            {
+                EnsureChannelRowStyles();
+
+                GUI.Label(new Rect(rect.xMax - 54f, rect.y, 46f, rect.height),
+                    channelsShown + " / " + channelsTotal,
+                    channelsShown == channelsTotal ? _groupCountStyle : _groupCountHighlightStyle);
+            }
+
+            if (showFilters == _showFilters) return;
+
+            _showFilters = showFilters;
+            _state.ShowFilters = showFilters;
+            _needsRepaint = true;
+        }
+
+        private void LogsPanelGUI()
+        {
+            RebuildCachedLogs();
+
+            HandleListKeys();
+
+            if (_scrollToSelectedLog && _selectedLog != null && Event.current.type == EventType.Layout)
+                ScrollToSelectedLog();
+
+            int totalCount = _cachedVisibleLogs.Count;
+
+            // Decided here, in window space: inside the scroll view the mouse position is
+            // scrolled along with the content, and the strip is not.
+            _pointerOverStrip = _stripRect.Contains(Event.current.mousePosition);
+
+            HandleListWheel();
+
+            // A row of its own above the list, so the rows start under it. Closed, the gear
+            // floats over the list instead and is drawn after it - see the end of this method.
+            // Read once: the gear on either can flip the switch part-way through this pass, and
+            // the other must not then be drawn in the same one.
+            bool settingsBarOpen = _showSettings;
+
+            if (settingsBarOpen)
+                SettingsBarGUI();
+
+            _logsPanelScroll = EditorGUILayout.BeginScrollView(_logsPanelScroll);
+
+            if (totalCount > 0 && _cumulativeHeights != null)
+            {
+                if (Event.current.type == EventType.Layout)
+                {
+                    float viewportHeight = position.height;
+                    float scrollY = _logsPanelScroll.y;
+
+                    int lo = 0, hi = totalCount;
+                    while (lo < hi)
+                    {
+                        int mid = (lo + hi) / 2;
+                        if (_cumulativeHeights[mid + 1] <= scrollY)
+                            lo = mid + 1;
+                        else
+                            hi = mid;
+                    }
+
+                    _layoutFirstVisible = Mathf.Clamp(lo, 0, totalCount - 1);
+
+                    float visibleEnd = scrollY + viewportHeight;
+                    _layoutLastVisible = _layoutFirstVisible;
+                    for (int i = _layoutFirstVisible; i < totalCount; i++)
+                    {
+                        if (_cumulativeHeights[i] >= visibleEnd)
+                            break;
+                        _layoutLastVisible = i;
+                    }
+
+                    _layoutLastVisible = Mathf.Min(_layoutLastVisible + 1, totalCount - 1);
+                }
+
+                int firstVisible = Mathf.Clamp(_layoutFirstVisible, 0, totalCount - 1);
+                int lastVisible = Mathf.Clamp(_layoutLastVisible, firstVisible, totalCount - 1);
+
+                float spaceBefore = _cumulativeHeights[firstVisible];
+                if (spaceBefore > 0)
+                    GUILayout.Space(spaceBefore);
+
+                for (int i = firstVisible; i <= lastVisible; i++)
+                {
+                    LogGUI(_cachedVisibleLogs[i], _cachedLogHeights[i], i);
+                }
+
+                float spaceAfter = _cumulativeHeights[totalCount] - _cumulativeHeights[lastVisible + 1];
+                if (spaceAfter > 0)
+                    GUILayout.Space(spaceAfter);
+            }
+
+            EditorGUILayout.EndScrollView();
+
+            // A right-click the rows did not take: the settings menu, on the list's empty tail.
+            ListContextMenuGUI();
+
+            // How tall the list actually is decides where its bottom sits, and only a repaint
+            // knows - during Layout the rect is still a placeholder. Resizing the window or
+            // dragging the detail panel moves that bottom, so a view resting on it follows.
+            if (Event.current.type == EventType.Repaint)
+            {
+                _logsViewportRect = GUILayoutUtility.GetLastRect();
+                float height = _logsViewportRect.height;
+
+                if (height > 0f && !Mathf.Approximately(height, _logsViewportHeight))
+                {
+                    bool wasAtBottom = _stickyTail.IsAtBottom(
+                        _logsPanelScroll.y, _logsViewportHeight, ContentHeight());
+
+                    _logsViewportHeight = height;
+
+                    float follow = _stickyTail.Follow(
+                        wasAtBottom, _logsPanelScroll.y, height, ContentHeight());
+
+                    if (!Mathf.Approximately(follow, _logsPanelScroll.y))
+                    {
+                        _logsPanelScroll.y = follow;
+                        Repaint();
+                    }
+                }
+
+                if (totalCount == 0)
+                    EmptyListHintGUI(_logsViewportRect);
+            }
+
+            if (!settingsBarOpen)
+                FloatingStripGUI(_logsViewportRect);
+
+            DetailPanelGUI();
+        }
+
+        /// <summary>
+        /// The wheel over the list, taken here rather than left to the scroll view. Unity's scroll
+        /// view takes a notch on the event and hands the new position back on the next pass, and
+        /// with the detail panel open that hand-back never came: the notch was used and the list
+        /// stayed where it was. Moved here, in window space and before the scroll view opens, the
+        /// position is the window's own and the wheel answers whatever else is drawn. The step is
+        /// the one Unity's scroll views move by, so the list feels like the panel beside it.
+        /// </summary>
+        private void HandleListWheel()
+        {
+            Event current = Event.current;
+            if (current.type != EventType.ScrollWheel || !_logsViewportRect.Contains(current.mousePosition)) return;
+
+            float bottom = _stickyTail.BottomOf(_logsViewportHeight, ContentHeight());
+            _logsPanelScroll.y = Mathf.Clamp(_logsPanelScroll.y + current.delta.y * WheelStep, 0f, bottom);
+
+            current.Use();
+            Repaint();
+        }
+
+        private void RebuildCachedLogs()
+        {
+            if (!_logsDirty) return;
+            if (Event.current != null && Event.current.type != EventType.Layout) return;
+            _logsDirty = false;
+
+            // Asked before the list is rebuilt, because where the view was resting is only
+            // answerable against the content it was resting in.
+            bool wasAtBottom = _stickyTail.IsAtBottom(_logsPanelScroll.y, _logsViewportHeight, ContentHeight());
+
+            bool allTypesVisible = true;
+            IReadOnlyList<FlowLogChannel> channels = Channels.All;
+
+            for (int i = 0; i < channels.Count; i++)
+            {
+                if (Channels.IsShown(channels[i])) continue;
+
+                allTypesVisible = false;
+                break;
+            }
+
+            // Isolation and muting hide rows without switching a channel off, so the shortcut for
+            // "everything is visible, hand the list straight over" has to know about them too.
+            if (!string.IsNullOrEmpty(_isolatedChannel) || !_groupUnmuted[0] || !_groupUnmuted[1] || !_groupUnmuted[2])
+                allTypesVisible = false;
+
+            if (allTypesVisible)
+            {
+                _cachedFilteredLogs = _allLogs;
+            }
+            else
+            {
+                var allLogs = _allLogs;
+                if (_multiTypeFilterBuffer == null)
+                    _multiTypeFilterBuffer = new List<ConsoleLog>();
+                else
+                    _multiTypeFilterBuffer.Clear();
+
+                for (int i = 0; i < allLogs.Count; i++)
+                {
+                    var log = allLogs[i];
+
+                    // A pin outranks a filter. Turning a channel off means hide that kind of log,
+                    // and the reader already said this particular one is not the kind they meant.
+                    // A warning and an error outrank it too: a switch hides chatter, and only the
+                    // severity toggles hide a report.
+                    if (!_channelRule.AnswersToChannels(log))
+                    {
+                        _multiTypeFilterBuffer.Add(log);
+                        continue;
+                    }
+
+                    // Isolation answers before anything else: one channel is showing and the rest
+                    // are not, whatever their switches and their groups say.
+                    if (!string.IsNullOrEmpty(_isolatedChannel))
+                    {
+                        if (string.Equals(log.Channel, _isolatedChannel, StringComparison.OrdinalIgnoreCase))
+                            _multiTypeFilterBuffer.Add(log);
+
+                        continue;
+                    }
+
+                    if (Channels.TryGet(log.Channel, out FlowLogChannel channel) && Channels.IsShown(channel) && !IsGroupMuted(channel))
+                        _multiTypeFilterBuffer.Add(log);
+                }
+
+                _cachedFilteredLogs = _multiTypeFilterBuffer;
+            }
+
+            _cachedLogCount = 0;
+            _cachedWarningCount = 0;
+            _cachedErrorCount = 0;
+            for (int i = 0; i < _cachedFilteredLogs.Count; i++)
+            {
+                switch (_cachedFilteredLogs[i].LogType)
+                {
+                    case LogType.Log: _cachedLogCount++; break;
+                    case LogType.Warning: _cachedWarningCount++; break;
+                    case LogType.Error: _cachedErrorCount++; break;
+                }
+            }
+
+            RebuildVisibleLogs();
+
+            if (_selectedLog != null && !_cachedVisibleLogs.Contains(_selectedLog))
+            {
+                _selectedLog = null;
+                InvalidateTraceCache();
+            }
+
+            _logsPanelScroll.y = _stickyTail.Follow(
+                wasAtBottom, _logsPanelScroll.y, _logsViewportHeight, ContentHeight());
+        }
+
+        /// <summary>
+        /// Walking the list with the keyboard. Handled before the scroll view is opened, so a key
+        /// this window answers never also reaches the scroll view underneath it. While a text
+        /// field is being edited the keyboard belongs to that field - the search box takes its own
+        /// arrow keys.
+        /// </summary>
+        private void HandleListKeys()
+        {
+            Event currentEvent = Event.current;
+            if (currentEvent.type != EventType.KeyDown) return;
+            if (EditorGUIUtility.editingTextField) return;
+
+            int count = _cachedVisibleLogs?.Count ?? 0;
+            if (count == 0) return;
+
+            if (currentEvent.keyCode == KeyCode.Return || currentEvent.keyCode == KeyCode.KeypadEnter)
+            {
+                if (_selectedLog != null && !_navigator.Open(_selectedLog))
+                    ShowNotification(new GUIContent(NoSourceHint()), 3d);
+
+                currentEvent.Use();
+                return;
+            }
+
+            if (currentEvent.keyCode == KeyCode.P && !currentEvent.control && !currentEvent.command)
+            {
+                if (_selectedLog != null)
+                {
+                    _pins.Toggle(_selectedLog);
+                    _logsDirty = true;
+                }
+
+                Repaint();
+                currentEvent.Use();
+                return;
+            }
+
+            if ((currentEvent.control || currentEvent.command) && currentEvent.keyCode == KeyCode.C)
+            {
+                if (_selectedLog != null)
+                    EditorGUIUtility.systemCopyBuffer = CopyTextOf(_selectedLog);
+
+                currentEvent.Use();
+                return;
+            }
+
+            int index = _selectedLog == null ? -1 : _cachedVisibleLogs.IndexOf(_selectedLog);
+            float rowHeight = _rowLineCount * LogEntryLineHeight + LogEntryPadding;
+            int rowsPerPage = Mathf.FloorToInt(_logsViewportHeight / rowHeight);
+
+            if (!_keyboard.TryMove(currentEvent.keyCode, index, count, rowsPerPage, out int moved)) return;
+
+            _selectedLog = _cachedVisibleLogs[moved];
+            _detailPanelScroll = Vector2.zero;
+            InvalidateTraceCache();
+
+            if (_cumulativeHeights != null && _cumulativeHeights.Length > moved)
+            {
+                _logsPanelScroll.y = _keyboard.Reveal(
+                    _logsPanelScroll.y, _logsViewportHeight, _cumulativeHeights[moved], rowHeight);
+            }
+
+            Repaint();
+            currentEvent.Use();
+        }
+
+        /// <summary>What Ctrl+C puts on the clipboard: the message, and the trace under it when
+        /// there is one, which is what a reader pastes into a bug report.</summary>
+        private string CopyTextOf(ConsoleLog log)
+        {
+            if (string.IsNullOrEmpty(log.StackTrace)) return log.Message;
+
+            return log.Message + "\n" + log.StackTrace;
+        }
+
+        /// <summary>
+        /// Whether the selected row is somewhere the view is not. The same question the keyboard's
+        /// reveal answers: if bringing the row into view would move the list, it is not in view.
+        /// </summary>
+        private bool IsSelectedLogOffScreen()
+        {
+            if (_selectedLog == null) return false;
+            if (_cachedVisibleLogs == null || _cumulativeHeights == null) return false;
+
+            int index = _cachedVisibleLogs.IndexOf(_selectedLog);
+            if (index < 0 || index >= _cachedLogHeights.Length) return false;
+
+            float revealed = _keyboard.Reveal(_logsPanelScroll.y, _logsViewportHeight,
+                _cumulativeHeights[index], _cachedLogHeights[index]);
+
+            return !Mathf.Approximately(revealed, _logsPanelScroll.y);
+        }
+
+        /// <summary>How tall the whole list is, folded and filtered as it currently stands.</summary>
+        private float ContentHeight()
+        {
+            if (_cumulativeHeights == null || _cachedVisibleLogs == null) return 0f;
+            if (_cachedVisibleLogs.Count == 0) return 0f;
+
+            return _cumulativeHeights[_cachedVisibleLogs.Count];
+        }
+
+        private void RebuildVisibleLogs()
+        {
+            if (_cachedVisibleLogs == null)
+                _cachedVisibleLogs = new List<ConsoleLog>();
+            else
+                _cachedVisibleLogs.Clear();
+
+            if (_cachedFilteredLogs == null) return;
+
+            bool hasSearch = !string.IsNullOrEmpty(_searchText);
+
+            for (int i = 0; i < _cachedFilteredLogs.Count; i++)
+            {
+                var log = _cachedFilteredLogs[i];
+                if (_pinnedOnly && !log.Pinned) continue;
+
+                // The severity toggles are a filter like the channels, so a pin outranks them too.
+                // A search is not - that is the reader looking for something rather than hiding a
+                // kind of log, and answering it with rows they pinned for another reason is noise.
+                if (!log.Pinned && !_logFilter[log.LogType]) continue;
+                if (hasSearch && !_searchQuery.Matches(log.Message)) continue;
+                _cachedVisibleLogs.Add(log);
+            }
+
+            if (_flowMode)
+                BuildFlowRows();
+            else
+                FoldVisibleLogs();
+
+            RebuildLogHeights();
+        }
+
+        /// <summary>
+        /// Regroups the rows into the flows they belong to. Read straight down, a busy frame is
+        /// four operations interleaved; grouped, each one is a block a reader can follow, and a
+        /// flow started from inside another sits indented under it.
+        ///
+        /// Collapse is not applied here. Folding equal rows and grouping them by the flow they
+        /// came from answer different questions, and doing both leaves a count on a row whose
+        /// neighbours came from somewhere else.
+        /// </summary>
+        private void BuildFlowRows()
+        {
+            List<FlowNode> roots = _flowTree.Build(_cachedVisibleLogs);
+
+            _flowRowBuffer.Clear();
+            _flowDepthBuffer.Clear();
+            _flowHeaderBuffer.Clear();
+            _flowHiddenBuffer.Clear();
+
+            for (int i = 0; i < roots.Count; i++)
+                FlattenFlow(roots[i], 0);
+
+            _cachedVisibleLogs.Clear();
+            _cachedVisibleLogs.AddRange(_flowRowBuffer);
+
+            int count = _flowRowBuffer.Count;
+
+            if (_rowDepths == null || _rowDepths.Length < count)
+                _rowDepths = new int[Mathf.Max(count, 64)];
+            if (_rowFlowHeaders == null || _rowFlowHeaders.Length < count)
+                _rowFlowHeaders = new int[Mathf.Max(count, 64)];
+            if (_collapseCounts == null || _collapseCounts.Length < count)
+                _collapseCounts = new int[Mathf.Max(count, 64)];
+
+            for (int i = 0; i < count; i++)
+            {
+                _rowDepths[i] = _flowDepthBuffer[i];
+                _rowFlowHeaders[i] = _flowHeaderBuffer[i];
+
+                // A collapsed flow keeps one row and says how many it stands for, which is what
+                // the fold badge already means.
+                _collapseCounts[i] = _flowHiddenBuffer[i];
+            }
+        }
+
+        private void FlattenFlow(FlowNode node, int depth)
+        {
+            // A log outside any flow is a row of its own with nothing to head it.
+            if (node.FlowId == 0)
+            {
+                for (int i = 0; i < node.Logs.Count; i++)
+                {
+                    _flowRowBuffer.Add(node.Logs[i]);
+                    _flowDepthBuffer.Add(depth);
+                    _flowHeaderBuffer.Add(0);
+                    _flowHiddenBuffer.Add(1);
+                }
+
+                return;
+            }
+
+            bool collapsed = _collapsedFlowIds.Contains(node.FlowId);
+            int shown = collapsed ? Mathf.Min(1, node.Logs.Count) : node.Logs.Count;
+
+            for (int i = 0; i < shown; i++)
+            {
+                _flowRowBuffer.Add(node.Logs[i]);
+                _flowDepthBuffer.Add(depth);
+                _flowHeaderBuffer.Add(i == 0 ? node.FlowId : 0);
+                _flowHiddenBuffer.Add(collapsed && i == 0 ? CountUnder(node) : 1);
+            }
+
+            if (collapsed) return;
+
+            for (int i = 0; i < node.Children.Count; i++)
+                FlattenFlow(node.Children[i], depth + 1);
+        }
+
+        /// <summary>How many rows a collapsed flow is standing in for, its children included.</summary>
+        private int CountUnder(FlowNode node)
+        {
+            int count = node.Logs.Count;
+
+            for (int i = 0; i < node.Children.Count; i++)
+                count += CountUnder(node.Children[i]);
+
+            return count;
+        }
+
+        /// <summary>
+        /// Folds equal rows into counted ones when Collapse is on. The visible list keeps holding
+        /// one log per row - the first occurrence - and the counts travel beside it, so nothing
+        /// downstream has to know whether folding happened.
+        /// </summary>
+        private void FoldVisibleLogs()
+        {
+            if (!_collapseRows)
+            {
+                _collapseCounts = null;
+                return;
+            }
+
+            List<CollapsedRow> rows = _collapse.Fold(_cachedVisibleLogs);
+
+            _cachedVisibleLogs.Clear();
+
+            if (_collapseCounts == null || _collapseCounts.Length < rows.Count)
+                _collapseCounts = new int[Mathf.Max(rows.Count, 64)];
+
+            for (int i = 0; i < rows.Count; i++)
+            {
+                _cachedVisibleLogs.Add(rows[i].Log);
+                _collapseCounts[i] = rows[i].Count;
+            }
+        }
+
+        private int FlowHeaderAt(int rowIndex)
+        {
+            if (!_flowMode || _rowFlowHeaders == null) return 0;
+            if (rowIndex < 0 || rowIndex >= _rowFlowHeaders.Length) return 0;
+
+            return _rowFlowHeaders[rowIndex];
+        }
+
+        private int DepthAt(int rowIndex)
+        {
+            if (!_flowMode || _rowDepths == null) return 0;
+            if (rowIndex < 0 || rowIndex >= _rowDepths.Length) return 0;
+
+            return _rowDepths[rowIndex];
+        }
+
+        /// <summary>
+        /// The line that opens a flow, with the arrow that folds it away. A flow is a signal and
+        /// everything its commands wrote, so folding one is how a reader puts an operation they
+        /// have already read out of the way without losing the rest of the list.
+        /// </summary>
+        private void FlowHeaderGUI(Rect rect, int flowId, int rowIndex)
+        {
+            bool collapsed = _collapsedFlowIds.Contains(flowId);
+            float indent = DepthAt(rowIndex) * FlowIndent;
+            var labelRect = new Rect(rect.x + indent + 6f, rect.y, rect.width - indent - 12f, rect.height);
+
+            if (Event.current.type == EventType.Repaint)
+            {
+                EnsureFlowHeaderStyle();
+
+                EditorGUI.DrawRect(new Rect(rect.x + indent, rect.y + rect.height - 1f,
+                    rect.width - indent, 1f), new Color(0.4f, 0.4f, 0.4f, 0.6f));
+
+                GUI.Label(labelRect, (collapsed ? "▸ " : "▾ ") + "Flow " + flowId, _flowHeaderStyle);
+            }
+
+            Event currentEvent = Event.current;
+            if (currentEvent.type != EventType.MouseDown || !rect.Contains(currentEvent.mousePosition)) return;
+            if (currentEvent.button != 0 || _pointerOverStrip) return;
+
+            if (!_collapsedFlowIds.Add(flowId))
+                _collapsedFlowIds.Remove(flowId);
+
+            _logsDirty = true;
+            Repaint();
+            currentEvent.Use();
+        }
+
+        private void EnsureFlowHeaderStyle()
+        {
+            if (_styleGuard.IsBuilt(_flowHeaderStyle, "FlowConsoleFlowHeader")) return;
+
+            _flowHeaderStyle = new GUIStyle(EditorStyles.miniLabel)
+            {
+                name = "FlowConsoleFlowHeader",
+                alignment = TextAnchor.MiddleLeft,
+                fontStyle = FontStyle.Bold
+            };
+
+            _flowHeaderStyle.normal.textColor = FlowHeaderColor;
+        }
+
+        /// <summary>
+        /// The line between one session and the next: a rule across the list with the side it is
+        /// opening written on it, so a play session can be told from the editing around it.
+        /// </summary>
+        private void DrawSessionSeparator(Rect rect, ConsoleLog opening)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+
+            EnsureSessionSeparatorStyle();
+
+            string label = _sessionRule.Label(opening);
+            var content = new GUIContent(label);
+            float labelWidth = _sessionSeparatorStyle.CalcSize(content).x + 10f;
+
+            // A band behind it. Drawn on nothing the strip read as a black gap in the list, which
+            // is the one thing a boundary between two sessions should not look like.
+            EditorGUI.DrawRect(rect, SessionSeparatorBandColor);
+
+            float middle = rect.y + rect.height * 0.5f;
+            float left = rect.x + 8f;
+            float right = rect.xMax - 8f;
+            float labelLeft = left + 12f;
+
+            EditorGUI.DrawRect(new Rect(left, middle, 12f, 1f), SessionSeparatorColor);
+            EditorGUI.DrawRect(new Rect(labelLeft + labelWidth, middle, Mathf.Max(0f, right - labelLeft - labelWidth),
+                1f), SessionSeparatorColor);
+
+            GUI.Label(new Rect(labelLeft + 5f, rect.y, labelWidth, rect.height), content, _sessionSeparatorStyle);
+        }
+
+        /// <summary>
+        /// Built on every draw rather than kept. A style built during the first repaint after a
+        /// domain reload can be a copy of a placeholder, and cached it stays a placeholder for the
+        /// life of the window - which is how this label kept coming out black however it was
+        /// written. There are only ever a handful of separators on screen.
+        /// </summary>
+        private void EnsureSessionSeparatorStyle()
+        {
+            _sessionSeparatorStyle = new GUIStyle(EditorStyles.label)
+            {
+                name = "FlowConsoleSessionSeparator",
+                alignment = TextAnchor.MiddleLeft,
+                fontSize = 10
+            };
+
+            _sessionSeparatorStyle.normal.textColor = SessionSeparatorColor;
+        }
+
+        /// <summary>
+        /// Paints the part of a line that matched the search behind the text. A narrowed list says
+        /// which rows survived but not why, and on a long message the word that matched can be
+        /// anywhere.
+        /// </summary>
+        private void DrawSearchHighlight(Rect lineRect, string drawn)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            if (string.IsNullOrEmpty(_searchText) || _searchQuery == null) return;
+
+            List<HighlightRange> ranges = _highlight.Ranges(drawn, _searchQuery);
+            if (ranges.Count == 0) return;
+
+            var content = new GUIContent(drawn);
+
+            for (int i = 0; i < ranges.Count; i++)
+            {
+                Vector2 from = _richTextStyle.GetCursorPixelPosition(lineRect, content, ranges[i].Start);
+                Vector2 to = _richTextStyle.GetCursorPixelPosition(
+                    lineRect, content, ranges[i].Start + ranges[i].Length);
+
+                // A match the row is too narrow to show, or one the label wrapped onto a line that
+                // is not drawn. There is nothing to paint on this row.
+                if (to.x <= from.x) continue;
+
+                float width = Mathf.Min(to.x, lineRect.xMax) - from.x;
+                if (width <= 0f) continue;
+
+                EditorGUI.DrawRect(new Rect(from.x, lineRect.y + 1f, width, lineRect.height - 2f),
+                    SearchHighlightColor);
+            }
+        }
+
+        private void RebuildLogHeights()
+        {
+            int count = _cachedVisibleLogs.Count;
+
+            if (_cachedLogHeights == null || _cachedLogHeights.Length < count)
+                _cachedLogHeights = new float[Mathf.Max(count, 64)];
+            if (_cumulativeHeights == null || _cumulativeHeights.Length < count + 1)
+                _cumulativeHeights = new float[Mathf.Max(count + 1, 65)];
+
+            _cumulativeHeights[0] = 0;
+
+            // Every row is the same height, the way Unity's console draws it. A message longer
+            // than the row is clipped and read in full in the detail panel; letting one log with
+            // forty newlines take the whole window is what the clamp is for.
+            float rowHeight = _rowLineCount * LogEntryLineHeight + LogEntryPadding;
+
+            for (int i = 0; i < count; i++)
+            {
+                // A row that opens a play or edit session, or heads a flow, is taller by the line
+                // drawn above it.
+                ConsoleLog previous = i > 0 ? _cachedVisibleLogs[i - 1] : null;
+                float height = rowHeight;
+
+                if (_sessionRule.StartsSession(previous, _cachedVisibleLogs[i]))
+                    height += SessionSeparatorHeight;
+
+                if (FlowHeaderAt(i) != 0)
+                    height += FlowHeaderHeight;
+
+                _cachedLogHeights[i] = height;
+                _cumulativeHeights[i + 1] = _cumulativeHeights[i] + height;
+            }
+        }
+
+        private void LogGUI(ConsoleLog consoleLog, float entryHeight, int rowIndex)
+        {
+            Rect rect = GUILayoutUtility.GetRect(0, entryHeight, GUILayout.ExpandWidth(true));
+
+            ConsoleLog above = rowIndex > 0 && rowIndex - 1 < _cachedVisibleLogs.Count
+                ? _cachedVisibleLogs[rowIndex - 1]
+                : null;
+
+            if (_sessionRule.StartsSession(above, consoleLog))
+            {
+                DrawSessionSeparator(new Rect(rect.x, rect.y, rect.width, SessionSeparatorHeight), consoleLog);
+                rect = new Rect(rect.x, rect.y + SessionSeparatorHeight, rect.width,
+                    rect.height - SessionSeparatorHeight);
+            }
+
+            int headerFlowId = FlowHeaderAt(rowIndex);
+
+            if (headerFlowId != 0)
+            {
+                FlowHeaderGUI(new Rect(rect.x, rect.y, rect.width, FlowHeaderHeight), headerFlowId, rowIndex);
+                rect = new Rect(rect.x, rect.y + FlowHeaderHeight, rect.width, rect.height - FlowHeaderHeight);
+            }
+
+            float indent = DepthAt(rowIndex) * FlowIndent;
+            if (indent > 0f)
+                rect = new Rect(rect.x + indent, rect.y, rect.width - indent, rect.height);
+
+            // Unity's console reads severity from an icon and uses the row background only to
+            // separate one row from the next. Tinting a whole row yellow or red made a page of
+            // warnings unreadable, so the severity moved to the icon and the row keeps the
+            // alternating band.
+            if (rowIndex % 2 == 1)
+                EditorGUI.DrawRect(rect, new Color(0f, 0f, 0f, 0.08f));
+
+            if (_selectedLog == consoleLog)
+                EditorGUI.DrawRect(rect, new Color(0.17f, 0.36f, 0.53f, 1f));
+
+            // The stripe at the edge marks a framework row and nothing else, in the channel's
+            // colour: what the framework did stands apart from what the game wrote, which carries
+            // its module's name on its source line and no stripe.
+            bool framework = Channels.TryGet(consoleLog.Channel, out FlowLogChannel rowChannel)
+                             && rowChannel.IsFrameworkOwned;
+
+            if (framework)
+                EditorGUI.DrawRect(new Rect(rect.x, rect.y, 3f, rect.height), consoleLog.LogColor);
+
+            bool small = _rowLineCount < 2;
+            Texture icon = IconFor(consoleLog.LogType, small);
+
+            // Drawn at the size the texture was authored for - 16 for the .sml variant, 32 for the
+            // large one - because scaling either of them is what made the shapes come out ragged.
+            float iconSize = small ? 16f : 32f;
+            float iconTop = rect.y + (rect.height - iconSize) * 0.5f;
+
+            if (icon != null)
+                GUI.DrawTexture(new Rect(rect.x + 6f, iconTop, iconSize, iconSize), icon, ScaleMode.StretchToFill);
+
+            float textLeft = rect.x + (small ? 26f : 42f);
+            // Two forms of the same prefix: the plain one is what the row is measured with, and the
+            // rich one is what is drawn. The second half of it - the milliseconds, or the gap since
+            // the row above - is dimmed, because it is read only when the seconds are not enough.
+            // Classic has no second half: it is the clock to the second, as Unity's console leads
+            // a row.
+            string date;
+            string dateRich;
+
+            if (_timeFormat == FlowConsoleTimeFormat.Frame)
+            {
+                bool hasPrevious = rowIndex > 0 && rowIndex - 1 < _cachedVisibleLogs.Count;
+                float previousRealtime = hasPrevious ? _cachedVisibleLogs[rowIndex - 1].Realtime : 0f;
+
+                date = _timing.Prefix(consoleLog.Frame, consoleLog.Realtime, previousRealtime, hasPrevious);
+
+                int gap = date.IndexOf("  ", StringComparison.Ordinal);
+                dateRich = gap < 0 ? date : date.Substring(0, gap) + Dim(date.Substring(gap));
+            }
+            else
+            {
+                string clock = consoleLog.Hour.ToString("00") + ":" + consoleLog.Minute.ToString("00") + ":" +
+                               consoleLog.Second.ToString("00");
+
+                if (_timeFormat == FlowConsoleTimeFormat.Classic)
+                {
+                    date = clock;
+                    dateRich = clock;
+                }
+                else
+                {
+                    string milliseconds = ":" + consoleLog.Millisecond.ToString("000");
+
+                    date = clock + milliseconds;
+                    dateRich = clock + Dim(milliseconds);
+                }
+            }
+
+            // Where the row came from, when it came from a device. Part of the prefix rather than
+            // the message, so the message stays plain text for the search and the collapse key.
+            string playerTag = string.IsNullOrEmpty(consoleLog.Player) ? "" : " · " + consoleLog.Player;
+
+            float textWidth = rect.width - (textLeft - rect.x) - 4f;
+
+            // The count of a folded row, right-aligned so the messages stay lined up under each
+            // other. Drawn before the text so the text knows how much room it has left.
+            // The same badge counts two things, one at a time: how many equal rows Collapse folded
+            // into this one, or how many rows the folded flow it heads stands for.
+            int foldedCount = (_collapseRows || _flowMode) && _collapseCounts != null && rowIndex < _collapseCounts.Length
+                ? _collapseCounts[rowIndex]
+                : 1;
+
+            if (foldedCount > 1)
+            {
+                var badge = new GUIContent(foldedCount.ToString());
+                Vector2 badgeSize = EditorStyles.miniButton.CalcSize(badge);
+                float badgeWidth = Mathf.Max(badgeSize.x, 22f);
+
+                var badgeRect = new Rect(rect.xMax - badgeWidth - 6f,
+                    rect.y + (rect.height - 16f) * 0.5f, badgeWidth, 16f);
+
+                GUI.Label(badgeRect, badge, EditorStyles.miniButton);
+                textWidth -= badgeWidth + 10f;
+            }
+
+            // Unity's own row: the message, and underneath it where the message came from. That
+            // last line is what tells a reader which of forty identical warnings is theirs, so it
+            // follows the message rather than sitting at the bottom of the row.
+            int messageSlots = small ? _rowLineCount : _rowLineCount - 1;
+
+            int drawnLines = 0;
+            while (drawnLines < messageSlots && LineOf(consoleLog.Message, drawnLines) != null)
+                drawnLines++;
+
+            if (drawnLines == 0) drawnLines = 1;
+
+            // Centred on what is actually drawn, not on what the row could hold. Centring on the
+            // maximum left a gap in the middle of a three-line row whenever the message was one
+            // line long, and the source line ended up stranded at the bottom.
+            float blockHeight = (drawnLines + (small ? 0 : 1)) * LogEntryLineHeight;
+            float textTop = rect.y + (rect.height - blockHeight) * 0.5f;
+
+            // The channel tag - "[Signal]", "[Player]" - moves off the message and onto the source
+            // line, where it reads as what it is - where the line came from - and leaves the first
+            // line to the message alone. The tag stays in the text: search, copy and the detail
+            // panel still see it. A one-line row has no source line, so there the tag stays put.
+            string channelTag = null;
+            Color channelTagColor = default;
+
+            for (int line = 0; line < drawnLines; line++)
+            {
+                string text = LineOf(consoleLog.Message, line) ?? string.Empty;
+
+                Rect lineRect = new Rect(textLeft, textTop + line * LogEntryLineHeight, textWidth, LogEntryLineHeight);
+
+                if (line != 0)
+                {
+                    DrawSearchHighlight(lineRect, text);
+                    GUI.Label(lineRect, text, _richTextStyle);
+                    continue;
+                }
+
+                if (!small && rowChannel != null
+                           && _channelTag.TryFind(rowChannel, text, out channelTag, out channelTagColor))
+                {
+                    text = text.Substring(channelTag.Length).TrimStart();
+                }
+
+                // The prefix is its own label so the message can keep being measured as plain
+                // text. A colour tag inside the drawn string would move every character along and
+                // the search highlight is placed by character index.
+                float prefixWidth = _richTextStyle.CalcSize(new GUIContent(date + playerTag + " | ")).x;
+                var prefixRect = new Rect(lineRect.x, lineRect.y, prefixWidth, lineRect.height);
+
+                GUI.Label(prefixRect, dateRich + Dim(playerTag) + " | ", _richTextStyle);
+
+                // The pin sits between the time and the message, which is where the eye already
+                // travels along the row. Drawn at the size the texture was authored for - scaling
+                // a 16 pixel icon is what made it come out ragged.
+                float pinWidth = 0f;
+
+                if (consoleLog.Pinned)
+                {
+                    Texture pin = EditorGUIUtility.IconContent("pin")?.image;
+
+                    if (pin != null)
+                    {
+                        var pinRect = new Rect(lineRect.x + prefixWidth,
+                            lineRect.y + (lineRect.height - PinIconSize) * 0.5f, PinIconSize, PinIconSize);
+
+                        // A coloured plate behind it, so a pinned row is picked out of a moving
+                        // list by colour rather than by recognising a small grey glyph. Inset,
+                        // because the pin's own texture carries empty space around the glyph.
+                        DrawDisc(new Rect(pinRect.x + 0.5f, pinRect.y - 0.5f, PinBadgeSize, PinBadgeSize),
+                            PinBadgeColor);
+
+                        GUI.DrawTexture(pinRect, pin, ScaleMode.StretchToFill);
+                    }
+
+                    pinWidth = PinIconSize + 3f;
+                }
+
+                // The channel's icon, where the text tag would have begun. Drawn in its own
+                // colours, the way the Project window draws it; the channel's colour is already
+                // on the strip at the row's edge.
+                float channelIconWidth = 0f;
+                Texture channelIcon = ChannelIconFor(consoleLog);
+
+                if (channelIcon != null)
+                {
+                    var channelIconRect = new Rect(lineRect.x + prefixWidth + pinWidth,
+                        lineRect.y + (lineRect.height - ChannelIconSize) * 0.5f, ChannelIconSize, ChannelIconSize);
+
+                    GUI.DrawTexture(channelIconRect, channelIcon, ScaleMode.ScaleToFit);
+
+                    channelIconWidth = ChannelIconSize + 3f;
+                }
+
+                float messageLeft = prefixWidth + pinWidth + channelIconWidth;
+                var messageRect = new Rect(lineRect.x + messageLeft, lineRect.y,
+                    Mathf.Max(0f, lineRect.width - messageLeft), lineRect.height);
+
+                DrawSearchHighlight(messageRect, text);
+                GUI.Label(messageRect, text, _richTextStyle);
+            }
+
+            if (!small)
+            {
+                Rect sourceRect = new Rect(textLeft, textTop + drawnLines * LogEntryLineHeight,
+                    textWidth, LogEntryLineHeight);
+
+                if (channelTag != null)
+                {
+                    float tagWidth = _secondLineTagStyle.CalcSize(new GUIContent(channelTag)).x;
+                    var tagRect = new Rect(sourceRect.x, sourceRect.y, tagWidth, sourceRect.height);
+
+                    // A plate of the tag's own colour, faint, behind a framework tag - the small
+                    // type carries too little of the colour on its own, and the plate is what tells
+                    // "[Screen]" the framework wrote from "[Screen]" a module of that name wrote.
+                    if (framework && Event.current.type == EventType.Repaint)
+                    {
+                        channelTagColor.a = TagPlateAlpha;
+                        EditorGUI.DrawRect(new Rect(tagRect.x, tagRect.y + 1f, tagRect.width, tagRect.height - 4f),
+                            channelTagColor);
+                    }
+
+                    GUI.Label(tagRect, channelTag, _secondLineTagStyle);
+
+                    sourceRect.x += tagWidth + SecondLineTagGap;
+                    sourceRect.width = Mathf.Max(0f, sourceRect.width - tagWidth - SecondLineTagGap);
+                }
+
+                GUI.Label(sourceRect, SecondLineFor(consoleLog), _secondLineStyle);
+            }
+
+            // A press on the strip floating over this row belongs to the strip, which is drawn
+            // after the list and would otherwise never see it.
+            Event currentEvent = Event.current;
+            bool pressed = currentEvent.type == EventType.MouseDown && rect.Contains(currentEvent.mousePosition);
+
+            if (pressed && !_pointerOverStrip)
+            {
+                if (currentEvent.button == 0)
+                {
+                    if (currentEvent.clickCount == 2)
+                    {
+                        _selectedLog = consoleLog;
+
+                        // Silently doing nothing reads as a broken window. The row either opens
+                        // its file or says why it cannot.
+                        if (!_navigator.Open(consoleLog))
+                            ShowNotification(new GUIContent(NoSourceHint()), 3d);
+                    }
+                    else
+                    {
+                        _selectedLog = consoleLog;
+                        if (!string.IsNullOrEmpty(_searchText))
+                            _logSelectedDuringSearch = true;
+                        _detailPanelScroll = Vector2.zero;
+                    }
+
+                    Repaint();
+                    currentEvent.Use();
+                }
+                else if (currentEvent.button == 1)
+                {
+                    GenericMenu menu = new GenericMenu();
+
+                    bool hasFileInfo = !string.IsNullOrEmpty(consoleLog.SourceFilePath);
+                    bool hasClassInfo = !string.IsNullOrEmpty(consoleLog.SourceClassName);
+
+                    if (hasFileInfo || hasClassInfo)
+                    {
+                        menu.AddItem(new GUIContent("Open File"), false, () => { TryOpenSourceFile(consoleLog); });
+                    }
+                    else
+                    {
+                        menu.AddDisabledItem(new GUIContent("Open File"));
+                    }
+
+                    menu.AddItem(new GUIContent("Copy"), false, () => { EditorGUIUtility.systemCopyBuffer = consoleLog.Message; });
+
+                    menu.AddSeparator("");
+                    menu.AddItem(new GUIContent(consoleLog.Pinned ? "Unpin" : "Pin"), consoleLog.Pinned, () =>
+                    {
+                        _pins.Toggle(consoleLog);
+                        _logsDirty = true;
+                        _needsRepaint = true;
+                    });
+
+                    menu.ShowAsContext();
+                    currentEvent.Use();
+                }
+            }
+
+            GUI.backgroundColor = Color.white;
+        }
+
+        private void ScrollToSelectedLog()
+        {
+            _scrollToSelectedLog = false;
+
+            for (int i = 0; i < _cachedVisibleLogs.Count; i++)
+            {
+                if (_cachedVisibleLogs[i] != _selectedLog) continue;
+
+                if (_cumulativeHeights != null && _cumulativeHeights.Length > i + 1)
+                {
+                    float logTop = _cumulativeHeights[i];
+                    float logHeight = _cachedLogHeights[i];
+                    float viewportHeight = position.height;
+                    _logsPanelScroll.y = logTop - (viewportHeight - logHeight) / 2f;
+                    _logsPanelScroll.y = Mathf.Max(0, _logsPanelScroll.y);
+                }
+
+                return;
+            }
+        }
+
+        /// <summary>
+        /// One grey line in the middle of an empty list, saying why it is empty when there is a
+        /// reason. Drawn over the viewport after the scroll view has closed, because an empty
+        /// scroll view has no content to lay a line out in.
+        /// </summary>
+        private void EmptyListHintGUI(Rect viewport)
+        {
+            string text = _emptyListHint.Text(IsAnyChannelShown(), _allLogs.Count);
+            if (text == null) return;
+
+            if (!_styleGuard.IsBuilt(_emptyListHintStyle, "FlowConsoleEmptyListHint"))
+            {
+                _emptyListHintStyle = new GUIStyle(EditorStyles.centeredGreyMiniLabel)
+                {
+                    name = "FlowConsoleEmptyListHint",
+                    alignment = TextAnchor.MiddleCenter,
+                    wordWrap = true,
+                    fontSize = 11
+                };
+            }
+
+            GUI.Label(viewport, text, _emptyListHintStyle);
+        }
+
+        private bool IsAnyChannelShown()
+        {
+            IReadOnlyList<FlowLogChannel> channels = Channels.All;
+
+            for (int i = 0; i < channels.Count; i++)
+            {
+                if (Channels.IsShown(channels[i])) return true;
+            }
+
+            return false;
+        }
+
+        private void OnLogTypeSelectionChanged()
+        {
+            _logsDirty = true;
+            _needsRepaint = true;
+            Repaint();
+        }
+
+        private void OnLogAdded(ConsoleLog log)
+        {
+            _allLogs.Add(log);
+            TrimToMaxLogCount();
+            _logsDirty = true;
+            _needsRepaint = true;
+        }
+
+        /// <summary>
+        /// The window keeps its own copy of the logs, so it has to honour the same limit the
+        /// settings put on FlowLogger - otherwise a window left open through a long session grows
+        /// without end while the list it was built from stays capped.
+        /// </summary>
+        private void TrimToMaxLogCount()
+        {
+            int maxLogCount = Preferences.MaxLogCount;
+            if (maxLogCount <= 0 || _allLogs.Count <= maxLogCount + LogTrimChunk)
+                return;
+
+            _pins.Trim(_allLogs, maxLogCount);
+        }
+    }
+}
+#endif

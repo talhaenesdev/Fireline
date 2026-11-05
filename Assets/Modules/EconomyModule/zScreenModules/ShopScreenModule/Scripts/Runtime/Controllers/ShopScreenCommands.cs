@@ -6,6 +6,7 @@ using FlowIoC.ScreenModule.Service;
 using Modules.EconomyModule.Shared.Data.ValueObjects;
 using Modules.EconomyModule.ShopScreenModule.Models;
 using Modules.EconomyModule.ShopScreenModule.ViewsMediators;
+using Modules.LocalizationModule.Services;
 
 namespace Modules.EconomyModule.ShopScreenModule.Controllers
 {
@@ -35,6 +36,7 @@ namespace Modules.EconomyModule.ShopScreenModule.Controllers
     internal class OpenShopScreenCommand : Command
     {
         [Inject] private IScreenService _screenService { get; set; }
+        [Inject] private ILocalizationService _localization { get; set; }
         [Inject] private IShopScreenModel _model { get; set; }
 
         public override async void Execute()
@@ -43,6 +45,7 @@ namespace Modules.EconomyModule.ShopScreenModule.Controllers
 
             try
             {
+                Func<string, string> localize = _localization.Get;
                 ShopScreenView screen = await _screenService.Open<ShopScreenView>().Show<ShopScreenView>();
                 if (screen == null)
                 {
@@ -51,6 +54,7 @@ namespace Modules.EconomyModule.ShopScreenModule.Controllers
                     return;
                 }
 
+                screen.Localizer.Use(localize);
                 screen.ShowItems(_model.Items);
                 screen.ShowWallet(_model.Money, 0, _model.Materials);
                 Release();

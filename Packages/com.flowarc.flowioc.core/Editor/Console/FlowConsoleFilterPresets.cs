@@ -1,0 +1,106 @@
+#if UNITY_EDITOR
+using System.Collections.Generic;
+using FlowIoC.ConsoleModule;
+using UnityEditor;
+
+namespace FlowIoC.Editor.Console
+{
+    public class FilterPreset
+    {
+        public string Name;
+        public List<string> VisibleChannels = new();
+    }
+
+    /// <summary>
+    /// A set of channels somebody reaches for often, under a name. Two ship with the console and
+    /// the rest are whatever a reader saves.
+    ///
+    /// Saved presets live in EditorPrefs, like every other switch a developer throws here: one
+    /// developer's filter has no business turning up in everybody else's diff.
+    /// </summary>
+    public class FlowConsoleFilterPresets
+    {
+        private const string PREFIX = "FlowIoC.Console.Preset.";
+        private const string NAMES_KEY = "FlowIoC.Console.PresetNames";
+
+        /// <summary>
+        /// Named for the job rather than for the channels, because that is what somebody is
+        /// looking for when they reach for one.
+        /// </summary>
+        public readonly List<FilterPreset> BuiltIn = new()
+        {
+            new FilterPreset
+            {
+                Name = "Signal chase",
+                VisibleChannels = new List<string> {"Signal", "Command"}
+            },
+            new FilterPreset
+            {
+                Name = "Screen debug",
+                VisibleChannels = new List<string> {"Signal", "Screen"}
+            }
+        };
+
+        public void Save(string name, IReadOnlyCollection<string> visibleChannels)
+        {
+            if (string.IsNullOrEmpty(name)) return;
+
+            EditorPrefs.SetString(PREFIX + name, string.Join(";", visibleChannels));
+
+            List<string> names = LoadNames();
+            if (!names.Contains(name))
+            {
+                names.Add(name);
+                EditorPrefs.SetString(NAMES_KEY, string.Join(";", names));
+            }
+        }
+
+        public List<FilterPreset> LoadSaved()
+        {
+            var presets = new List<FilterPreset>();
+
+            foreach (string name in LoadNames())
+            {
+                var preset = new FilterPreset {Name = name};
+
+                foreach (string part in EditorPrefs.GetString(PREFIX + name, "").Split(';'))
+                {
+                    if (!string.IsNullOrEmpty(part))
+                        preset.VisibleChannels.Add(part);
+                }
+
+                presets.Add(preset);
+            }
+
+            return presets;
+        }
+
+        public void Delete(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return;
+
+            EditorPrefs.DeleteKey(PREFIX + name);
+
+            List<string> names = LoadNames();
+            if (names.Remove(name))
+                EditorPrefs.SetString(NAMES_KEY, string.Join(";", names));
+        }
+
+        private static List<string> LoadNames()
+        {
+            var names = new List<string>();
+            string stored = EditorPrefs.GetString(NAMES_KEY, "");
+
+            if (string.IsNullOrEmpty(stored)) return names;
+
+            foreach (string name in stored.Split(';'))
+            {
+                if (!string.IsNullOrEmpty(name))
+                    names.Add(name);
+            }
+
+            return names;
+        }
+    }
+}
+#endif

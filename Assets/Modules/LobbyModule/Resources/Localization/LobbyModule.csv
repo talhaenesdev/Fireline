@@ -1,0 +1,47 @@
+key,tr,en
+OYUNCU ADI,,PLAYER NAME
+Adını yaz,,Type your name
+LOBİ KODU,,LOBBY CODE
+Katılmak için kod gir,,Enter a code to join
+LOBİ KUR,,CREATE
+KATIL,,JOIN
+BAĞLI DEĞİL,,NOT CONNECTED
+HOST SENSİN,,YOU ARE HOST
+OYUNCUSUN,,YOU ARE A PLAYER
+OYUNCULAR,,PLAYERS
+OYUNCU {0},,PLAYER {0}
+BOŞ,,EMPTY
+OYUN MODU,,GAME MODE
+Host seçiyor,,Host decides
+DEATHMATCH,,DEATHMATCH
+Birbirinizle savaşın,,Fight each other
+ZOMBİ,,ZOMBIES
+Dalgalara karşı birlikte hayatta kalın,,Survive the waves together
+"Deathmatch tek haritada oynanır. Son kalan değil, en çok vuran kazanır.",,"Deathmatch is played on one map. Not the last one standing, the one with the most kills wins."
+HARİTA,,MAP
+ÜS SAVUNMASI,,BASE DEFENSE
+ZOMBİ ARENA,,ZOMBIE ARENA
+"Duvarları ör, kapıyı tut, karargâhı gece boyunca savun.",,"Raise the walls, hold the gate, defend the headquarters through the night."
+"Şehir sokakları, açılacak kapılar ve yetenek makinesi.",,"City streets, doors to unlock and a perk machine."
+ZORLUK,,DIFFICULTY
+KOLAY,,EASY
+NORMAL,,NORMAL
+KÂBUS,,NIGHTMARE
+HAZIR,,READY
+HAZIR OL,,GET READY
+AYRIL,,LEAVE
+BAŞLAT,,START
+Ready to create or join a lobby.,Lobi kurmaya ya da katılmaya hazır.,
+Creating lobby...,Lobi kuruluyor...,
+Lobby created successfully!,Lobi kuruldu!,
+Failed to create lobby.,Lobi kurulamadı.,
+Joining lobby...,Lobiye katılınıyor...,
+Successfully joined the lobby!,Lobiye katıldın!,
+Failed to join lobby.,Lobiye katılınamadı.,
+Leaving lobby...,Lobiden çıkılıyor...,
+You left the lobby.,Lobiden çıktın.,
+Starting game...,Oyun başlıyor...,
+Failed to start the game.,Oyun başlatılamadı.,
+Please enter your player name.,Lütfen oyuncu adını yaz.,
+Please enter a join code.,Lütfen bir katılma kodu gir.,
+Could not reach Unity Services.,Unity Services'a ulaşılamadı.,

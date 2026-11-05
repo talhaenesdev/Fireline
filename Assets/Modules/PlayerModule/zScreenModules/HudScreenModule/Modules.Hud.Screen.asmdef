@@ -5,6 +5,7 @@
     "Modules.Hud.Screen.Signals",
     "Modules.Player.Shared",
     "Unity.TextMeshPro",
+    "Modules.Localization",
     "UnityEngine.UI"
   ],
   "includePlatforms": [],

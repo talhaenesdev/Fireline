@@ -1,0 +1,429 @@
+#if UNITY_EDITOR
+using System;
+using System.Collections.Generic;
+using System.IO;
+using FlowIoC.Editor.CodeGenerator;
+using FlowIoC.Editor.Migration;
+using UnityEditor;
+using UnityEngine;
+
+namespace FlowIoC.Editor.Config.ModuleConfig
+{
+    [CreateAssetMenu(fileName = "ED_MainModuleDirectoryStructure",
+        menuName = "FlowIoC/Editor/CodeGenerator/MainModule Directory Structure Config")]
+    public class ED_MainModuleDirectoryStructure : DirectoryStructureConfig
+    {
+        [field: SerializeReference]
+        protected internal override List<FolderEVO> RootFolders { get; protected set; } = new List<FolderEVO>
+        {
+            new FolderEVO
+            {
+                FolderName = "Art", Type = FolderEVO.FolderType.Folder, IsMandatory = false, IsOptional = true, IsNamespaceProvider = true
+            },
+            new FolderEVO
+            {
+                FolderName = "Prefabs", Type = FolderEVO.FolderType.Prefabs, IsMandatory = true, IsNamespaceProvider = true
+            },
+            new FolderEVO
+            {
+                FolderName = "Resources", Type = FolderEVO.FolderType.Resources, IsMandatory = false, IsOptional = true, IsNamespaceProvider = true
+            },
+            new FolderEVO
+            {
+                FolderName = "Scenes", Type = FolderEVO.FolderType.Scenes, IsMandatory = false, IsOptional = true, IsNamespaceProvider = true
+            },
+            new FolderEVO()
+            {
+                FolderName = "Scriptables", Type = FolderEVO.FolderType.Folder, IsMandatory = false, IsOptional = true, IsNamespaceProvider = true,
+                SubFolders = new List<FolderEVO>()
+            },
+            new FolderEVO
+            {
+                FolderName = "Scripts",
+                SubFolders = new List<FolderEVO>
+                {
+                    new FolderEVO
+                    {
+                        FolderName = "Runtime",
+                        SubFolders = new List<FolderEVO>
+                        {
+                            new FolderEVO
+                            {
+                                FolderName = "Data",
+                                SubFolders = new List<FolderEVO>
+                                {
+                                    new FolderEVO
+                                    {
+                                        FolderName = "UnityObjects", Type = FolderEVO.FolderType.UnityObjects, IsMandatory = true,
+                                        IsNamespaceProvider = true
+                                    },
+                                    new FolderEVO
+                                    {
+                                        FolderName = "ValueObjects", Type = FolderEVO.FolderType.ValueObjects, IsMandatory = true,
+                                        IsNamespaceProvider = true
+                                    }
+                                },
+                                Type = FolderEVO.FolderType.Folder,
+                                IsMandatory = true,
+                                IsNamespaceProvider = true
+                            },
+                            new FolderEVO
+                            {
+                                FolderName = "Models",
+                                Type = FolderEVO.FolderType.Models,
+                                IsMandatory = true,
+                                IsNamespaceProvider = true
+                            },
+                            new FolderEVO
+                            {
+                                FolderName = "Enums",
+                                Type = FolderEVO.FolderType.Folder,
+                                IsMandatory = false,
+                                IsOptional = true,
+                                IsNamespaceProvider = true
+                            },
+                            new FolderEVO
+                            {
+                                FolderName = "RootsContexts",
+                                Type = FolderEVO.FolderType.RootsAndContexts,
+                                IsMandatory = true,
+                                IsNamespaceProvider = true
+                            },
+                            new FolderEVO
+                            {
+                                FolderName = "Signals",
+                                Type = FolderEVO.FolderType.Signals,
+                                IsMandatory = false,
+                                IsOptional = true,
+                                IsNamespaceProvider = true
+                            },
+                            new FolderEVO
+                            {
+                                FolderName = "ViewsMediators",
+                                Type = FolderEVO.FolderType.ViewsAndMediators,
+                                IsMandatory = true,
+                                IsNamespaceProvider = true
+                            },
+                            new FolderEVO
+                            {
+                                FolderName = "Services",
+                                Type = FolderEVO.FolderType.Services,
+                                IsMandatory = false,
+                                IsOptional = true,
+                                IsNamespaceProvider = true
+                            },
+                            new FolderEVO
+                            {
+                                FolderName = "Systems",
+                                Type = FolderEVO.FolderType.Systems,
+                                IsMandatory = false,
+                                IsOptional = true,
+                                IsNamespaceProvider = true
+                            },
+                            new FolderEVO
+                            {
+                                FolderName = "Constants",
+                                Type = FolderEVO.FolderType.Folder,
+                                IsMandatory = false,
+                                IsOptional = true,
+                                IsNamespaceProvider = true
+                            },
+                            new FolderEVO
+                            {
+                                FolderName = "Controllers",
+                                Type = FolderEVO.FolderType.Controllers,
+                                IsMandatory = true,
+                                IsNamespaceProvider = true
+                            },
+                            new FolderEVO
+                            {
+                                FolderName = "Entities",
+                                Type = FolderEVO.FolderType.Folder,
+                                IsMandatory = true,
+                                IsNamespaceProvider = true
+                            }
+                        },
+                        Type = FolderEVO.FolderType.Folder,
+                        IsMandatory = true,
+                        IsNamespaceProvider = false
+                    },
+                    new FolderEVO
+                    {
+                        FolderName = "Editor", Type = FolderEVO.FolderType.Editor, IsMandatory = true
+                    },
+                    new FolderEVO
+                    {
+                        FolderName = "Shared",
+                        SubFolders = new List<FolderEVO>
+                        {
+                            new FolderEVO
+                            {
+                                FolderName = "Data",
+                                SubFolders = new List<FolderEVO>
+                                {
+                                    new FolderEVO
+                                    {
+                                        FolderName = "UnityObjects", Type = FolderEVO.FolderType.SharedUnityObjects, IsMandatory = true,
+                                        IsNamespaceProvider = true
+                                    },
+                                    new FolderEVO
+                                    {
+                                        FolderName = "ValueObjects", Type = FolderEVO.FolderType.SharedValueObjects, IsMandatory = true,
+                                        IsNamespaceProvider = true
+                                    }
+                                },
+                                Type = FolderEVO.FolderType.Folder,
+                                IsMandatory = true,
+                                IsNamespaceProvider = true
+                            },
+                            new FolderEVO
+                            {
+                                FolderName = "Enums",
+                                Type = FolderEVO.FolderType.SharedEnums,
+                                IsMandatory = true,
+                                IsNamespaceProvider = true
+                            },
+                            new FolderEVO
+                            {
+                                FolderName = "Constants",
+                                Type = FolderEVO.FolderType.SharedConstants,
+                                IsMandatory = true,
+                                IsNamespaceProvider = true
+                            },
+                        },
+                        Type = FolderEVO.FolderType.Shared,
+                        IsMandatory = false,
+                        IsOptional = true,
+                        IsNamespaceProvider = true
+                    },
+                    // The module's public signal holder, in an assembly of its own beside Runtime
+                    // and Shared. Keeping it out of Shared is what stops a module that reads a
+                    // neighbour's published enum from being handed that neighbour's signals with
+                    // it.
+                    //
+                    // A choice, ticked by default. Most modules have a public surface, but not all:
+                    // a Service that answers the caller it was given rather than announcing, and a
+                    // Connector that wires other modules and owns no signals of its own, are both
+                    // finished without one - and a folder they cannot decline is a folder every
+                    // tool then has to explain away as empty.
+                    new FolderEVO
+                    {
+                        FolderName = "Signals",
+                        Type = FolderEVO.FolderType.PublicSignals,
+                        IsMandatory = false,
+                        IsOptional = true,
+                        IsNamespaceProvider = true
+                    }
+                },
+                Type = FolderEVO.FolderType.Folder,
+                IsMandatory = true,
+                IsNamespaceProvider = false
+            },
+
+            new FolderEVO
+            {
+                FolderName = "zSubModules", Type = FolderEVO.FolderType.SubModules, IsMandatory = false, IsOptional = true,
+                IsNamespaceProvider = false
+            },
+            new FolderEVO
+            {
+                FolderName = "zTestModules", Type = FolderEVO.FolderType.TestModules, IsMandatory = false, IsOptional = true,
+                IsNamespaceProvider = false
+            },
+            new FolderEVO
+            {
+                FolderName = "zScreenModules", Type = FolderEVO.FolderType.ScreenModules, IsMandatory = false, IsOptional = true,
+                IsNamespaceProvider = false
+            }
+        };
+
+        public static DirectoryStructureConfig GetOrCreateConfig(string configKey)
+        {
+            new FlowIoCPathMigrator().MigrateIfNeeded();
+
+            string settingsPath = CodeGeneratorStrings.CONFIG_PATH;
+            var settings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(settingsPath);
+            if (settings == null)
+            {
+                settings = ScriptableObject.CreateInstance<ED_CodeGenerator>();
+                AssetDatabase.CreateAsset(settings, settingsPath);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+
+                Debug.Log($"ED_CodeGenerator asset created at: {settingsPath}");
+            }
+
+            if (!settings.DirectoryStructureConfigPaths.TryGetValue(configKey, out string configPath))
+            {
+                throw new Exception($"Config path for key '{configKey}' not found in ED_CodeGenerator. Please add it.");
+            }
+
+            ED_MainModuleDirectoryStructure config = AssetDatabase.LoadAssetAtPath<ED_MainModuleDirectoryStructure>(configPath);
+
+            if (config == null)
+            {
+                string fullPath = Path.GetDirectoryName(configPath);
+                if (!Directory.Exists(fullPath))
+                {
+                    Directory.CreateDirectory(fullPath);
+                }
+
+                config = CreateInstance<ED_MainModuleDirectoryStructure>();
+                config.InitializeDefaultFolderStructure();
+
+                AssetDatabase.CreateAsset(config, configPath);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+
+                Debug.Log($"DirectoryStructureConfig created at: {configPath}");
+            }
+
+            bool healed = config.EnsureSharedBranch(settings);
+            healed |= config.EnsurePublicSignalsFolder(settings);
+            healed |= config.RemoveRetiredFolderTypes();
+            healed |= config.RemoveRetiredFolderNames();
+            healed |= config.MakeFolderOptional("Scriptables");
+
+            // Signals was mandatory in this layout until a module turned up that owes no public
+            // surface - a Service that answers its caller, a Connector that owns no signals at all.
+            // Only this layout: a screen module still cannot decline it.
+            healed |= config.MakeFolderOptional(FolderEVO.FolderType.PublicSignals);
+
+            if (healed)
+            {
+                EditorUtility.SetDirty(config);
+                AssetDatabase.SaveAssets();
+            }
+
+            return config;
+        }
+
+
+        protected override void InitializeDefaultFolderStructure()
+        {
+            base.InitializeDefaultFolderStructure();
+
+            var codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
+            if (codeGenSettings == null)
+            {
+                Debug.LogError($"ED_CodeGenerator asset not found at {CodeGeneratorStrings.CONFIG_PATH}");
+                return;
+            }
+
+            RootFolders = new List<FolderEVO>
+            {
+                CreateFolder("Art", FolderEVO.FolderType.Folder, null, false, true),
+                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Prefabs], FolderEVO.FolderType.Prefabs, null,
+                    true),
+                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Resources], FolderEVO.FolderType.Resources, null,
+                    false, true),
+                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Scenes], FolderEVO.FolderType.Scenes, null, false,
+                    true),
+                CreateFolder("Scriptables", FolderEVO.FolderType.Folder, new List<FolderEVO>(), false, true, true),
+                CreateFolder("Scripts", FolderEVO.FolderType.Folder, new List<FolderEVO>
+                {
+                    CreateFolder("Runtime", FolderEVO.FolderType.Folder, new List<FolderEVO>
+                    {
+                        CreateFolder("Data", FolderEVO.FolderType.Folder, new List<FolderEVO>
+                        {
+                            CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.UnityObjects],
+                                FolderEVO.FolderType.UnityObjects, null, true),
+                            CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ValueObjects],
+                                FolderEVO.FolderType.ValueObjects, null, true),
+                        }, true),
+                        CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Models], FolderEVO.FolderType.Models,
+                            null, true),
+                        CreateFolder("Enums", FolderEVO.FolderType.Folder, null, false, true),
+                        CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.RootsAndContexts],
+                            FolderEVO.FolderType.RootsAndContexts, null, true,
+                            isNamespaceProvider: true),
+                        CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.Signals, "Signals"),
+                            FolderEVO.FolderType.Signals, null, false, true),
+                        CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators],
+                            FolderEVO.FolderType.ViewsAndMediators, null, true),
+                        CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Services], FolderEVO.FolderType.Services,
+                            null, false, true, isNamespaceProvider: true),
+                        CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.Systems, "Systems"), FolderEVO.FolderType.Systems,
+                            null, false, true, isNamespaceProvider: true),
+                        CreateFolder("Constants", FolderEVO.FolderType.Folder, null, false, true, isNamespaceProvider: true),
+                        CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Controllers],
+                            FolderEVO.FolderType.Controllers, null, true, isNamespaceProvider: true),
+                        CreateFolder("Entities", FolderEVO.FolderType.Folder, null, true, isNamespaceProvider: true)
+                    }, true, false, false),
+                    CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Editor], FolderEVO.FolderType.Editor, null,
+                        true),
+                    // Shared is a sibling of Runtime rather than a folder inside it because it
+                    // becomes its own assembly: what a module wants to publish to a screen or a
+                    // sub module is the data, not the Models and Commands that Runtime holds.
+                    // Unlike Runtime it is a namespace provider, so a shared value object lands in
+                    // <Module>.Shared.Data.ValueObjects and cannot collide with the Runtime type
+                    // of the same name sitting in <Module>.Data.ValueObjects.
+                    BuildSharedBranch(codeGenSettings),
+                    // Signals is the third assembly, and the reason Shared holds data alone: a
+                    // module that references a neighbour's Shared to read a published enum must
+                    // not get that neighbour's signal holder in scope with it. Optional here and
+                    // mandatory in the screen layout - a screen has no Context of its own, so its
+                    // holder is the only way in.
+                    BuildPublicSignalsFolder(codeGenSettings, isMandatory: false)
+                }, true, false, false),
+
+                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.SubModules], FolderEVO.FolderType.SubModules,
+                    null, false, true, false),
+                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.TestModules], FolderEVO.FolderType.TestModules,
+                    null, false, true, false),
+                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ScreenModules],
+                    FolderEVO.FolderType.ScreenModules, null, false, true, false)
+            };
+        }
+
+        protected override FolderEVO CreateFolder(string folderName, FolderEVO.FolderType folderType, List<FolderEVO> subFolders = null,
+            bool isMandatory = false, bool isOptional = false,
+            bool isNamespaceProvider = true)
+        {
+            base.CreateFolder(folderName, folderType, subFolders);
+            return new FolderEVO
+            {
+                FolderName = folderName,
+                Type = folderType,
+                SubFolders = subFolders ?? new List<FolderEVO>(),
+                IsMandatory = isMandatory,
+                IsOptional = isOptional,
+                IsNamespaceProvider = isNamespaceProvider
+            };
+        }
+
+        protected override string FindFolderPathByID(FolderEVO.FolderType folderID, List<FolderEVO> folders, string basePath,
+            out bool isOptional)
+        {
+            foreach (FolderEVO folder in folders)
+            {
+                string currentPath = Path.Combine(basePath, folder.FolderName);
+
+                if (folder.Type.ToString().Equals(folderID.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    isOptional = folder.IsOptional;
+                    return currentPath;
+                }
+                else if (folder.SubFolders != null && folder.SubFolders.Count > 0)
+                {
+                    string subFolderPath = FindFolderPathByID(folderID, folder.SubFolders, currentPath, out isOptional);
+                    if (!string.IsNullOrEmpty(subFolderPath))
+                    {
+                        // A folder is only as mandatory as the branch it hangs off. The Shared
+                        // subfolders are each mandatory within Shared - ticking Shared lays all of
+                        // them down at once - but Shared itself is optional, so a module created
+                        // without it has no Data/UnityObjects under Shared and that is ordinary
+                        // rather than a fault. Without this the caller that warns about a missing
+                        // folder would warn once per Shared subfolder for every such module.
+                        isOptional |= folder.IsOptional;
+                        return subFolderPath;
+                    }
+                }
+            }
+
+            isOptional = false;
+            return string.Empty;
+        }
+    }
+}
+#endif

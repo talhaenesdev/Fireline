@@ -24,6 +24,7 @@ namespace Modules.MatchModule.MatchScreenModule.ViewsMediators
             _view.HideCompleted -= OnScreenHidden;
         }
 
+
         private void OnScreenShown(IScreenBody screen)
         {
             _view.ExitClicked += OnExitClicked;

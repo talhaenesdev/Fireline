@@ -43,6 +43,8 @@ namespace Modules.EnemyModule.ViewsMediators
     {
         [SerializeField] private CD_ZombieWaves _config;
         [SerializeField] private Transform _spawnPointRoot;
+        [Tooltip("The height of the walkable ground in this scene. Players and zombies are centred a metre above it, so what lies on the ground - structures, corpses, rings - is drawn here rather than at their centre height, where it would hide their legs.")]
+        [SerializeField] private float _groundHeight = -1f;
         [SerializeField] private CD_Turret _turret;
         [SerializeField] private CD_Barricade _barricade;
         [SerializeField] private CD_Wall _wall;
@@ -185,6 +187,14 @@ namespace Modules.EnemyModule.ViewsMediators
         public Action<bool> AllyOrderAnnounced;
 
         public void RequestAllyOrder() => AllyOrderServerRpc();
+
+        /// <summary>A player asked for the next wave now.</summary>
+        public Action SkipBreakRequested;
+
+        public void RequestSkipBreak() => SkipBreakServerRpc();
+
+        [ServerRpc(RequireOwnership = false)]
+        private void SkipBreakServerRpc() => SkipBreakRequested?.Invoke();
 
         public void AnnounceAllyOrderServer(ulong clientId, bool isFollowing)
         {
@@ -352,6 +362,8 @@ namespace Modules.EnemyModule.ViewsMediators
             _carried?.Place(transform.position, CARRY_SCALE, false);
         }
 
+        private Vector3 Grounded(Vector3 position) => new(position.x, _groundHeight, position.z);
+
         private IStructureVisual Get(int kind) => (StructureKind) kind switch
         {
             StructureKind.Barricade => _pool.Get<BarricadeVisual>(_barricadePoolKey, transform),
@@ -424,7 +436,7 @@ namespace Modules.EnemyModule.ViewsMediators
         private void BlastClientRpc(Vector3 position, float radius, Color color)
         {
             if (_pool != null)
-                _pool.Get<BlastRing>(_blastPoolKey, transform)?.Show(position, radius, color);
+                _pool.Get<BlastRing>(_blastPoolKey, transform)?.Show(Grounded(position), radius, color);
 
             Chunks().Burst(position, new Color(0.25f, 0.2f, 0.15f), 14 + Mathf.RoundToInt(radius * 3f), 7f, 0.22f);
             Chunks().Burst(position, color, 8, 9f, 0.16f);
@@ -488,7 +500,7 @@ namespace Modules.EnemyModule.ViewsMediators
                 _objectiveZone = null;
             }
 
-            _objectiveZone?.Show(_objectivePosition.Value, _objective.Radius, _objectiveProgress.Value);
+            _objectiveZone?.Show(Grounded(_objectivePosition.Value), _objective.Radius, _objectiveProgress.Value);
             ObjectiveChanged?.Invoke(_objective != null ? _objective.Title : string.Empty, isActive, _objectiveProgress.Value);
         }
 
@@ -512,7 +524,7 @@ namespace Modules.EnemyModule.ViewsMediators
         private void ZombieDeathClientRpc(Vector3 position, float yaw, Color tint, float scale)
         {
             if (_pool != null)
-                _pool.Get<ZombieCorpse>(_corpsePoolKey, transform)?.Show(position, yaw, tint, scale);
+                _pool.Get<ZombieCorpse>(_corpsePoolKey, transform)?.Show(Grounded(position), yaw, tint, scale);
 
             Chunks().Burst(position, new Color(0.5f, 0.04f, 0.04f), 10, 4.5f, 0.16f * scale);
             Chunks().Burst(position, tint * 0.8f, 5, 3.5f, 0.2f * scale);
@@ -569,7 +581,7 @@ namespace Modules.EnemyModule.ViewsMediators
                     if (visual == null)
                         continue;
 
-                    visual.Place(turret.Position, 1f, true);
+                    visual.Place(Grounded(turret.Position), 1f, true);
                     _turretVisuals[turret.Id] = visual;
                 }
 

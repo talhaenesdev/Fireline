@@ -65,6 +65,9 @@ namespace Modules.EnemyModule.Signals
         /// <summary>The local player switches their soldiers between guarding and following.</summary>
         public Signal ToggleAllyOrder = new();
 
+        /// <summary>The local player wants the next wave now, without waiting out the break.</summary>
+        public Signal SkipWaveBreak = new();
+
         /// <summary>A player bought an upgrade: each of their turrets goes up a level. Server only.</summary>
         public Signal<ulong> UpgradeTurrets = new();
 
